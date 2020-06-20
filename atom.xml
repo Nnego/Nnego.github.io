@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://nnego.github.io</id>
     <title>苏小霂的博客</title>
-    <updated>2020-06-20T15:29:59.328Z</updated>
+    <updated>2020-06-20T15:40:07.255Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://nnego.github.io"/>
     <link rel="self" href="https://nnego.github.io/atom.xml"/>
@@ -11,14 +11,14 @@
     <icon>https://nnego.github.io/favicon.ico</icon>
     <rights>All rights reserved 2020, 苏小霂的博客</rights>
     <entry>
-        <title type="html"><![CDATA[关于人生的邂逅与离别]]></title>
+        <title type="html"><![CDATA[关于本站]]></title>
         <id>https://nnego.github.io/post/guan-yu-ren-sheng-de-xie-hou-yu-chi-bie/</id>
         <link href="https://nnego.github.io/post/guan-yu-ren-sheng-de-xie-hou-yu-chi-bie/">
         </link>
         <updated>2020-06-20T14:54:17.000Z</updated>
-        <content type="html"><![CDATA[<ul>
-<li>关于离别，我的经验就是，走的时候不要回头，不要回头，不要回头</li>
-</ul>
+        <content type="html"><![CDATA[<ol>
+<li>2020年注定是不平凡的一年，而我恰恰在这一年毕业。网上也有话题讨论“2020届最惨毕业生”，是不是最惨我不知道，但我挺惨的，几年最大的事情就是考研失败吧，说实话这件事对我打击挺大的……颓了几天之后还是打起精神来，准备春招，经历了大概一个多月，大大小小的笔试面试后，最后拿到了一个游戏公司的offer，待续……</li>
+</ol>
 ]]></content>
     </entry>
     <entry>
@@ -26,7 +26,7 @@
         <id>https://nnego.github.io/post/hello-gridea/</id>
         <link href="https://nnego.github.io/post/hello-gridea/">
         </link>
-        <updated>2018-12-11T16:00:00.000Z</updated>
+        <updated>2019-02-20T12:31:51.000Z</updated>
         <summary type="html"><![CDATA[<p>👏  欢迎使用 <strong>Gridea</strong> ！<br>
 ✍️  <strong>Gridea</strong> 一个静态博客写作客户端。你可以用它来记录你的生活、心情、知识、笔记、创意... ...</p>
 ]]></summary>
