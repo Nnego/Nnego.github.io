@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://nnego.github.io</id>
-    <title>Gridea</title>
-    <updated>2020-06-20T15:28:00.807Z</updated>
+    <title>苏小霂的博客</title>
+    <updated>2020-06-20T15:29:53.182Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://nnego.github.io"/>
     <link rel="self" href="https://nnego.github.io/atom.xml"/>
-    <subtitle>温故而知新</subtitle>
+    <subtitle>做自己想做的事，成为自己想成为的人，永远都不会迟。</subtitle>
     <logo>https://nnego.github.io/images/avatar.png</logo>
     <icon>https://nnego.github.io/favicon.ico</icon>
-    <rights>All rights reserved 2020, Gridea</rights>
+    <rights>All rights reserved 2020, 苏小霂的博客</rights>
     <entry>
         <title type="html"><![CDATA[关于人生的邂逅与离别]]></title>
         <id>https://nnego.github.io/post/guan-yu-ren-sheng-de-xie-hou-yu-chi-bie/</id>
