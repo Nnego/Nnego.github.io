@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://nnego.github.io</id>
     <title>苏小霂的博客</title>
-    <updated>2020-06-20T15:40:49.690Z</updated>
+    <updated>2020-06-21T00:34:23.209Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://nnego.github.io"/>
     <link rel="self" href="https://nnego.github.io/atom.xml"/>
@@ -12,13 +12,16 @@
     <rights>All rights reserved 2020, 苏小霂的博客</rights>
     <entry>
         <title type="html"><![CDATA[关于本站]]></title>
-        <id>https://nnego.github.io/post/guan-yu-ren-sheng-de-xie-hou-yu-chi-bie/</id>
-        <link href="https://nnego.github.io/post/guan-yu-ren-sheng-de-xie-hou-yu-chi-bie/">
+        <id>https://nnego.github.io/post/about-this-site/</id>
+        <link href="https://nnego.github.io/post/about-this-site/">
         </link>
         <updated>2020-06-20T14:54:17.000Z</updated>
-        <content type="html"><![CDATA[<ol>
-<li>2020年注定是不平凡的一年，而我恰恰在这一年毕业。网上也有话题讨论“2020届最惨毕业生”，是不是最惨我不知道，但我挺惨的，几年最大的事情就是考研失败吧，说实话这件事对我打击挺大的……颓了几天之后还是打起精神来，准备春招，经历了大概一个多月，大大小小的笔试面试后，最后拿到了一个游戏公司的offer，待续……</li>
-</ol>
+        <summary type="html"><![CDATA[<p>前言</p>
+]]></summary>
+        <content type="html"><![CDATA[<p>前言</p>
+<!-- more -->
+<h4 id="近期经历">近期经历</h4>
+<p>2020年注定是不平凡的一年，而我恰恰在这一年毕业。网上也有话题讨论“2020届最惨毕业生”，是不是最惨我不知道，但我挺惨的，几年最大的事情就是考研失败吧，说实话这件事对我打击挺大的……颓了几天之后还是打起精神来，准备春招，经历了大概一个多月，大大小小的笔试面试后，最后拿到了一个游戏公司的offer，待续……</p>
 ]]></content>
     </entry>
     <entry>
