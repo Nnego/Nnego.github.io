@@ -2,18 +2,18 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://nnego.github.io</id>
     <title>苏小霂的博客</title>
-    <updated>2020-06-21T01:14:15.934Z</updated>
+    <updated>2020-06-21T01:15:31.566Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://nnego.github.io"/>
     <link rel="self" href="https://nnego.github.io/atom.xml"/>
-    <subtitle>做自己想做的事，成为自己想成为的人，永远都不会迟。</subtitle>
+    <subtitle>做自己想做的事，成为自己想成为的人，永远都不会太迟。</subtitle>
     <logo>https://nnego.github.io/images/avatar.png</logo>
     <icon>https://nnego.github.io/favicon.ico</icon>
     <rights>All rights reserved 2020, 苏小霂的博客</rights>
     <entry>
         <title type="html"><![CDATA[关于本站]]></title>
-        <id>https://nnego.github.io/post/about-this-site/</id>
-        <link href="https://nnego.github.io/post/about-this-site/">
+        <id>https://nnego.github.io/about-this-site/</id>
+        <link href="https://nnego.github.io/about-this-site/">
         </link>
         <updated>2020-06-20T14:54:17.000Z</updated>
         <summary type="html"><![CDATA[<p>👆前言，勉强算是近况总结吧，说一说</p>
@@ -26,8 +26,8 @@
     </entry>
     <entry>
         <title type="html"><![CDATA[Hello Gridea]]></title>
-        <id>https://nnego.github.io/post/hello-gridea/</id>
-        <link href="https://nnego.github.io/post/hello-gridea/">
+        <id>https://nnego.github.io/hello-gridea/</id>
+        <link href="https://nnego.github.io/hello-gridea/">
         </link>
         <updated>2019-02-20T12:31:51.000Z</updated>
         <summary type="html"><![CDATA[<p>👏  欢迎使用 <strong>Gridea</strong> ！<br>
