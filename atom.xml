@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://nnego.github.io</id>
     <title>苏小霂的博客</title>
-    <updated>2020-06-21T02:42:14.533Z</updated>
+    <updated>2020-06-21T03:10:31.049Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://nnego.github.io"/>
     <link rel="self" href="https://nnego.github.io/atom.xml"/>
@@ -22,6 +22,127 @@
 <!-- more -->
 <h4 id="近期经历">近期经历</h4>
 <p>2020年注定是不平凡的一年，而我恰恰在这一年毕业。网上也有话题讨论“2020届最惨毕业生”，是不是最惨我不知道，但我挺惨的，但应该不是最惨的。今年最大的事情就是考研失败吧，考完之后觉得自己数学做的一塌糊涂，但没想到还是给击穿了下限，总的来说就是感觉不怎么好，成绩出来后竟然这么差。虽说有心理准备，这件事还是让我难过了好久……颓了几天之后打起精神来，准备春招，经历了大概一个多月，大大小小的笔试面试后，最后拿到了一个游戏公司的offer就没再投简历了。此时我的毕业设计还未动身，4月中旬的时候才正式开始做，5月初开学，在学校紧赶慢赶完成了程序，写完论文，最后通过了毕业答辩，总之一切还算顺利。相比其他学校的云毕业，我们还算幸运，能够赶回学校见一见老师同学，能跟朋友们再开开黑，一起欢笑，一起拍毕业照，为自己匆忙的大学生活添上一个完整的休止符。在离别前的几天我开始写这篇文章，想赶在分别前写点什么</p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[Hello World]]></title>
+        <id>https://nnego.github.io/dqoJZQMp5/</id>
+        <link href="https://nnego.github.io/dqoJZQMp5/">
+        </link>
+        <updated>2019-02-21T02:58:13.000Z</updated>
+        <summary type="html"><![CDATA[<p>入门~~~</p>
+<p>少许markdown语法和hexo常用命令 |=_=|</p>
+]]></summary>
+        <content type="html"><![CDATA[<p>入门~~~</p>
+<p>少许markdown语法和hexo常用命令 |=_=|</p>
+<!-- more -->
+<h2 id="常常想不起来的markdown语法">常常想不起来的Markdown语法</h2>
+<h3 id="字体居中">字体居中</h3>
+<pre><code class="language-html">&lt;center&gt;测试文字&lt;/center&gt;
+</code></pre>
+<ul>
+<li>测试效果：</li>
+</ul>
+<center>测试文字</center>
+<hr>
+<h3 id="斜体">斜体</h3>
+<pre><code>*斜体文本* 或 _斜体文本_   //注意两个*号与文字之间不要有空格
+</code></pre>
+<ul>
+<li>
+<p>效果：</p>
+<p><em>斜体文本</em>  或者 <em>斜体文本</em></p>
+</li>
+</ul>
+<hr>
+<h3 id="粗体">粗体</h3>
+<pre><code>**加粗文本** 或 __加粗文本__
+</code></pre>
+<ul>
+<li>
+<p>测试结果</p>
+<p><strong>加粗文本</strong> 或者 <strong>加粗文本</strong></p>
+</li>
+</ul>
+<hr>
+<h3 id="删除线">删除线</h3>
+<pre><code>~~删除文本~~
+</code></pre>
+<ul>
+<li>
+<p>效果</p>
+<p><s>删除文本</s></p>
+</li>
+</ul>
+<hr>
+<h3 id="下划线">下划线</h3>
+<pre><code>&lt;u&gt;下划线文本&lt;/u&gt;
+</code></pre>
+<ul>
+<li>
+<p>测试文本</p>
+<p><u>下划线文本</u></p>
+</li>
+</ul>
+<h3 id="引用">引用</h3>
+<pre><code>&gt; 测试文字 // 有无空格皆可
+</code></pre>
+<ul>
+<li>测试效果：</li>
+</ul>
+<blockquote>
+<p>测试文字(无空格)</p>
+</blockquote>
+<blockquote>
+<p>测试文字(有空格)</p>
+</blockquote>
+<blockquote>
+<p>节选自</p>
+<blockquote>
+<p>《节选自</p>
+<blockquote>
+<p>&lt;节选&gt;</p>
+</blockquote>
+<p>》</p>
+</blockquote>
+</blockquote>
+<h3 id="代码块">代码块</h3>
+<pre><code>​```
+ //测试文字
+​```
+
+代码上下分别用三个反引号包起来，且反引号各占一行
+</code></pre>
+<ul>
+<li>
+<p>测试效果</p>
+<pre><code class="language-c">#include&lt;iostream&gt;
+using namespace std;
+int main()
+{
+    return 0;
+}
+</code></pre>
+</li>
+</ul>
+<h3 id="分割线">分割线</h3>
+<pre><code>三个或四个以上的 - 或者 * 均可
+
+1 | ---
+2 | ***
+3 | ----
+4 | ****
+</code></pre>
+<ul>
+<li>
+<p>测试效果</p>
+<hr>
+<hr>
+<hr>
+<hr>
+</li>
+</ul>
+<hr>
 ]]></content>
     </entry>
     <entry>
