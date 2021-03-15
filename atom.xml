@@ -2,13 +2,162 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://nnego.github.io</id>
     <title>苏小霂的博客</title>
-    <updated>2021-03-15T12:46:31.671Z</updated>
+    <updated>2021-03-15T15:48:15.417Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://nnego.github.io"/>
     <link rel="self" href="https://nnego.github.io/atom.xml"/>
     <logo>https://nnego.github.io/images/avatar.png</logo>
     <icon>https://nnego.github.io/favicon.ico</icon>
     <rights>All rights reserved 2021, 苏小霂的博客</rights>
+    <entry>
+        <title type="html"><![CDATA[Maven仓库配置阿里云镜像]]></title>
+        <id>https://nnego.github.io/x6uhqGdh2/</id>
+        <link href="https://nnego.github.io/x6uhqGdh2/">
+        </link>
+        <updated>2021-01-07T15:39:51.000Z</updated>
+        <content type="html"><![CDATA[<p>macOS Maven路径 一般在<br>
+<code>/usr/local/maven/apache-maven-3.6.3</code><br>
+进入<code>conf</code>目录，修改<code>settings.xml</code>，</p>
+<pre><code class="language-shell">sudo vim /usr/local/maven/apache-maven-3.6.3/conf/settings.xml
+</code></pre>
+<p>找到<code>mirror</code>元素，添加阿里云仓库镜像代码，如下</p>
+<pre><code class="language-xml">&lt;mirrors&gt;
+    &lt;!-- mirror
+     | Specifies a repository mirror site to use instead of a given repository. The repository that
+     | this mirror serves has an ID that matches the mirrorOf element of this mirror. IDs are used
+     | for inheritance and direct lookup purposes, and must be unique across the set of mirrors.
+     |
+    &lt;mirror&gt;
+      &lt;id&gt;mirrorId&lt;/id&gt;
+      &lt;mirrorOf&gt;repositoryId&lt;/mirrorOf&gt;
+      &lt;name&gt;Human Readable Name for this Mirror.&lt;/name&gt;
+      &lt;url&gt;http://my.repository.com/repo/path&lt;/url&gt;
+    &lt;/mirror&gt;
+     --&gt;
+     &lt;mirror&gt;
+      &lt;id&gt;aliyunmaven&lt;/id&gt;
+      &lt;mirrorOf&gt;*&lt;/mirrorOf&gt;
+      &lt;name&gt;Aliyun Maven Public&lt;/name&gt;
+      &lt;url&gt;https://maven.aliyun.com/repository/public&lt;/url&gt;
+    &lt;/mirror&gt;
+  &lt;/mirrors&gt;
+</code></pre>
+<p>接下来在IDE中配置Maven的安装路径和自定义的配置文件路径即可。</p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[pom.xml文件注释说明]]></title>
+        <id>https://nnego.github.io/5eNHby0oy/</id>
+        <link href="https://nnego.github.io/5eNHby0oy/">
+        </link>
+        <updated>2021-01-06T12:54:19.000Z</updated>
+        <content type="html"><![CDATA[<p>POM(Project Object Model，项目对象模型)是Maven工程的基本单元，也是Maven的核心。它是一个xml文件，包含项目的基本信息，用于描述项目如何构建、声明项目依赖等。<br>
+在执行任务或目标时，Maven会在当前目录中查找pom.xml文件，然后获取所需的配置信息，再执行目标。<br>
+pom.xml通常有以下元素。</p>
+<p>下面是一个完整的<code>pom.xml</code>文件，</p>
+<pre><code class="language-xml">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;project xmlns=&quot;http://maven.apache.org/POM/4.0.0&quot; xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+	xsi:schemaLocation=&quot;http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd&quot;&gt;
+	&lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+
+    &lt;!-- 父项目的坐标，如果项目没规定某个元素的值，那么父项目中的对应值应为项目的默认值，坐标包括groupId artifactId version --&gt;
+	&lt;parent&gt;
+        &lt;!-- 被继承的父项目的唯一标识符 --&gt;
+		&lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+        &lt;!-- 被继承的父项目的构件标识符 --&gt;
+		&lt;artifactId&gt;spring-boot-starter-parent&lt;/artifactId&gt;
+        &lt;!-- 被继承的父项目的版本号 --&gt;
+		&lt;version&gt;2.4.3&lt;/version&gt;
+        &lt;!-- 被继承的父项目的pom.xml文件的相对路径，相对路径允许一个不同的路径，默认值是../pom.xml
+            Maven现在构建当前项目的地方寻找父项目的pom，然后在文件系统的relativePath寻找，最后在远程仓库寻找父项目的pom --&gt;
+		&lt;relativePath/&gt; &lt;!-- lookup parent from repository --&gt;
+	&lt;/parent&gt;
+
+    &lt;!-- 公司或组织的唯一标识(项目的全球唯一标识符)， 通常用全限定包名区分该项目和其他项目。Maven会将该项目生成的jar包放在包名对应的本地路径下 --&gt;
+	&lt;groupId&gt;com.example&lt;/groupId&gt;
+    &lt;!-- 项目的唯一ID，一个groupId下面可能有多个项目，靠artifactId来区分 --&gt;
+	&lt;artifactId&gt;demo&lt;/artifactId&gt;
+    &lt;!-- 版本号， 格式为 主版本.次版本.增量版本-限定版本号 --&gt;
+	&lt;version&gt;0.0.1-SNAPSHOT&lt;/version&gt;
+    &lt;!-- 项目名称，用于Maven产生的文档 --&gt;
+	&lt;name&gt;HelloWorld&lt;/name&gt;
+	&lt;description&gt;Demo project for Spring Boot&lt;/description&gt;
+	&lt;properties&gt;
+        &lt;!-- 项目开发的java版本号 --&gt;
+		&lt;java.version&gt;11&lt;/java.version&gt;
+	&lt;/properties&gt;
+
+    &lt;!-- 项目的依赖项，自动从Maven仓库下载 --&gt;
+	&lt;dependencies&gt;
+		&lt;dependency&gt;
+			&lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+			&lt;artifactId&gt;spring-boot-starter-web&lt;/artifactId&gt;
+		&lt;/dependency&gt;
+
+		&lt;dependency&gt;
+			&lt;groupId&gt;org.projectlombok&lt;/groupId&gt;
+			&lt;artifactId&gt;lombok&lt;/artifactId&gt;
+			&lt;optional&gt;true&lt;/optional&gt;
+		&lt;/dependency&gt;
+		&lt;dependency&gt;
+			&lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+			&lt;artifactId&gt;spring-boot-starter-test&lt;/artifactId&gt;
+			&lt;scope&gt;test&lt;/scope&gt;
+		&lt;/dependency&gt;
+
+		&lt;dependency&gt;
+			&lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+			&lt;artifactId&gt;spring-boot-devtools&lt;/artifactId&gt;
+			&lt;optional&gt;true&lt;/optional&gt;
+		&lt;/dependency&gt;
+
+		&lt;dependency&gt;
+			&lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+			&lt;artifactId&gt;spring-boot-configuration-processor&lt;/artifactId&gt;
+			&lt;optional&gt;true&lt;/optional&gt;
+		&lt;/dependency&gt;
+		&lt;dependency&gt;
+			&lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+			&lt;artifactId&gt;spring-boot&lt;/artifactId&gt;
+			&lt;version&gt;2.4.3&lt;/version&gt;
+		&lt;/dependency&gt;
+		&lt;dependency&gt;
+			&lt;groupId&gt;junit&lt;/groupId&gt;
+			&lt;artifactId&gt;junit&lt;/artifactId&gt;
+			&lt;scope&gt;test&lt;/scope&gt;
+		&lt;/dependency&gt;
+	&lt;/dependencies&gt;
+
+    &lt;!-- 构建项目(打包生成可执行文件)需要的信息 --&gt;
+	&lt;build&gt;
+        &lt;!-- 项目使用的插件列表 --&gt;
+		&lt;plugins&gt;
+			&lt;plugin&gt;
+				&lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+				&lt;artifactId&gt;spring-boot-maven-plugin&lt;/artifactId&gt;
+				&lt;configuration&gt;
+					&lt;excludes&gt;
+						&lt;exclude&gt;
+							&lt;groupId&gt;org.projectlombok&lt;/groupId&gt;
+							&lt;artifactId&gt;lombok&lt;/artifactId&gt;
+						&lt;/exclude&gt;
+					&lt;/excludes&gt;
+				&lt;/configuration&gt;
+			&lt;/plugin&gt;
+
+			&lt;!--build jar 包用的maven插件	--&gt;
+			&lt;plugin&gt;
+				&lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+				&lt;artifactId&gt;spring-boot-maven-plugin&lt;/artifactId&gt;
+			&lt;/plugin&gt;
+		&lt;/plugins&gt;
+	&lt;/build&gt;
+
+&lt;/project&gt;
+
+</code></pre>
+]]></content>
+    </entry>
     <entry>
         <title type="html"><![CDATA[TCP/UDP的区别]]></title>
         <id>https://nnego.github.io/cM1qxAOaL/</id>
