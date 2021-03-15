@@ -2,7 +2,7 @@
 <html lang="zh-CN">
  <head>
      <meta charset="utf-8" />
-  <title>Hello Gridea | 苏小霂的博客</title>
+  <title>TCP/UDP的区别 | 苏小霂的博客</title>
   <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
   <link rel="stylesheet" href="https://nnego.github.io/styles/main.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
@@ -77,40 +77,32 @@
      <div class="post-page">
       <div class="post animated fadeInDown">
        <div class="post-title">
-        <h3><a>Hello Gridea</a></h3>
+        <h3><a>TCP/UDP的区别</a></h3>
        </div>
        <div class="post-content">
-        <p>👏  欢迎使用 <strong>Gridea</strong> ！<br>
-✍️  <strong>Gridea</strong> 一个静态博客写作客户端。你可以用它来记录你的生活、心情、知识、笔记、创意... ...</p>
-<!-- more -->
-<p><a href="https://github.com/getgridea/gridea">Github</a><br>
-<a href="https://gridea.dev/">Gridea 主页</a><br>
-<a href="http://fehey.com/">示例网站</a></p>
-<h2 id="特性">特性👇</h2>
-<p>📝  你可以使用最酷的 <strong>Markdown</strong> 语法，进行快速创作</p>
-<p>🌉  你可以给文章配上精美的封面图和在文章任意位置插入图片</p>
-<p>🏷️  你可以对文章进行标签分组</p>
-<p>📋  你可以自定义菜单，甚至可以创建外部链接菜单</p>
-<p>💻  你可以在 <strong>Windows</strong>，<strong>MacOS</strong> 或 <strong>Linux</strong> 设备上使用此客户端</p>
-<p>🌎  你可以使用 <strong>𝖦𝗂𝗍𝗁𝗎𝖻 𝖯𝖺𝗀𝖾𝗌</strong> 或 <strong>Coding Pages</strong> 向世界展示，未来将支持更多平台</p>
-<p>💬  你可以进行简单的配置，接入 <a href="https://github.com/gitalk/gitalk">Gitalk</a> 或 <a href="https://github.com/SukkaW/DisqusJS">DisqusJS</a> 评论系统</p>
-<p>🇬🇧  你可以使用<strong>中文简体</strong>或<strong>英语</strong></p>
-<p>🌁  你可以任意使用应用内默认主题或任意第三方主题，强大的主题自定义能力</p>
-<p>🖥  你可以自定义源文件夹，利用 OneDrive、百度网盘、iCloud、Dropbox 等进行多设备同步</p>
-<p>🌱 当然 <strong>Gridea</strong> 还很年轻，有很多不足，但请相信，它会不停向前 🏃</p>
-<p>未来，它一定会成为你离不开的伙伴</p>
-<p>尽情发挥你的才华吧！</p>
-<p>😘 Enjoy~</p>
+        <p>**基于连接</p>
+<p>基于连接有几个层面的意思：</p>
+<p>TCP是全双工的。</p>
+<p>连接是一对一的，所以基于广播和多播(目标是多个主机地址)的应用程序不能使用TCP服务。而无连接协议UDP则非常适合于广播和多播。</p>
+<p><strong>基于流</strong></p>
+<p>TCP基于流，UDP基于数据报；这种区别对应到实际编程操作中，体现为通信双方是否必须执行相同次数的读写操作。</p>
+<p>TCP基于流，流没有写入数据大小的限制，我们分好几次写入数据到发送缓冲区，当TCP模块真正开始发数据，可能一个TCP报文段就发完了，所以TCP模块发出TCP报文段的个数和应用程序执行的写操作次数没有固定的数量关系。</p>
+<p>收到一个或多个TCP报文段后，TCP模块将他们携带的应用程序数据按照TCP报文段的序号依次放入TCP接收缓冲区中，并通知应用程序读取数据。接收端应用程序可以一次性将TCP接收缓冲区中的数据全部读出，也可以分多次读，这取决于用户指定的应用程序读缓冲区的大小。</p>
+<p>而UDP，发送端应用程序每执行一次写操作，UDP模块就把它封装为一个UDP数据报并发送之。接收端必须及时针对每一个UDP数据报执行读操作，否则就会丢包。并且，如果用户分配的应用程序缓冲区空间不足，UDP数据将被截断。</p>
+<figure data-type="image" tabindex="1"><img src="https://pic7.58cdn.com.cn/nowater/webim/big/n_v2770d1d26039b4f7d8e6ef4dd28ad13d1.png" alt="image-20201220175635166.png" loading="lazy"></figure>
+<p><strong>可靠的</strong></p>
+<p>TCP通过发送应答、超时重传、窗口控制，排序整理实现可靠交付。</p>
+<p>UDP则是发完就不管了。数据确认和超时重传都需要上层协议来处理。</p>
 
        </div>
        <div class="post-footer">
         <div class="meta">
          <div class="info">
           <i class="fa fa-sun-o"></i>
-          <span class="date">2018-12-12</span>
+          <span class="date">2020-12-19</span>
           <i class="fa fa-tag"></i>
           
-          <a class="tag" href="https://nnego.github.io/7DremERQ9/" title="Gridea">Gridea </a>
+          <a class="tag" href="https://nnego.github.io/m597yoqXr/" title="计算机网络">计算机网络 </a>
           
          </div>
         </div>
@@ -124,12 +116,14 @@
         <a class="fa fa-weibo" href="javascript:void((function(s,d,e){try{}catch(e){}var f='http://service.weibo.com/share/share.php?',u=d.location.href,p=['url=',e(u),'&amp;title=',e(d.title),'&amp;appkey=2924220432'].join('');function a(){if(!window.open([f,p].join(''),'mb',['toolbar=0,status=0,resizable=1,width=620,height=450,left=',(s.width-620)/2,',top=',(s.height-450)/2].join('')))u.href=[f,p].join('');};if(/Firefox/.test(navigator.userAgent)){setTimeout(a,0)}else{a()}})(screen,document,encodeURIComponent));"></a>
        </div>
        <div class="twitter">
-        <a class="fa fa-twitter" href="http://twitter.com/home?status=,https://nnego.github.io/hello-gridea/,;"></a>
+        <a class="fa fa-twitter" href="http://twitter.com/home?status=,https://nnego.github.io/cM1qxAOaL/,;"></a>
        </div>
       </div>
       <div class="pagination">
        <ul class="clearfix">
 
+        
+        <li class="next pagbuttons"><a class="btn" role="navigation" href="https://nnego.github.io/iFKh1fT3l/" title=" socket与TCP/IP协议族的关系">下一篇</a></li>
         
        </ul>
       </div>
