@@ -2,13 +2,476 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://nnego.github.io</id>
     <title>苏小霂的博客</title>
-    <updated>2021-03-15T16:08:52.174Z</updated>
+    <updated>2022-02-23T10:30:33.995Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://nnego.github.io"/>
     <link rel="self" href="https://nnego.github.io/atom.xml"/>
     <logo>https://nnego.github.io/images/avatar.png</logo>
     <icon>https://nnego.github.io/favicon.ico</icon>
-    <rights>All rights reserved 2021, 苏小霂的博客</rights>
+    <rights>All rights reserved 2022, 苏小霂的博客</rights>
+    <entry>
+        <title type="html"><![CDATA[JVM学习笔记(二) 双亲委派与类加载]]></title>
+        <id>https://nnego.github.io/_F_qtsYNS/</id>
+        <link href="https://nnego.github.io/_F_qtsYNS/">
+        </link>
+        <updated>2022-02-23T10:23:31.000Z</updated>
+        <summary type="html"><![CDATA[<p>双亲委派机制</p>
+]]></summary>
+        <content type="html"><![CDATA[<p>双亲委派机制</p>
+<!-- more -->
+<h4 id="什么是双亲委派">什么是双亲委派？</h4>
+<ol>
+<li>类加载器收到类加载请求</li>
+<li>将这个请求向上委托给父类加载器完成，一直向上，直到bootstrap类加载器。</li>
+<li>bootstrap检查是否能加载这个类，能加载就结束，不能加载就抛出异常，通知子加载器加载该类</li>
+<li>重复步骤3。</li>
+</ol>
+<h4 id="双亲委派机制的作用">双亲委派机制的作用？</h4>
+<p>让基础类得以正确地统一地加载。出于一种安全的考虑，不让破坏基础类？越基础的类越由上层的类加载器加载。</p>
+<h4 id="破坏双亲委派机制">破坏双亲委派机制？</h4>
+<h5 id="为什么要破坏">为什么要破坏</h5>
+<p>基础类型要调用用户的代码怎么办？由于加载范围限制，某些情况父要委托子加载Class，就不得不破坏双亲委派机制。</p>
+<h5 id="破坏方法">破坏方法</h5>
+<p>线程上下文类加载器(ThreadContextClassLoader)</p>
+<p>Java.lang.Thread.setContextClassLoader()方法</p>
+<p>JDK1.6提供了<code>java.util.ServiceProvider</code>类</p>
+<h3 id="类加载">类加载</h3>
+<h4 id="启动程序如何查看加载了哪些类">启动程序如何查看加载了哪些类</h4>
+<p>-XX:+TraceClassLoading [类名]</p>
+<p>-verbose [类名]</p>
+<h4 id="类必须初始化的时机">类必须初始化的时机</h4>
+<p>1.遇到 new、getstatic、putstatic、invokestatic 4 个字节码指令时。</p>
+<p>2.使用 java.lang.relect 包的方法对类进行反射调用时。</p>
+<p>3.当初始化一个类的时候，如果父类没被初始化，则先初始化父类。</p>
+<p>4.当虚拟机启动时，指定了执行主类（main()的方法的那个类），则需要先初始化这个主类。</p>
+<p>5.JDK1.7 动态语言支持时，如果一个 java.lang.invoke.MethodHandle 实例最后解析结果 REF<em>getStatic,REF</em>putStatic,REF_invokeStatic 的方法句柄，且该句柄对应的类没有初始化，则需要先初始化这个类。</p>
+<h4 id="类加载的过程类的生命周期">类加载的过程/类的生命周期</h4>
+<ol>
+<li>加载</li>
+</ol>
+<ul>
+<li>
+<p>将类以全类名方式获取二进制流，</p>
+</li>
+<li>
+<p>字节流的静态存储结构==&gt;方法区的运行时数据结构。</p>
+</li>
+<li>
+<p>生成描述该类的Class对象。作为在方法区内这个类的数据的访问入口。</p>
+</li>
+</ul>
+<ol start="2">
+<li>链接</li>
+</ol>
+<p>2.1 验证</p>
+<ul>
+<li>文件格式验证</li>
+<li>元数据验证</li>
+<li>字节码验证</li>
+<li>符号引用验证</li>
+</ul>
+<p>2.2 准备</p>
+<p>​ 该阶段是正式为类变量分配内存并设置类变量初始值。强调一点，这里说的类变量是指被 static 修饰的，而不是实例变量。</p>
+<p>2.3 解析</p>
+<p>​ 该阶段虚拟机将常量池内的符号引用替换为直接引用的过程。</p>
+<ol start="3">
+<li>初始化</li>
+</ol>
+<p>类或者类执行初始化方法，类变量真正被赋值的阶段。</p>
+<ol start="4">
+<li>
+<p>使用</p>
+</li>
+<li>
+<p>卸载</p>
+</li>
+</ol>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[Linux 常用命令之磁盘占用]]></title>
+        <id>https://nnego.github.io/fGaED5wIY/</id>
+        <link href="https://nnego.github.io/fGaED5wIY/">
+        </link>
+        <updated>2021-04-11T10:17:00.000Z</updated>
+        <summary type="html"><![CDATA[<h3 id="查看磁盘占用">查看磁盘占用</h3>
+]]></summary>
+        <content type="html"><![CDATA[<h3 id="查看磁盘占用">查看磁盘占用</h3>
+<!-- more -->
+<p><strong>先查看总计</strong></p>
+<pre><code class="language-bash">df -h
+</code></pre>
+<pre><code>Filesystem                         Size  Used Avail Use% Mounted on
+udev                               462M     0  462M   0% /dev
+tmpfs                               99M  1.1M   98M   2% /run
+/dev/mapper/ubuntu--vg-ubuntu--lv  8.8G  5.6G  2.8G  68% /
+tmpfs                              493M     0  493M   0% /dev/shm
+tmpfs                              5.0M     0  5.0M   0% /run/lock
+tmpfs                              493M     0  493M   0% /sys/fs/cgroup
+/dev/loop0                         100M  100M     0 100% /snap/core/11167
+/dev/loop2                          56M   56M     0 100% /snap/core18/2066
+/dev/loop3                          33M   33M     0 100% /snap/snapd/12057
+/dev/sda2                          976M   80M  830M   9% /boot
+tmpfs                               99M     0   99M   0% /run/user/0
+</code></pre>
+<p><strong>查看具体目录下的大小，并用sort排序</strong></p>
+<pre><code class="language-bash">du -s /* | sort -nr
+</code></pre>
+<pre><code class="language-bash">1803956 /var
+1426132 /usr
+642492  /lib
+597555  /snap
+79056   /boot
+26148   /tmp
+21872   /root
+16072   /bin
+15408   /sbin
+6720    /etc
+1052    /run
+36      /home
+16      /opt
+16      /lost+found
+4       /srv
+4       /mnt
+4       /media
+4       /lib64
+</code></pre>
+<h4 id="查看当前目录下文件及目录大小情况">查看当前目录下文件及目录大小情况</h4>
+<pre><code class="language-bash">du -h --max-depth=1
+</code></pre>
+<h3 id="查看内存占用">查看内存占用</h3>
+<ol>
+<li>top，交互命令界面下，按M，按照内存占用排序</li>
+</ol>
+<pre><code> PID USER      PR  NI    VIRT    RES    SHR S %CPU %MEM     TIME+ COMMAND                         
+  430 root      19  -1  294532  58080  57560 S  0.0  5.8   0:37.33 systemd-journal                 
+ 2294 mysql     20   0 1302768  18244   8564 S  0.0  1.8   3:05.17 mysqld                          
+ 1037 root      20   0  674172  14896   5324 S  0.0  1.5   1:08.17 snapd                           
+ 9818 root      20   0  107992   7064   6048 S  0.3  0.7   0:00.31 sshd                            
+ 9900 root      20   0   52396   6180   4280 S  0.0  0.6   0:00.17 zsh                             
+    1 root      20   0  160180   5860   3628 S  0.0  0.6   0:51.14 systemd                         
+10158 root      20   0   42776   3928   3332 R  0.3  0.4   0:00.06 top                             
+15619 root      20   0   76640   3768   3228 S  0.0  0.4   0:00.04 systemd                         
+  942 root      20   0  286260   2952   2472 S  0.0  0.3   0:06.95 accounts-daemon                 
+  980 root      20   0   70560   2560   2276 S  0.0  0.3   0:00.55 systemd-logind                  
+  447 root      20   0   45980   2484   1484 S  0.0  0.2   0:01.76 systemd-udevd                   
+ 1058 root      20   0  288888   1640   1288 S  0.0  0.2   0:00.13 polkitd                         
+  944 message+  20   0   50192   1636   1192 S  0.0  0.2   0:00.86 dbus-daemon                     
+  986 root      20   0  629764   1468    404 S  0.0  0.1   0:02.04 lxcfs                           
+  873 systemd+  20   0   79920   1272   1116 S  0.0  0.1   0:00.19 systemd-network                 
+ 1038 syslog    20   0  263044    852      0 S  0.0  0.1   0:07.73 rsyslogd                        
+ 1097 root      20   0   72308    744    668 S  0.0  0.1   0:00.01 sshd                            
+ 5329 redis     20   0   50160    640    568 R  0.3  0.1   2:07.54 redis-serve
+</code></pre>
+<ol start="2">
+<li>free</li>
+</ol>
+<pre><code>              total        used        free      shared  buff/cache   available
+Mem:        1008736      145764      246260         852      616712      678708
+Swap:       1852412      362752     1489660
+</code></pre>
+<ol start="3">
+<li>cat /proc/meminfo</li>
+</ol>
+<pre><code>MemTotal:        1008736 kB
+MemFree:          246368 kB
+MemAvailable:     678784 kB
+Buffers:           94612 kB
+Cached:           251232 kB
+SwapCached:        27984 kB
+Active:           258104 kB
+Inactive:         148036 kB
+Active(anon):      19336 kB
+Inactive(anon):    41812 kB
+Active(file):     238768 kB
+Inactive(file):   106224 kB
+Unevictable:           0 kB
+Mlocked:               0 kB
+SwapTotal:       1852412 kB
+SwapFree:        1489660 kB
+Dirty:                 0 kB
+Writeback:             0 kB
+AnonPages:         34640 kB
+Mapped:            81804 kB
+Shmem:               852 kB
+Slab:             307132 kB
+SReclaimable:     270836 kB
+SUnreclaim:        36296 kB
+KernelStack:        2748 kB
+PageTables:         5064 kB
+NFS_Unstable:          0 kB
+Bounce:                0 kB
+WritebackTmp:          0 kB
+CommitLimit:     2356780 kB
+Committed_AS:    1111028 kB
+VmallocTotal:   34359738367 kB
+VmallocUsed:           0 kB
+VmallocChunk:          0 kB
+HardwareCorrupted:     0 kB
+AnonHugePages:         0 kB
+ShmemHugePages:        0 kB
+ShmemPmdMapped:        0 kB
+CmaTotal:              0 kB
+CmaFree:               0 kB
+HugePages_Total:       0
+HugePages_Free:        0
+HugePages_Rsvd:        0
+HugePages_Surp:        0
+Hugepagesize:       2048 kB
+DirectMap4k:      118720 kB
+DirectMap2M:      929792 kB
+</code></pre>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[Java静态代理与动态代理]]></title>
+        <id>https://nnego.github.io/3bDeVf7mN/</id>
+        <link href="https://nnego.github.io/3bDeVf7mN/">
+        </link>
+        <updated>2021-04-09T10:18:42.000Z</updated>
+        <content type="html"><![CDATA[<!-- more -->
+<h2 id="动态代理">动态代理</h2>
+<p>区别静态代理，代理角色是动态生成的。</p>
+<p>分类：1. 基于类(cglib动态代理) 2. 基于接口(JDK动态代理)</p>
+<h3 id="基于jdk的动态代理">基于JDK的动态代理</h3>
+<p>原理：利用<strong>反射机制</strong>生成一个实现代理接口的匿名类，在调用具体方法前调用InvokeHandler来处理。</p>
+<p>InvocationHandler接口：</p>
+<p>Proxy类</p>
+<h3 id="基于cglib的动态代理">基于CGLib的动态代理</h3>
+<p>原理：被代理的对象可以不用实现接口，但是不能为final类，因为其使用asm开源包，对代理对象类的class文件加载进来，通过修改其字节码生成子类来处理。</p>
+<p>MethodInterceptor接口：</p>
+<p>Enhancer类</p>
+<p>代理类实现：</p>
+<pre><code class="language-java">package com.suhang.boot.service.impl;
+
+import org.springframework.cglib.proxy.Enhancer;
+import org.springframework.cglib.proxy.MethodInterceptor;
+import org.springframework.cglib.proxy.MethodProxy;
+import java.lang.reflect.Method;
+
+public class CGLibProxy implements MethodInterceptor {
+    private Object target;
+
+    public void setTarget(Object target) {
+        this.target = target;
+    }
+
+
+    @Override
+    public Object intercept(Object o, Method method, Object[] objects, MethodProxy methodProxy) throws Throwable {
+
+        log();
+        Object invokeSuper = methodProxy.invokeSuper(o, objects);
+        return invokeSuper;
+    }
+
+    /**
+     * 创建代理对象
+     *
+     */
+    public Object getProxyInstance(){
+
+        Enhancer enhancer = new Enhancer();//弟弟类
+        enhancer.setSuperclass(target.getClass());
+        enhancer.setCallback(this);//回调，当前类
+        return enhancer.create();
+
+    }
+
+
+    //要加的东西
+    void log(){
+        System.out.println(&quot;世界父辈阿巴瑟老佛爷&quot;);
+    }
+}
+</code></pre>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[Java并发编程之锁与线程池]]></title>
+        <id>https://nnego.github.io/E13nrh1_6/</id>
+        <link href="https://nnego.github.io/E13nrh1_6/">
+        </link>
+        <updated>2021-04-03T10:13:28.000Z</updated>
+        <content type="html"><![CDATA[<!-- more -->
+<h2 id="synchronized-关键字">synchronized 关键字</h2>
+<p>synchronized通过对象内部的一个叫做<strong>监视器锁</strong>的东西来实现的。</p>
+<p>监视器锁本身依赖于操作系统底层的<strong>互斥锁Mutex Lock</strong>来实现的。</p>
+<p>操作系统实现线程之间的切换需要从<strong>用户态</strong>转换到<strong>核心态</strong>，成本很高，状态转换要花费比较长的时间。</p>
+<p>这就是synchronized效率低的原因。这种依赖于操作系统MutexLock实现的锁成为<strong>重量级锁</strong>。</p>
+<h3 id="synchronized-vs-volatile">synchronized v.s. volatile</h3>
+<p>Volatile：内存可见(不保证原子性，不保证互斥性)；防止CPU指令重排(内存屏障)</p>
+<p>扩展：</p>
+<p>如何保证内存可见？</p>
+<blockquote>
+<p><strong>JMM通过控制主内存与每个线程的本地内存之间的交互，来为Java程序员提供内存可见性保证。</strong></p>
+</blockquote>
+<p>什么是内存屏障？</p>
+<blockquote>
+<p><strong>MM属于语言级的内存模型，它确保在不同的编译器和不同的处理器平台之上，通过禁止特定类型的编译器重排序和处理器重排序，为程序员提供一致的内存可见性保证</strong>。</p>
+</blockquote>
+<h3 id="happens-before规则">happens-before规则</h3>
+<p>happens-before表示的是前一个操作的结果对于后续操作是可见的，它是一种表达多个线程之间对于内存的可见性。所以我们可以认为在 JMM 中，如果一个操作执行的结果需要对另一个操作可见，那么这两个操作必须要存在happens-before关系。这两个操作可以是同一个线程，也可以是不同的线程。</p>
+<h3 id="synchronized-vs-lock">Synchronized v.s. Lock</h3>
+<p>Synchronized 对象头的偏向锁标志位？</p>
+<h2 id="java中的锁">java中的锁</h2>
+<h4 id="对象头偏向锁">对象头偏向锁</h4>
+<p>锁的状态由低到高：</p>
+<p>无锁 -&gt; 偏向锁 -&gt; 轻量级锁 -&gt; 重量级锁</p>
+<p>只能升级，不能降级。</p>
+<table>
+<thead>
+<tr>
+<th>锁状态</th>
+<th>存储内容</th>
+<th>标志位</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>无锁</td>
+<td>对象的hashCode，对象分代年龄，是否是偏向锁(0)</td>
+<td>01</td>
+</tr>
+<tr>
+<td>偏向锁</td>
+<td>偏向线程ID，偏向时间戳，对象分代年龄，是否偏向锁(1)</td>
+<td>01</td>
+</tr>
+<tr>
+<td>轻量级锁</td>
+<td>指向栈中锁记录的指针</td>
+<td>00</td>
+</tr>
+<tr>
+<td>重量级锁</td>
+<td>指向互斥量的指针</td>
+<td>11</td>
+</tr>
+</tbody>
+</table>
+<p>锁的对比</p>
+<table>
+<thead>
+<tr>
+<th>锁</th>
+<th>优点</th>
+<th>缺点</th>
+<th>场景</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>偏向锁</td>
+<td>加解锁不需要额外消耗，和执行非异步方法相比仅存在纳秒级差距。</td>
+<td>若线程之间存在竞争，会代带来额外的锁撤销的消耗(撤销偏向锁会Stop The World)</td>
+<td>使用于只有一个线程访问同步代码场景</td>
+</tr>
+<tr>
+<td>轻量级锁</td>
+<td>竞争的线程不会阻塞，提高了系统的响应速度</td>
+<td>始终得不到锁的竞争线程，不断自旋会消耗CPU</td>
+<td>追求响应速度，同步代码块执行速度非常快</td>
+</tr>
+<tr>
+<td>重量级锁</td>
+<td>线程竞争不使用自旋，不会消耗CPU</td>
+<td>线程阻塞，响应时间慢</td>
+<td>追求吞吐量，同步块执行速度较慢</td>
+</tr>
+</tbody>
+</table>
+<p>锁如何升级</p>
+<ul>
+<li>
+<p>无锁</p>
+<p>无锁是指线程通过无限循环来执行更新操作，如果执行成功就退出循环，如果执行失败（有其他线程更新了值），则继续执行，直到成功为止。CAS操作就属于无锁。如果从性能的角度来看，无锁状态的性能是非常高的。</p>
+</li>
+<li>
+<p>偏向锁</p>
+<p><strong>偏向锁的前提假设是当一个线程获取锁，后面还有大概率该线程还会需要继续持有这把锁</strong> 。</p>
+<p>当有另外一个线程区尝试获取这个锁的时候，偏向模式就宣告结束。</p>
+<blockquote>
+<p>虚拟机启用偏向锁的参数<code>-XX:UseBiasedLocking</code>。如果当前偏向锁已启动，当锁对象第一次被线程获取的时候，虚拟机将会把对象头中的标志位设为<code>01</code>，即偏向模式。同时使用CAS操作把获取到这个锁的线程的ID记录在对象的Mark Word之中，如果CAS操作成功，持有偏向锁的线程以后每次进入这个锁的同步块时，虚拟机都可以不用再进行同步操作了。</p>
+</blockquote>
+</li>
+<li>
+<p>轻量级锁</p>
+<p><strong>当开始有锁的竞争了，那么偏向锁就会升级到轻量级锁；</strong></p>
+<p>当获取锁冲突多，时间越长的时候，线程肯定无法继续在这里死等了，所以只好先挂起，然后等前面获取锁的线程释放了锁之后，再开启下一轮的锁竞争，而这种形式就是我们的重量级锁。</p>
+<p>在代码进入同步块的时候，如果此同步对象没有被锁定（锁标志位为<code>01</code>状态），虚拟机首先将在当前线程的栈帧中建立一个名为锁记录（Lock Record）的空间，用于存储锁对象目前的Mark Word的拷贝。</p>
+<p>然后，虚拟机将使用CAS操作尝试将对象的Mark Word更新为指向Lock Record的指针。如果这个更新动作成功了，那么这个线程就拥有了该对象的锁，并且对象Mark Word的锁标志位（Mark Word的最后2bit）将转变为<code>00</code>，即表示此对象处于轻量级锁定状态。 <strong>轻量级锁的前提假设是对于绝大部分的锁，在整个同步周期内都是不存在竞争的，通过CAS操作来避免时候互斥锁的开销</strong></p>
+<p>关于自旋锁：</p>
+<blockquote>
+<p>自旋锁是一种通过让线程不释放当前的CPU执行一个忙循环，来尝试获取锁的方式。 <strong>自旋锁的前提假设是锁被其它线程占用的时间很短</strong> 。如果其它线程占用锁的时间很长，那么自旋的线程只会白白消耗处理器资源，而不会做任何有用的工作，反而带来性能上的浪费。自旋次数的默认值是<code>10</code>次，用户可以通过使用参数<code>-XX:PreBlockSpin</code>来更改。</p>
+</blockquote>
+</li>
+<li>
+<p>重量级锁</p>
+<p>当有两个及以上的线程争用同一个锁，那么轻量级锁就不再有效，要膨胀为重量级锁。锁标志的状态值变为<code>10</code>，Mark Word中存储的就是指向重量级锁（互斥量）的指针，后面等待锁的线程也要进入阻塞状态。</p>
+<blockquote>
+<ul>
+<li>偏向锁只有设置了<code>-XX:UseBiasedLocking</code>参数才会存在</li>
+<li>假设启用了偏向锁，对象头的锁标志位是<code>01</code>（和未锁定状态一样），但是存储的内容是偏向线程ID、偏向时间戳</li>
+<li>当线程获取偏向锁是通过CAS操作将对象头中存储的偏向线程ID更新为当前线程的ID</li>
+<li>对象是否被锁定是指对象头是否指向线程的锁记录（Lock Record）</li>
+<li>只有是轻量级锁或者重量级锁时对象才会被锁定</li>
+</ul>
+</blockquote>
+</li>
+</ul>
+<h2 id="callable-vs-runnable">callable vs runnable</h2>
+<ul>
+<li>callable可与Future结合拿到线程结束后的返回值</li>
+<li>callable的Callable的抽象方法有返回值。返回值类型就是泛型类型。</li>
+<li>Callable接口带泛型</li>
+<li>call()方法还能抛出异常。</li>
+</ul>
+<hr>
+<h2 id="线程池">线程池</h2>
+<p>为什么要用线程池？</p>
+<p>为了减少在创建和销毁线程上所花的时间和对系统资源的消耗，解决资源不足的问题。</p>
+<p>如果不适用线程池，有可能造成系统创建大量同类线程而消耗内存挥着”过度切换“问题。</p>
+<p>四种线程池</p>
+<ul>
+<li><strong>SingleThreadPool</strong>：单个线程线程池</li>
+<li><strong>FixedThreadPool</strong>：指定大小的固定大小线程池</li>
+<li><strong>CachedThreadPool</strong>：</li>
+<li><strong>ScheduledThreadPool</strong></li>
+</ul>
+<p>问题</p>
+<ul>
+<li><strong>FixedThreadPool</strong>和<strong>SingleThreadPool</strong>：允许的<strong>请求队列</strong>长度为Interger.MAX_VALUE，可能会堆积大量请求，造成OOM；</li>
+<li><strong>CachedThreadPool</strong>和<strong>ScheduledThreadPool</strong>：允许的创建线程数量为Integer.MAX_VALUE，可能会创建大量线程，造成OOM。</li>
+</ul>
+<p>线程池参数？</p>
+<ul>
+<li>corePoolSize：核心线程数量，定义了最小可以同时运行的线程数量，没有任务也不会被回收。</li>
+<li>maximumPoolSize：当线程数量<strong>大于核心线程数</strong>，且队列中存放的任务达到队列容量的时候，继续创建线程。</li>
+<li>keepalivetime：超过corePoolSize之后”临时线程“的存活时间。</li>
+<li>Time_unit：单位</li>
+<li>workQueue：当新任务来的时候，保存未执行的任务。大于corePoolSize时进入阻塞队列等待。</li>
+<li>threadFactory：线程工厂，用来创建线程，默认就行</li>
+<li>RejectdExecutionHandler handler：拒绝策略，线程数量达到maximumPoolSize大小，且workQueue也塞满的情况下，线程池调用handler拒绝策略来处理请求。</li>
+</ul>
+<p>拒绝策略：</p>
+<ul>
+<li>
+<p>AbortPolicy：默认拒绝策略，直接抛异常</p>
+</li>
+<li>
+<p>DiscardPolicy：直接抛弃不处理。</p>
+</li>
+<li>
+<p>DiscardOldestPolicy：丢弃队列中最老的任务。</p>
+</li>
+<li>
+<p>CallerRunsPolicy：将任务分配给当前执行execute方法的线程来执行</p>
+<p>自定义拒绝策略：实现<code>RejectedExecutionHandler</code>接口，可以实现友好的拒绝策略。包括但不限于：将数据存入数据库，用日志处理等。</p>
+</li>
+</ul>
+]]></content>
+    </entry>
     <entry>
         <title type="html"><![CDATA[Maven仓库配置阿里云镜像]]></title>
         <id>https://nnego.github.io/x6uhqGdh2/</id>
@@ -280,7 +743,7 @@ pom.xml通常有以下元素。</p>
 ]]></content>
     </entry>
     <entry>
-        <title type="html"><![CDATA[JVM学习笔记(一)]]></title>
+        <title type="html"><![CDATA[JVM学习笔记(一) 运行时数据区]]></title>
         <id>https://nnego.github.io/Eql641qxr/</id>
         <link href="https://nnego.github.io/Eql641qxr/">
         </link>
@@ -338,9 +801,17 @@ pom.xml通常有以下元素。</p>
 <p>方法区(Method Area)</p>
 <ul>
 <li>方法区同Java堆一样，是各个线程共享的内存区域，用于存储<strong>已被虚拟机加载</strong>的<code>类型信息</code>、<code>常量</code>、<code>静态变量</code>、<code>即时编译器编译后的代码缓存</code>等数据。《Java虚拟机规范》中把方法区描·述为堆的一个逻辑部分，但它却有一个别名“非堆”(Non-Heap)，目的是与Java堆区分开来。</li>
+<li>**static final Class 常量池 **放在方法区</li>
 </ul>
 </li>
 </ul>
+<p>方法区指的是理论概念。</p>
+<p>持久代/元空间指的是实现机制。</p>
+<blockquote>
+<p>JDK 1.6 及之前：有永久代，字符串常量池和运行时常量池都存在持久代。</p>
+<p>JDK 1.7 ： 有永久代，字符串常量池移到堆区 运行时常量池还在方法区。</p>
+<p>JDK 1.8 及之后 ：无永久代，字符串常量池在堆区，运行时常量池在元空间。</p>
+</blockquote>
 ]]></content>
     </entry>
 </feed>

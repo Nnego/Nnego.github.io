@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+ <head>
+     <meta charset="utf-8" />
+  <title>JVM学习笔记(二) 双亲委派与类加载 | 苏小霂的博客</title>
+  <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
+  <link rel="stylesheet" href="https://nnego.github.io/styles/main.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+   <script src="https://cdn.staticfile.org/highlight.js/9.15.9/highlight.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+ </head>
+ <body>
+     <div class="sidebar animated fadeInDown">
+   <div class="logo-title">
+    <div class="title">
+     <img src="https://nnego.github.io/images/avatar.png?v=1645612222838" style="width:127px;" />
+
+     <div class="description">
+      <p></p>
+     </div>
+    </div>
+   </div>
+   <ul class="social-links">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+   </ul>
+   <div class="footer">
+    <div class="by_farbox">
+   
+    </div>
+    
+
+    </div>
+   </div>
+  </div>
+  <div class="main">
+     <div class="page-top animated fadeInDown">
+    <div class="nav">
+    
+     <li><a  href="/">首页</a></li>
+
+     <li><a  href="/archives">归档</a></li>
+
+     <li><a  href="/tags">标签</a></li>
+
+     <li><a  href="https://nnego.github.io/about">关于</a></li>
+
+    </div>
+    <div class="information">
+     <div class="back_btn">
+      <li><a class="fa fa-chevron-left" onclick="window.history.go(-1)"> </a></li>
+     </div>
+    </div>
+   </div>
+   <div class="autopagerize_page_element">
+    <div class="content">
+     <div class="post-page">
+      <div class="post animated fadeInDown">
+       <div class="post-title">
+        <h3><a>JVM学习笔记(二) 双亲委派与类加载</a></h3>
+       </div>
+       <div class="post-content">
+        <p>双亲委派机制</p>
+<!-- more -->
+<h4 id="什么是双亲委派">什么是双亲委派？</h4>
+<ol>
+<li>类加载器收到类加载请求</li>
+<li>将这个请求向上委托给父类加载器完成，一直向上，直到bootstrap类加载器。</li>
+<li>bootstrap检查是否能加载这个类，能加载就结束，不能加载就抛出异常，通知子加载器加载该类</li>
+<li>重复步骤3。</li>
+</ol>
+<h4 id="双亲委派机制的作用">双亲委派机制的作用？</h4>
+<p>让基础类得以正确地统一地加载。出于一种安全的考虑，不让破坏基础类？越基础的类越由上层的类加载器加载。</p>
+<h4 id="破坏双亲委派机制">破坏双亲委派机制？</h4>
+<h5 id="为什么要破坏">为什么要破坏</h5>
+<p>基础类型要调用用户的代码怎么办？由于加载范围限制，某些情况父要委托子加载Class，就不得不破坏双亲委派机制。</p>
+<h5 id="破坏方法">破坏方法</h5>
+<p>线程上下文类加载器(ThreadContextClassLoader)</p>
+<p>Java.lang.Thread.setContextClassLoader()方法</p>
+<p>JDK1.6提供了<code>java.util.ServiceProvider</code>类</p>
+<h3 id="类加载">类加载</h3>
+<h4 id="启动程序如何查看加载了哪些类">启动程序如何查看加载了哪些类</h4>
+<p>-XX:+TraceClassLoading [类名]</p>
+<p>-verbose [类名]</p>
+<h4 id="类必须初始化的时机">类必须初始化的时机</h4>
+<p>1.遇到 new、getstatic、putstatic、invokestatic 4 个字节码指令时。</p>
+<p>2.使用 java.lang.relect 包的方法对类进行反射调用时。</p>
+<p>3.当初始化一个类的时候，如果父类没被初始化，则先初始化父类。</p>
+<p>4.当虚拟机启动时，指定了执行主类（main()的方法的那个类），则需要先初始化这个主类。</p>
+<p>5.JDK1.7 动态语言支持时，如果一个 java.lang.invoke.MethodHandle 实例最后解析结果 REF<em>getStatic,REF</em>putStatic,REF_invokeStatic 的方法句柄，且该句柄对应的类没有初始化，则需要先初始化这个类。</p>
+<h4 id="类加载的过程类的生命周期">类加载的过程/类的生命周期</h4>
+<ol>
+<li>加载</li>
+</ol>
+<ul>
+<li>
+<p>将类以全类名方式获取二进制流，</p>
+</li>
+<li>
+<p>字节流的静态存储结构==&gt;方法区的运行时数据结构。</p>
+</li>
+<li>
+<p>生成描述该类的Class对象。作为在方法区内这个类的数据的访问入口。</p>
+</li>
+</ul>
+<ol start="2">
+<li>链接</li>
+</ol>
+<p>2.1 验证</p>
+<ul>
+<li>文件格式验证</li>
+<li>元数据验证</li>
+<li>字节码验证</li>
+<li>符号引用验证</li>
+</ul>
+<p>2.2 准备</p>
+<p>​ 该阶段是正式为类变量分配内存并设置类变量初始值。强调一点，这里说的类变量是指被 static 修饰的，而不是实例变量。</p>
+<p>2.3 解析</p>
+<p>​ 该阶段虚拟机将常量池内的符号引用替换为直接引用的过程。</p>
+<ol start="3">
+<li>初始化</li>
+</ol>
+<p>类或者类执行初始化方法，类变量真正被赋值的阶段。</p>
+<ol start="4">
+<li>
+<p>使用</p>
+</li>
+<li>
+<p>卸载</p>
+</li>
+</ol>
+
+       </div>
+       <div class="post-footer">
+        <div class="meta">
+         <div class="info">
+          <i class="fa fa-sun-o"></i>
+          <span class="date">2022-02-23</span>
+          <i class="fa fa-tag"></i>
+          
+          <a class="tag" href="https://nnego.github.io/_PzzGB-wA/" title="Java">Java </a>
+          
+         </div>
+        </div>
+       </div>
+      </div>
+      <div class="share">
+       <div class="evernote">
+        <a class="fa fa-bookmark" href="javascript:(function(){EN_CLIP_HOST='http://www.evernote.com';try{var%20x=document.createElement('SCRIPT');x.type='text/javascript';x.src=EN_CLIP_HOST+'/public/bookmarkClipper.js?'+(new%20Date().getTime()/100000);document.getElementsByTagName('head')[0].appendChild(x);}catch(e){location.href=EN_CLIP_HOST+'/clip.action?url='+encodeURIComponent(location.href)+'&amp;title='+encodeURIComponent(document.title);}})();" ref="nofollow" target="_blank"></a>
+       </div>
+       <div class="weibo">
+        <a class="fa fa-weibo" href="javascript:void((function(s,d,e){try{}catch(e){}var f='http://service.weibo.com/share/share.php?',u=d.location.href,p=['url=',e(u),'&amp;title=',e(d.title),'&amp;appkey=2924220432'].join('');function a(){if(!window.open([f,p].join(''),'mb',['toolbar=0,status=0,resizable=1,width=620,height=450,left=',(s.width-620)/2,',top=',(s.height-450)/2].join('')))u.href=[f,p].join('');};if(/Firefox/.test(navigator.userAgent)){setTimeout(a,0)}else{a()}})(screen,document,encodeURIComponent));"></a>
+       </div>
+       <div class="twitter">
+        <a class="fa fa-twitter" href="http://twitter.com/home?status=,https://nnego.github.io/_F_qtsYNS/,;"></a>
+       </div>
+      </div>
+      <div class="pagination">
+       <ul class="clearfix">
+
+        
+        <li class="next pagbuttons"><a class="btn" role="navigation" href="https://nnego.github.io/fGaED5wIY/" title=" Linux 常用命令之磁盘占用">下一篇</a></li>
+        
+       </ul>
+      </div>
+        
+     </div>
+    </div>
+   </div>
+  </div>
+  <script src="https://nnego.github.io/media/scripts/jquery.js"></script>
+  <script src="https://nnego.github.io/media/scripts/jquery-migrate-1.2.1.min.js"></script>
+  <script src="https://nnego.github.io/media/scripts/jquery.appear.js"></script>
+
+
+ </body>
+</html>

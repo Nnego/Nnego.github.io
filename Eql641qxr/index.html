@@ -2,7 +2,7 @@
 <html lang="zh-CN">
  <head>
      <meta charset="utf-8" />
-  <title>JVM学习笔记(一) | 苏小霂的博客</title>
+  <title>JVM学习笔记(一) 运行时数据区 | 苏小霂的博客</title>
   <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
   <link rel="stylesheet" href="https://nnego.github.io/styles/main.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
@@ -13,7 +13,7 @@
      <div class="sidebar animated fadeInDown">
    <div class="logo-title">
     <div class="title">
-     <img src="https://nnego.github.io/images/avatar.png?v=1615823290314" style="width:127px;" />
+     <img src="https://nnego.github.io/images/avatar.png?v=1645612222838" style="width:127px;" />
 
      <div class="description">
       <p></p>
@@ -77,7 +77,7 @@
      <div class="post-page">
       <div class="post animated fadeInDown">
        <div class="post-title">
-        <h3><a>JVM学习笔记(一)</a></h3>
+        <h3><a>JVM学习笔记(一) 运行时数据区</a></h3>
        </div>
        <div class="post-content">
         <h3 id="运行时数据区">运行时数据区</h3>
@@ -133,9 +133,17 @@
 <p>方法区(Method Area)</p>
 <ul>
 <li>方法区同Java堆一样，是各个线程共享的内存区域，用于存储<strong>已被虚拟机加载</strong>的<code>类型信息</code>、<code>常量</code>、<code>静态变量</code>、<code>即时编译器编译后的代码缓存</code>等数据。《Java虚拟机规范》中把方法区描·述为堆的一个逻辑部分，但它却有一个别名“非堆”(Non-Heap)，目的是与Java堆区分开来。</li>
+<li>**static final Class 常量池 **放在方法区</li>
 </ul>
 </li>
 </ul>
+<p>方法区指的是理论概念。</p>
+<p>持久代/元空间指的是实现机制。</p>
+<blockquote>
+<p>JDK 1.6 及之前：有永久代，字符串常量池和运行时常量池都存在持久代。</p>
+<p>JDK 1.7 ： 有永久代，字符串常量池移到堆区 运行时常量池还在方法区。</p>
+<p>JDK 1.8 及之后 ：无永久代，字符串常量池在堆区，运行时常量池在元空间。</p>
+</blockquote>
 
        </div>
        <div class="post-footer">
