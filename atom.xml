@@ -2,13 +2,174 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://nnego.github.io</id>
     <title>苏小霂的博客</title>
-    <updated>2022-03-23T01:57:21.697Z</updated>
+    <updated>2022-03-23T02:03:24.048Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://nnego.github.io"/>
     <link rel="self" href="https://nnego.github.io/atom.xml"/>
     <logo>https://nnego.github.io/images/avatar.png</logo>
     <icon>https://nnego.github.io/favicon.ico</icon>
     <rights>All rights reserved 2022, 苏小霂的博客</rights>
+    <entry>
+        <title type="html"><![CDATA[ClickHouse安装与使用]]></title>
+        <id>https://nnego.github.io/VphV8ID1D/</id>
+        <link href="https://nnego.github.io/VphV8ID1D/">
+        </link>
+        <updated>2022-02-22T14:22:22.000Z</updated>
+        <summary type="html"><![CDATA[<blockquote>
+<p>ClickHouse是一个用于联机分析(OLAP)的列式数据库管理系统(DBMS)。</p>
+</blockquote>
+]]></summary>
+        <content type="html"><![CDATA[<blockquote>
+<p>ClickHouse是一个用于联机分析(OLAP)的列式数据库管理系统(DBMS)。</p>
+</blockquote>
+<!-- more -->
+<h3 id="clickhouse-安装">clickhouse 安装</h3>
+<p>环境: CentOS 7 x64<br>
+安装方式: 在线yum安装</p>
+<pre><code class="language-shell">sudo yum install yum-utils
+sudo rpm --import https://repo.clickhouse.tech/CLICKHOUSE-KEY.GPG
+sudo yum-config-manager --add-repo https://repo.clickhouse.tech/rpm/clickhouse.repo
+sudo yum install clickhouse-server clickhouse-client
+</code></pre>
+<p>将clickhouse注册为系统服务</p>
+<pre><code class="language-shell">systemctl enable clockhouse-server.service
+</code></pre>
+<hr>
+<h3 id="clickhouse卸载">clickhouse卸载</h3>
+<ol>
+<li>找出yum安装过的clickhouse程序及依赖：</li>
+</ol>
+<p><code>yum list installed | grep clickhouse</code></p>
+<pre><code>clickhouse-client.noarch           22.2.2.1-2                          @clickhouse-stable
+clickhouse-common-static.x86_64    22.2.2.1-2                          @clickhouse-stable
+clickhouse-server.noarch           22.2.2.1-2                          @clickhouse-stable
+</code></pre>
+<ol start="2">
+<li>依次yum remove</li>
+</ol>
+<p><code>yum remove -y clickhouse-client</code></p>
+<p><code>yum remove -y clickhouse-common-static</code></p>
+<ol start="3">
+<li>删除clickhouse的配置文件和数据文件，日志文件等</li>
+</ol>
+<p><code>rm -rf /var/lib/clickhouse*</code></p>
+<p><code>rm -rf /etc/clickhouse*</code></p>
+<p><code>rm -rf /var/log/clickhouse-server/*</code></p>
+<hr>
+<h3 id="clickhouse-配置">clickhouse 配置</h3>
+<blockquote>
+<p>默认配置文件位置</p>
+</blockquote>
+<p>服务端配置文件: <code>/etc/clickhouse-server</code></p>
+<p><code>config.xml 全局配置文件</code></p>
+<p><code>user.xml 用户配置文件</code></p>
+<p>数据文件: <code>/var/lib/clickhouse</code></p>
+<p>日志存放目录: <code>/var/log/clickhouse-server</code></p>
+<blockquote>
+<p>开启远程连接</p>
+</blockquote>
+<pre><code class="language-shell"># 1. 编辑配置文件
+vim /etc/clickhouse-server/config.xml
+
+# 2. 找到
+&lt;listen_host&gt;::&lt;/listen_host&gt;
+# 3.去掉注释
+
+# 4.重启服务
+systemctl restart clickhouse-server.service
+</code></pre>
+<blockquote>
+<p>设置密码</p>
+</blockquote>
+<pre><code class="language-shell">vim /etc/clickhouse-server/user.xml
+</code></pre>
+<p>找到<code>&lt;password&gt;</code>标签页，添加密码，保存退出，重启服务即可</p>
+<h3 id="连接到clickhouse-server">连接到ClickHouse-Server</h3>
+<ol>
+<li>命令行工具(clickhouse-client)</li>
+</ol>
+<pre><code>查找配置文件中的tcp端口
+cat /etc/clickhouse-server/config.xml | grep &quot;&lt;tcp_port&gt;&quot;
+
+输出：
+&lt;tcp_port&gt;9001&lt;/tcp_port&gt;
+</code></pre>
+<p>看到tcp端口是9001，用客户端连接：</p>
+<pre><code>clickhouse-client --password 123456 --port 9001
+</code></pre>
+<p>不加 <code>--port</code> 选项，默认是9000端口。</p>
+<ol start="2">
+<li>图形化界面软件(DBeaver, DataGrip)</li>
+</ol>
+<pre><code>查看配置文件，查找http端口，用图形化界面工具连接的时候，端口就填这个
+
+cat /etc/clickhouse-server/config.xml | grep &quot;&lt;http_port&gt;&quot;
+</code></pre>
+<h3 id="clickhouse踩坑">clickhouse踩坑</h3>
+<h4 id="数据格式">数据格式</h4>
+<h5 id="nullable问题">Nullable问题</h5>
+<p>建表时，指定某个字段可为空，语法为 <code>字段名 Nullable(类型)</code> ，这样插入数据时，字段可为Null值。这样会带来性能问题：</p>
+<blockquote>
+<p>表的列中存储 <code>Nullable</code> 类型值，ClickHouse 除了使用带有值的普通文件外，还使用带有 <code>NULL</code> 掩码的单独文件。 掩码文件中的条目允许 ClickHouse 区分每个表行的 <code>NULL</code> 和相应数据类型的默认值。 由于附加了新文件，<code>Nullable</code> 列与类似的普通文件相比消耗额外的存储空间。</p>
+</blockquote>
+<h5 id="枚举类型问题">枚举类型问题</h5>
+<p>clickhouse中的枚举类型和MySQL中的不太一样，声明的时候，格式是这样的：</p>
+<pre><code class="language-shell">licence_plate_type Nullable(Enum8('yellow' = 1, 'blue' = 2, 'green' = 3)),
+</code></pre>
+<h5 id="order-by问题">order by问题</h5>
+<p>千万以上数据集进行order by 查询时需要搭配where 条件和limit语句一起使用。</p>
+<h4 id="去重查询">去重查询</h4>
+<p>用uniqCombined替代distinct性能可提升10倍以上，uniqCombined底层采用类似HyperLogLog算法实现，能接收2%左右的数据误差，可直接使用这种去重方式提升查询性能。</p>
+<h4 id="数据导入编码问题">数据导入编码问题</h4>
+<p><s>latin1字符集导入ck的时候会报错，或许是MySQL数据库版本问题?</s></p>
+<p>MySQL 旧版本的时间日期格式为 <code>0000-00-00 00:00:00</code> 的记录，导入新版MySQL会报错。</p>
+<p>解决方式：</p>
+<pre><code>SELECT @@SESSION.sql_mode;
+</code></pre>
+<p>如果结果有NO_ZERO_DATE和NO_ZERO_IN_DATE，就是我们日期不能设为0000-00-00的原因，把sql_mode中的这两个去掉就行了</p>
+<pre><code>set @@global.sql_mode=(select replace(@@sql_mode,'NO_ZERO_IN_DATE,NO_ZERO_DATE',''));
+</code></pre>
+<h4 id="使用datax导入数据的问题">使用dataX导入数据的问题</h4>
+<h5 id="datax没有clickhouse插件解决方案">dataX没有clickhouse插件解决方案</h5>
+<p>默认下载安装的dataX不包含clickhousereader和clickhousewriter的插件，因此如果要从MySQL导入数据，需要自己手动编译dataX的源码。</p>
+<h5 id="编译失败先准备依赖">编译失败，先准备依赖</h5>
+<p>先下载源码</p>
+<pre><code>git clone git@gitee.com:nnego/eigenbase-properties.git
+#编译为jar
+mvn clean install
+#手动安装jar，改为你自己的目录
+mvn install:install-file -DgroupId=eigenbase -DartifactId=eigenbase-properties -Dversion=1.1.4 -Dpackaging=jar -Dfile=/Users/htc/code/git/eigenbase-properties/target/eigenbase-properties-1.1.7-SNAPSHOT.jar
+</code></pre>
+<p>下载DataX并编译</p>
+<pre><code>#下载DataX源码
+git clone https://github.com/alibaba/DataX.git
+#打开根pom文件，把不需要的子模块注释掉
+#编译dataX
+mvn -U clean package assembly:assembly -Dmaven.test.skip=true
+</code></pre>
+<p>编译成功之后进到 <code>target/datax/datax/plugin</code> 目录中找到clickhouse的读写插件，复制到安装目录对应位置即可。</p>
+<h4 id="其他注意事项">其他注意事项</h4>
+<ul>
+<li>
+<p>clickhouse必须指定密码，否则dataX同步会失败。clickhouse更改密码在配置文件 <code>users.xml</code> 里。</p>
+</li>
+<li>
+<p>显示成功但是实际上并没有导入记录</p>
+</li>
+</ul>
+<p>dataX日志输出显示成功导入数据，但是实际clickhouse数据库里面并没有数据。</p>
+<p><s>观察日志输出？猜想可能出现问题的原因？？</s></p>
+<p>原因：</p>
+<p>采用ReplacingMergeTree，order by id，id是主键，相同主键只保留最新的记录。源数据的多条记录id都是0，所以会触发merge，最终只剩下一条数据，其他数据都被删除了。</p>
+<p>怎么办：</p>
+<p>重新建表，表引擎改为MergeTree即可。</p>
+<h4 id="kafka消息格式问题">kafka消息格式问题</h4>
+<p>json的key，value 大小驼峰 和ORM框架的问题。</p>
+<h4 id="大表join的性能优化问题">大表join的性能优化问题</h4>
+<p>参考链接：</p>
+<p><a href="https://www.jianshu.com/p/f9a54193dc63">从携程性能测试case中重新认识clickhouse - 简书 (jianshu.com)</a></p>
+]]></content>
+    </entry>
     <entry>
         <title type="html"><![CDATA[JVM学习笔记(二) 双亲委派与类加载]]></title>
         <id>https://nnego.github.io/_F_qtsYNS/</id>
@@ -738,78 +899,6 @@ pom.xml通常有以下元素。</p>
 <p>应用层协议(或程序)可能直接跳过传输层协议而直接使用网络层的协议。比如ping程序和OSPF协议。</p>
 <p>应用层协议(或程序)通常既可使用TCP服务，又可使用UDP服务，如DNS。</p>
 <p>可以查看<code>/etc/services</code>文件查找所有知名的应用层协议，以及他们都能使用哪些传输层服务。</p>
-]]></content>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[JVM学习笔记(一) 运行时数据区]]></title>
-        <id>https://nnego.github.io/Eql641qxr/</id>
-        <link href="https://nnego.github.io/Eql641qxr/">
-        </link>
-        <updated>2020-12-14T14:38:57.000Z</updated>
-        <content type="html"><![CDATA[<h3 id="运行时数据区">运行时数据区</h3>
-<p>Java虚拟机运行时将其管理的内存区域划分为几个数据区。包括以下几个：</p>
-<ul>
-<li>
-<p>虚拟机栈(VM Stack)</p>
-<ul>
-<li>虚拟机栈也是线程私有的。生命周期与线程相同。</li>
-<li>虚拟机栈描述的是<code>Java方法执行的线程内存模型</code>：每个方法执行时，Java虚拟机会同步创建一个<code>栈帧(Stack Frame)</code>用于存储<code>局部变量表</code>，<code>操作数栈</code>，<code>动态链接</code>，<code>方法出口</code>等信息。一个方法从执行到结束，对应着一个栈帧在虚拟机栈中从入栈到出栈的过程。</li>
-<li>对于C/C++中所谓的堆内存和栈内存，在Java中划分的要更为细腻一些。栈通常指的就是这里的虚拟机栈，或者更多情况下指的就是虚拟机栈的<code>局部变量表</code>部分。</li>
-<li>局部变量表存放了编译器克制的各种Java虚拟机基本数据结构(boolean, byte, char, short, int, long, float, double)、对象引用(reference类型，指向对象起始地址的指针，或者指向一个代表对象的句柄或者其他与此对象相关的位置)和returnAddress类型(指向一条字节码指令的地址)。</li>
-<li>上述数据结构在局部变量表中的存储空间以<code>局部变量槽</code>(slot)来表示的。其中64位的long和double型占两个槽，其余占1个。具体的每个槽占32bit还是64bit，取决于具体的虚拟机如何实现。</li>
-<li>《Java虚拟机规范》中，对此内存区域规定了两类异常情况：
-<ol>
-<li>线程请求栈深超过虚拟机所允许栈深，抛<code>StackOverflowError</code>异常。</li>
-<li>若虚拟机栈容量可动态伸展，栈扩展是无法申请足够内存时，抛<code>OutOfMemoryError</code>异常。</li>
-</ol>
-</li>
-</ul>
-</li>
-<li>
-<p>本地方法栈(Native Method Stack)</p>
-<p>该内存区域发挥的作用类似虚拟机栈，只是为本地方法提供服务。有的虚拟机(如HotSpot)直接把本地方法栈和虚拟机栈合为一体。抛异常也同虚拟机栈。</p>
-</li>
-<li>
-<p>程序计数器(Program Counter Register)</p>
-<ul>
-<li>
-<p>是一块较小的<strong>内存空间</strong> 。是程序控制流的指示器。可以看做当前线程所执行java字节码的行号指示器。</p>
-</li>
-<li>
-<p>是程序控制流的指示器，分支、循环、跳转、异常处理、线程恢复等基础功能都要依赖这个计数器来完成。</p>
-</li>
-<li>
-<p>线程私有。</p>
-</li>
-<li>
-<p>若线程执行的是一个Java方法，PCR记录的是<strong>正在执行的虚拟机字节码指令的地址</strong>；如果是本地方法(Native)，这个计数器的值应为空。</p>
-</li>
-</ul>
-</li>
-<li>
-<p>堆区(Heap)</p>
-<ul>
-<li>Java堆(Java Heap)是虚拟机所管理的内存中最大的一块儿。堆是所有线程共享的内存区域，在虚拟机启动时创建。此内存区域的唯一作用就是存放<code>对象实例</code>，java世界里几乎所有的对象实例都在这里分配内存。</li>
-<li>Java堆是<strong>垃圾收集器</strong>管理的内存区域。GC操作的目标区域。</li>
-<li>堆可以处于物理上不连续的内存空间中，但在逻辑上它应该被视为连续的。堆即可被实现为固定的，也可被实现为可扩展的，不过当前主流虚拟机都将其实现为可扩展的。(通过参数 -Xms 和 -Xmx设定)。</li>
-<li>如果在Java堆中没有内存完成实例分配，并且堆也无法再扩展时，抛<code>OutOfMemoryError</code>异常。</li>
-</ul>
-</li>
-<li>
-<p>方法区(Method Area)</p>
-<ul>
-<li>方法区同Java堆一样，是各个线程共享的内存区域，用于存储<strong>已被虚拟机加载</strong>的<code>类型信息</code>、<code>常量</code>、<code>静态变量</code>、<code>即时编译器编译后的代码缓存</code>等数据。《Java虚拟机规范》中把方法区描·述为堆的一个逻辑部分，但它却有一个别名“非堆”(Non-Heap)，目的是与Java堆区分开来。</li>
-<li>**static final Class 常量池 **放在方法区</li>
-</ul>
-</li>
-</ul>
-<p>方法区指的是理论概念。</p>
-<p>持久代/元空间指的是实现机制。</p>
-<blockquote>
-<p>JDK 1.6 及之前：有永久代，字符串常量池和运行时常量池都存在持久代。</p>
-<p>JDK 1.7 ： 有永久代，字符串常量池移到堆区 运行时常量池还在方法区。</p>
-<p>JDK 1.8 及之后 ：无永久代，字符串常量池在堆区，运行时常量池在元空间。</p>
-</blockquote>
 ]]></content>
     </entry>
 </feed>
