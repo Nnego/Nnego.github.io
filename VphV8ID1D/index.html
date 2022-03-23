@@ -13,7 +13,7 @@
      <div class="sidebar animated fadeInDown">
    <div class="logo-title">
     <div class="title">
-     <img src="https://nnego.github.io/images/avatar.png?v=1648002068450" style="width:127px;" />
+     <img src="https://nnego.github.io/images/avatar.png?v=1648002869925" style="width:127px;" />
 
      <div class="description">
       <p></p>
@@ -168,6 +168,39 @@ cat /etc/clickhouse-server/config.xml | grep &quot;&lt;http_port&gt;&quot;
 </code></pre>
 <h3 id="clickhouse踩坑">clickhouse踩坑</h3>
 <h4 id="数据格式">数据格式</h4>
+<p>建表语句格式如下</p>
+<pre><code class="language-sql">CREATE TABLE default.toll_transaction
+(
+    `id` Int64,
+    `transaction_id` String,
+    `user_uuid` String,
+    `user_id` Int64,
+    `money_destination` Int32,
+    `trade_type` Enum8('RECHARGE' = 1, 'PAY' = 2, 'CROSS' = 3, 'COUPON' = 4, 'WITHDRAW' = 5, 'REFUND' = 6, 'PENALTY' = 7, 'WASH' = 8, 'CHARGE' = 9, 'VIP' = 10, 'SLOTSOLD' = 11) DEFAULT 'PAY',
+    `pay_type` Enum8('BALANCE' = 1, 'WECHAT' = 2, 'ALIPAY' = 3, 'BANK' = 4, 'PLATFORM' = 5, 'BOC' = 6, 'ALIPAY_NOSENSE' = 7, 'BOC_QUICKPAY' = 8, 'WECHAT_NOSENSE' = 9, 'UNION_SCAN_ALI' = 10, 'UNION_SCAN_WECHAT' = 11, 'UNION_ALI' = 12, 'UNION_WECHAT' = 13, 'BOC_ALI' = 14, 'BOC_WECHAT' = 15, 'BOC_BANK' = 16, 'ICBC_ALI' = 17, 'ICBC_WECHAT' = 18, 'ICBC_QUICKPAY' = 19) DEFAULT 'BALANCE',
+    `amount` Decimal(15, 2),
+    `lucky_money_amount` Decimal(15, 2),
+    `third_party_transaction_id` String,
+    `licence_plate` String,
+    `transaction_time` Int64,
+    `transaction_result` Enum8('SUCCESS' = 1, 'PENDING' = 2, 'FAILED' = 3, 'PROCESSING' = 4),
+    `order_id` String,
+    `park_name` String,
+    `parking_time` Int32,
+    `updated_at` DateTime DEFAULT now(),
+    `created_at` DateTime,
+    `prepay_id` String,
+    `operator_id` Int64,
+    `park_id` Int64,
+    `used_lucky_money_id` Int64 DEFAULT 0,
+    `status` Int32 DEFAULT 0,
+    `slot_renewal_record_id` Int64,
+    `redemption_id` Int64
+)
+ENGINE = ReplacingMergeTree(created_at)
+ORDER BY id
+SETTINGS index_granularity = 8192;
+</code></pre>
 <h5 id="nullable问题">Nullable问题</h5>
 <p>建表时，指定某个字段可为空，语法为 <code>字段名 Nullable(类型)</code> ，这样插入数据时，字段可为Null值。这样会带来性能问题：</p>
 <blockquote>

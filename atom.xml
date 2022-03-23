@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://nnego.github.io</id>
     <title>苏小霂的博客</title>
-    <updated>2022-03-23T02:21:22.037Z</updated>
+    <updated>2022-03-23T02:34:33.771Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://nnego.github.io"/>
     <link rel="self" href="https://nnego.github.io/atom.xml"/>
@@ -210,6 +210,39 @@ cat /etc/clickhouse-server/config.xml | grep &quot;&lt;http_port&gt;&quot;
 </code></pre>
 <h3 id="clickhouse踩坑">clickhouse踩坑</h3>
 <h4 id="数据格式">数据格式</h4>
+<p>建表语句格式如下</p>
+<pre><code class="language-sql">CREATE TABLE default.toll_transaction
+(
+    `id` Int64,
+    `transaction_id` String,
+    `user_uuid` String,
+    `user_id` Int64,
+    `money_destination` Int32,
+    `trade_type` Enum8('RECHARGE' = 1, 'PAY' = 2, 'CROSS' = 3, 'COUPON' = 4, 'WITHDRAW' = 5, 'REFUND' = 6, 'PENALTY' = 7, 'WASH' = 8, 'CHARGE' = 9, 'VIP' = 10, 'SLOTSOLD' = 11) DEFAULT 'PAY',
+    `pay_type` Enum8('BALANCE' = 1, 'WECHAT' = 2, 'ALIPAY' = 3, 'BANK' = 4, 'PLATFORM' = 5, 'BOC' = 6, 'ALIPAY_NOSENSE' = 7, 'BOC_QUICKPAY' = 8, 'WECHAT_NOSENSE' = 9, 'UNION_SCAN_ALI' = 10, 'UNION_SCAN_WECHAT' = 11, 'UNION_ALI' = 12, 'UNION_WECHAT' = 13, 'BOC_ALI' = 14, 'BOC_WECHAT' = 15, 'BOC_BANK' = 16, 'ICBC_ALI' = 17, 'ICBC_WECHAT' = 18, 'ICBC_QUICKPAY' = 19) DEFAULT 'BALANCE',
+    `amount` Decimal(15, 2),
+    `lucky_money_amount` Decimal(15, 2),
+    `third_party_transaction_id` String,
+    `licence_plate` String,
+    `transaction_time` Int64,
+    `transaction_result` Enum8('SUCCESS' = 1, 'PENDING' = 2, 'FAILED' = 3, 'PROCESSING' = 4),
+    `order_id` String,
+    `park_name` String,
+    `parking_time` Int32,
+    `updated_at` DateTime DEFAULT now(),
+    `created_at` DateTime,
+    `prepay_id` String,
+    `operator_id` Int64,
+    `park_id` Int64,
+    `used_lucky_money_id` Int64 DEFAULT 0,
+    `status` Int32 DEFAULT 0,
+    `slot_renewal_record_id` Int64,
+    `redemption_id` Int64
+)
+ENGINE = ReplacingMergeTree(created_at)
+ORDER BY id
+SETTINGS index_granularity = 8192;
+</code></pre>
 <h5 id="nullable问题">Nullable问题</h5>
 <p>建表时，指定某个字段可为空，语法为 <code>字段名 Nullable(类型)</code> ，这样插入数据时，字段可为Null值。这样会带来性能问题：</p>
 <blockquote>
@@ -1072,124 +1105,351 @@ public class CGLibProxy implements MethodInterceptor {
 ]]></content>
     </entry>
     <entry>
-        <title type="html"><![CDATA[CentOS对时服务Chrony]]></title>
-        <id>https://nnego.github.io/FraynM9Bh/</id>
-        <link href="https://nnego.github.io/FraynM9Bh/">
+        <title type="html"><![CDATA[HashMap学习笔记(一)]]></title>
+        <id>https://nnego.github.io/OgUovHA8F/</id>
+        <link href="https://nnego.github.io/OgUovHA8F/">
         </link>
-        <updated>2021-01-19T02:08:59.000Z</updated>
-        <content type="html"><![CDATA[<!-- more -->
-<h3 id="安装chrony">安装chrony</h3>
-<pre><code class="language-shell">yum install chrony -y
+        <updated>2021-02-09T02:27:43.000Z</updated>
+        <summary type="html"><![CDATA[<p>HashMap相关知识点</p>
+]]></summary>
+        <content type="html"><![CDATA[<p>HashMap相关知识点</p>
+<!-- more -->
+<h4 id="扰动函数">扰动函数</h4>
+<pre><code class="language-java">        static final int hash(Object key) {
+        int h;
+        return (key == null) ? 0 : (h = key.hashCode()) ^ (h &gt;&gt;&gt; 16);
+    }
 </code></pre>
-<h3 id="查看chrony的程序运行环境">查看chrony的程序运行环境</h3>
-<pre><code class="language-shell">▶ rpm -ql chrony
-/etc/NetworkManager/dispatcher.d/20-chrony
-/etc/chrony.conf 主配置文件
-/etc/chrony.keys
-/etc/dhcp/dhclient.d/chrony.sh
-/etc/logrotate.d/chrony
-/etc/sysconfig/chronyd
-/usr/bin/chronyc 客户端可执行文件
-...
-</code></pre>
-<p>使用<code>man chrony.conf</code>了解配置文件的格式</p>
-<h3 id="配置">配置</h3>
 <ol>
-<li>配置chronyd服务开机自启</li>
+<li>取对象的hashCode(32位整数)。</li>
+<li>获取高16位(h &gt;&gt;&gt; 16 无符号位移16位)。</li>
+<li>跟自己的hashCode高16位进行亦或运算。</li>
 </ol>
-<p><code>systemctl enable chronyd.service</code></p>
+<h4 id="取模运算">取模运算</h4>
+<pre><code class="language-java">return hash(key) &amp; (length - 1)
+</code></pre>
+<p>这个length一定是2的整数次幂，减1保证二进制全是1。用位运算取模。</p>
+<h4 id="put增加元素">PUT增加元素</h4>
+<ol>
+<li>
+<p>先通过hash值计算出key映射到哪个桶(扰动函数+ 取模)；</p>
+</li>
+<li>
+<p>如果桶上没有碰撞冲突，直接插入；</p>
+</li>
+<li>
+<p>如果出现冲突，则处理冲突：</p>
+</li>
+</ol>
+<p>​ a. 若使用传统的链式方法插入，链长度大于临界值，则进行链表树化；</p>
+<p>​ b. 若该桶使用红黑树处理冲突，则调用红黑树的插入方法插入数据。</p>
+<ol start="4">
+<li>
+<p>如果桶中存在重复的键，则为该键替换新值value；</p>
+</li>
+<li>
+<p>若现有kv对数量(即size)大于阈值threshold，则进行扩容</p>
+</li>
+</ol>
+<p>Put完整代码</p>
+<pre><code class="language-java">final V putVal(int hash, K key, V value, boolean onlyIfAbsent, boolean evict) {
+        Node&lt;K,V&gt;[] tab; Node&lt;K,V&gt; p; int n, i;
+
+              // 判断是不是第一次put数据，第一次put数据才申请分配内存 Node&lt;&gt;[] table
+        if ((tab = table) == null || (n = tab.length) == 0) 
+            n = (tab = resize()).length;
+              // 判断 通过hash索引到的桶里面有没有其他Node，没有就new一个node
+        if ((p = tab[i = (n - 1) &amp; hash]) == null) 
+            tab[i] = newNode(hash, key, value, null);
+        else { //桶内有数据，需要在桶内添加链表或者是红黑树结点
+            Node&lt;K,V&gt; e; K k;
+            if (p.hash == hash &amp;&amp;
+                ((k = p.key) == key || (key != null &amp;&amp; key.equals(k)))) //判断新key和旧key是否相等，重复的键则替换。
+                e = p;
+            else if (p instanceof TreeNode)//键不重复，且是红黑树结点，用红黑树的插入方法
+                e = ((TreeNode&lt;K,V&gt;)p).putTreeVal(this, tab, hash, key, value);
+            else {//键不重复，且是链表节点
+                for (int binCount = 0; ; ++binCount) { //循环
+                    if ((e = p.next) == null) { //链表为空或p指向最后一个链表结点，新建Node结点，链表长度大于树化阈值，树化；然而======&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;树化条件是(桶长度&gt;=64 &amp;&amp; 链表长度&gt;=8)，树化的时候检查如果桶长度不达标，就会扩容而不是树化
+                        p.next = newNode(hash, key, value, null); 
+                        if (binCount &gt;= TREEIFY_THRESHOLD - 1) // -1 for 1st
+                            treeifyBin(tab, hash);
+                        break;
+                    }
+                    if (e.hash == hash &amp;&amp;
+                        ((k = e.key) == key || (key != null &amp;&amp; key.equals(k)))) //同hash，同key
+                        break;
+                    p = e;// 等同于p = p.next;
+                }
+            }
+            if (e != null) { // existing mapping for key
+                V oldValue = e.value;
+                if (!onlyIfAbsent || oldValue == null)
+                    e.value = value; 
+                afterNodeAccess(e);
+                return oldValue;
+            }
+        }
+        ++modCount;
+        if (++size &gt; threshold)
+            resize();
+        afterNodeInsertion(evict);
+        return null;
+    }
+</code></pre>
+<h4 id="扩容">扩容</h4>
+<ol>
+<li>扩容的时机</li>
+</ol>
+<ul>
+<li>数组长度大于threshold</li>
+<li>bucket的链表长度大于8，且桶的数量小于64，再次发生hash碰撞不树化直接扩容。</li>
+</ul>
 <ol start="2">
-<li>重启chronyd服务</li>
+<li>扩容的内容</li>
 </ol>
-<p><code>systemctl restart chronyd.service</code></p>
-<ol start="3">
-<li>查看chronyd服务状态</li>
+<p>扩容之后，重新申请一个长度为原来2倍的数组，遍历原来hash表中每个元素，重新索引(hash)，很耗费性能。</p>
+<pre><code class="language-java">final Node&lt;K,V&gt;[] resize() {
+        Node&lt;K,V&gt;[] oldTab = table;
+        int oldCap = (oldTab == null) ? 0 : oldTab.length;
+        int oldThr = threshold;
+        int newCap, newThr = 0;
+        if (oldCap &gt; 0) {
+            if (oldCap &gt;= MAXIMUM_CAPACITY) {
+                threshold = Integer.MAX_VALUE;
+                return oldTab;
+            }
+            else if ((newCap = oldCap &lt;&lt; 1) &lt; MAXIMUM_CAPACITY &amp;&amp;
+                     oldCap &gt;= DEFAULT_INITIAL_CAPACITY)
+                newThr = oldThr &lt;&lt; 1; // double threshold
+        }
+        else if (oldThr &gt; 0) // initial capacity was placed in threshold
+            newCap = oldThr;
+        else {               // zero initial threshold signifies using defaults
+            newCap = DEFAULT_INITIAL_CAPACITY;
+            newThr = (int)(DEFAULT_LOAD_FACTOR * DEFAULT_INITIAL_CAPACITY);
+        }
+        if (newThr == 0) {
+            float ft = (float)newCap * loadFactor;
+            newThr = (newCap &lt; MAXIMUM_CAPACITY &amp;&amp; ft &lt; (float)MAXIMUM_CAPACITY ?
+                      (int)ft : Integer.MAX_VALUE);
+        }
+        threshold = newThr;
+        @SuppressWarnings({&quot;rawtypes&quot;,&quot;unchecked&quot;})
+        Node&lt;K,V&gt;[] newTab = (Node&lt;K,V&gt;[])new Node[newCap];
+        table = newTab;
+        if (oldTab != null) { //old为null表示第一次分配内存，没有必要挪元素。
+            for (int j = 0; j &lt; oldCap; ++j) {
+                Node&lt;K,V&gt; e;
+                if ((e = oldTab[j]) != null) {
+                    oldTab[j] = null;
+                    if (e.next == null)
+                        newTab[e.hash &amp; (newCap - 1)] = e;
+                    else if (e instanceof TreeNode)
+                        ((TreeNode&lt;K,V&gt;)e).split(this, newTab, j, oldCap);
+                    else { // preserve order
+                        Node&lt;K,V&gt; loHead = null, loTail = null;
+                        Node&lt;K,V&gt; hiHead = null, hiTail = null;
+                        Node&lt;K,V&gt; next;
+                        do {
+                            next = e.next;
+                              // 这里使用了巧妙的重新hash方法，重新索引的位置要么在原位置，要么在 原位置+oldCap 的位置。
+                            // e.hash直接和oldCap做&amp;运算，0表示在原位置，1表示在新位置。在不在新位置取决于高位的1bit。
+                            if ((e.hash &amp; oldCap) == 0) {
+                                if (loTail == null)
+                                    loHead = e;
+                                else
+                                    loTail.next = e;
+                                loTail = e;
+                            }
+                            else {
+                                if (hiTail == null)
+                                    hiHead = e;
+                                else
+                                    hiTail.next = e;
+                                hiTail = e;
+                            }
+                        } while ((e = next) != null);
+                        if (loTail != null) {
+                            loTail.next = null;
+                            newTab[j] = loHead;
+                        }
+                        if (hiTail != null) {
+                            hiTail.next = null;
+                            newTab[j + oldCap] = hiHead;
+                        }
+                    }
+                }
+            }
+        }
+        return newTab;
+    }
+</code></pre>
+<h4 id="树化">树化</h4>
+<p>总结：</p>
+<ol>
+<li>根据哈希表中元素个数确定是扩容还是树化。(树化条件 桶数量&gt;=阈值 &amp;&amp; 桶中链表长度&gt;=阈值，若其中一个条件不满足)</li>
+<li>如果是树化，遍历链表，新建树形结点，复制数据，建立树的连接。</li>
+<li>然后让桶中的第一个元素指向新创建的树根结点，替换桶的链表内容为树形化内容。</li>
 </ol>
-<p><code>systemctl status chronyd.service</code></p>
-<p>编辑<code>/etc/chrony.conf</code>配置文件:</p>
-<pre><code class="language-properties">  1 # Use public servers from the pool.ntp.org project.
-  2 # Please consider joining the pool (http://www.pool.ntp.org/join.html).
-  3 #server 0.centos.pool.ntp.org iburst
-  4 #server 1.centos.pool.ntp.org iburst
-  5 #server 2.centos.pool.ntp.org iburst
-  6 #server 3.centos.pool.ntp.org iburst
-  7 
-  8 server ntp1.aliyun.com iburst # 替换为aliyun服务器
-  9 server ntp2.aliyun.com iburst
- 10 server ntp3.aliyun.com iburst
- 11 server ntp4.aliyun.com iburst
- 12 
- 13 # Record the rate at which the system clock gains/losses time.
- 14 driftfile /var/lib/chrony/drift
- 15 
- 16 # Allow the system clock to be stepped in the first three updates
- 17 # if its offset is larger than 1 second.
- 18 makestep 1.0 3
- 19 
- 20 # Enable kernel synchronization of the real-time clock (RTC).
- 21 rtcsync
- 22 
- 23 # Enable hardware timestamping on all interfaces that support it.
- 24 #hwtimestamp *
- 25 
- 26 # Increase the minimum number of selectable sources required to adjust
- 27 # the system clock.
- 28 #minsources 2
- 29 
- 30 # Allow NTP client access from local network.
- 31 #allow 192.168.0.0/16
- 32 
- 33 # Serve time even if not synchronized to a time source.
- 34 #local stratum 10
- 35 
- 36 # Specify file containing keys for NTP authentication.
- 37 #keyfile /etc/chrony.keys
- 38 
- 39 # Specify directory for log files.
- 40 logdir /var/log/chrony
- 41 
- 42 # Select which information is logged.
- 43 #log measurements statistics tracking
-</code></pre>
-<h3 id="手动强制同步系统时钟">手动强制同步系统时钟</h3>
-<pre><code class="language-shell">chronyc -a makestep
-</code></pre>
 ]]></content>
     </entry>
     <entry>
-        <title type="html"><![CDATA[Maven仓库配置阿里云镜像]]></title>
-        <id>https://nnego.github.io/x6uhqGdh2/</id>
-        <link href="https://nnego.github.io/x6uhqGdh2/">
+        <title type="html"><![CDATA[MySQL其一]]></title>
+        <id>https://nnego.github.io/GSGgVwW_1/</id>
+        <link href="https://nnego.github.io/GSGgVwW_1/">
         </link>
-        <updated>2021-01-07T15:39:51.000Z</updated>
-        <content type="html"><![CDATA[<p>macOS Maven路径 一般在<br>
-<code>/usr/local/maven/apache-maven-3.6.3</code><br>
-进入<code>conf</code>目录，修改<code>settings.xml</code>，</p>
-<pre><code class="language-shell">sudo vim /usr/local/maven/apache-maven-3.6.3/conf/settings.xml
+        <updated>2021-02-03T02:24:45.000Z</updated>
+        <summary type="html"><![CDATA[<p>索引，事务隔离级别和MVCC</p>
+]]></summary>
+        <content type="html"><![CDATA[<p>索引，事务隔离级别和MVCC</p>
+<!-- more -->
+<h3 id="mysql索引">MySQL索引</h3>
+<pre><code class="language-markdown"># 1. 什么是索引
+- 官方定义：一种帮助MySQL提高查询效率的数据结构
+- 索引的优点：
+          1. 大大加快数据查询效率
+- 索引的缺点：
+          1. 维护索引需要耗费数据库资源
+          2. 索引需要占据磁盘空间
+          3. 对表的数据进行增删改查的时候，因为要维护索引，所以速度会受到影响。  
+
+# 2. 索引的分类
+- InnoDB
+- a. 主键索引
+            设定为主键后，数据库会自动创建索引，InnoDB为聚簇索引。 主键索引列值不能为null 
+
+- b. 单值索引(普通索引)
+            一个索引只包含单个列，一个表可以有多个单值索引。  
+
+- c. 唯一索引允许有空值
+            索引列的值必须唯一，但允许有空值。 唯一索引可以为null，但是只能有一个。
+
+- d. 复合索引
+            一个索引包含多个列
+
+- MyISAM
+- e Full Text 全文索引
+            full text 在定义索引的列上支持值的全文查找，允许在这些索引列中插入控空值和重复值
 </code></pre>
-<p>找到<code>mirror</code>元素，添加阿里云仓库镜像代码，如下</p>
-<pre><code class="language-xml">&lt;mirrors&gt;
-    &lt;!-- mirror
-     | Specifies a repository mirror site to use instead of a given repository. The repository that
-     | this mirror serves has an ID that matches the mirrorOf element of this mirror. IDs are used
-     | for inheritance and direct lookup purposes, and must be unique across the set of mirrors.
-     |
-    &lt;mirror&gt;
-      &lt;id&gt;mirrorId&lt;/id&gt;
-      &lt;mirrorOf&gt;repositoryId&lt;/mirrorOf&gt;
-      &lt;name&gt;Human Readable Name for this Mirror.&lt;/name&gt;
-      &lt;url&gt;http://my.repository.com/repo/path&lt;/url&gt;
-    &lt;/mirror&gt;
-     --&gt;
-     &lt;mirror&gt;
-      &lt;id&gt;aliyunmaven&lt;/id&gt;
-      &lt;mirrorOf&gt;*&lt;/mirrorOf&gt;
-      &lt;name&gt;Aliyun Maven Public&lt;/name&gt;
-      &lt;url&gt;https://maven.aliyun.com/repository/public&lt;/url&gt;
-    &lt;/mirror&gt;
-  &lt;/mirrors&gt;
+<pre><code class="language-markdown"># 3. 索引的使用
+-1. 主键索引 逐渐自动创建主键索引
+            查看表的索引 
+            show index from [table];
+
+-2. 单值索引(普通索引)
+     -- 建表时创建索引 
+             create table t_user(id varchar(20) primary key, name varchar(20),key(name));
+             '注意 默认创建的索引名和列名一致'
+
+     -- 建表后创建索引
+             create index 索引名 on 表名(列名);
+
+    -- 删除索引
+            drop index 索引名 on 表名;
+
+-3.  唯一索引
+    -- 建表时创建索引
+            create table t_user(id varchar(20) primary key, name varchar(20),unique(name));
+
+    -- 建表后创建索引
+            create unique index 索引名 on 表名(列名)
+
+-4.  复合索引
+    -- 建表时创建索引
+            create table t_user(id varchar(20) primary key, name varchar(20), age int, dir varchar(20), key(name,age,dir));
+
+
+    -- 建表后创建索引
+            create index 索引名 on 表名(列名1, 列名2，……)
+
+    -- 使用复合索引
+
+            例：
+            (name,age,dir) 索引
+            # 1. 最左前缀原则
+            # 2. MySQL引擎会动态调整查询字段顺序，以更好地利用索引
+
+            查询顺序                 能否使用索引
+            ----------------------------------
+            name dir age    可以 ，调整顺序
+            name age dir    可以
+            name dir                不可以
+            name age                可以 ，符合最左前缀原则
+            age name                可以 ，调整顺序之后符合左前缀
+            age dir                    不可以， 调整了也不符合左前缀
 </code></pre>
-<p>接下来在IDE中配置Maven的安装路径和自定义的配置文件路径即可。</p>
+<pre><code class="language-markdown"># 4. 索引的底层原理
+- InnoDB存储引擎的底层数据结构  B+树
+
+- B+树与B树区别：
+        1. 非叶子结点只存储键值信息。
+        2. 所有叶子结点之间都有一个链指针。
+        3. 数据记录都存放在叶子结点。
+
+- InnoDB存储引擎页大小16K，指针类型占用4-8位，一般3层树高的B+Tree能存10亿条 左右数据。
+- 一般MySQL数据库中，B+Tree树高2-4层。一般InnoDB设计时是将根节点常驻内存的，因此某一键值的行记录查询只要1—3次磁盘IO
+
+# 5. 聚簇索引和非聚簇索引
+    -- 聚簇索引： 数据存储和索引放在一起，索引结构的叶子结点保留了行数据。 
+    -- 非聚簇索引： 将数据和索引分开存储，索引结构的叶子结点指向了数据对应的存放位置(存主键索引树上的键，而不是地址，因为地址会变，要维护很麻烦)。
+
+    - 主键索引一定是聚簇索引；聚簇索引不一定是主键索引。
+
+    - 在聚簇索引上建立的索引被称为 辅助索引 ，非聚簇索引都是辅助索引。普通索引(单值索引)、复合索引、唯一索引叶子结点存储的不再是行的物理位置，而是主键值。辅助索引查找数据总是要二次查找。
+</code></pre>
+<h3 id="mysql事务隔离级别">MySQL事务隔离级别</h3>
+<table>
+<thead>
+<tr>
+<th>隔离级别</th>
+<th>解决的问题</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>未提交读 Read Uncommited</td>
+<td>-</td>
+</tr>
+<tr>
+<td>已提交读 Read Commited</td>
+<td>脏读</td>
+</tr>
+<tr>
+<td>可重复读 *默认级别 Repeatable Read</td>
+<td>不可重复读</td>
+</tr>
+<tr>
+<td>可串行化 Serializible</td>
+<td>幻读</td>
+</tr>
+</tbody>
+</table>
+<p>脏读：A事务能读取到B事务中未提交的数据，称为脏读。</p>
+<p>不可重复读：数据修改ABA问题。A读，B改，A再读，不一致了。</p>
+<p>幻读：类似ABA问题。重点在于新增或者删除记录条数。</p>
+<h3 id="mysql多版本并发控制mvcc">MySQL多版本并发控制MVCC</h3>
+<pre><code class="language-markdown"># 1. MVCC与行级锁的关系
+    -- MYSQL的支持事务的引擎实现的都不是简单的行级锁，基于并发考虑，一般会实现了多版本并发控制。
+    -- 可以认为MVCC是行级锁的一个变种，但是它在很多情况加避免了加锁操作，因此开销更低。
+
+# 2. MVCC是如何实现的
+    MVCC的实现，是通过保存数据在某个时间点的快照来实现的。不同引擎实现方式不同，分为乐观并发控制和悲观并发控制。
+    以InnoDB为例：
+    InnoDB的MVCC，是通过在每行记录后面保存两个隐藏的列来实现的。这两个列，一个保存了行的创建时间，一个保存行的过期时间（或者删除时间）。这里的时间并不是实际的时间值，而是系统版本号（system version number）。每开始一个新的事务，系统版本号回自动递增。事务开始时刻的系统版本号会作为&lt;事务的版本号&gt;，用来和查询到的每行记录的版本号作比较。在repeatable read 隔离级别下的MVCC具体操作：
+    SELECT
+        只会查找行数据版本号早于或等于当前事务版本号的 target_version &lt;= cur_version
+        大于当前事务版本号的数据，可能是其他事务修改过的
+
+    INSERT
+      InnoDB为新插入的行保存当前版本号为系统版本号。
+
+    DELETE
+      InnoDB为删除的行数据保存当前系统版本号作为行删除标识。
+
+    UPDATE
+</code></pre>
+<h3 id="mysql优化策略">MySQL优化策略</h3>
 ]]></content>
     </entry>
 </feed>
