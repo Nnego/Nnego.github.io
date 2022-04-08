@@ -2,13 +2,267 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://nnego.github.io</id>
     <title>苏小霂的博客</title>
-    <updated>2022-03-23T03:13:55.258Z</updated>
+    <updated>2022-04-08T10:06:17.389Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://nnego.github.io"/>
     <link rel="self" href="https://nnego.github.io/atom.xml"/>
     <logo>https://nnego.github.io/images/avatar.png</logo>
     <icon>https://nnego.github.io/favicon.ico</icon>
     <rights>All rights reserved 2022, 苏小霂的博客</rights>
+    <entry>
+        <title type="html"><![CDATA[KafKa实现ClickHouse增量同步数据]]></title>
+        <id>https://nnego.github.io/CbG54JdMQ/</id>
+        <link href="https://nnego.github.io/CbG54JdMQ/">
+        </link>
+        <updated>2022-02-22T14:22:23.000Z</updated>
+        <summary type="html"><![CDATA[<p>KafKa与ClickHouse</p>
+]]></summary>
+        <content type="html"><![CDATA[<p>KafKa与ClickHouse</p>
+<!-- more -->
+<hr>
+<h2 id="kafka下载与安装">Kafka下载与安装</h2>
+<h3 id="下载">下载</h3>
+<p>官网下载 :</p>
+<p><a href="https://kafka.apache.org/downloads">Apache Kafka</a></p>
+<p>确保已经安装jdk8+环境，使用<code>javac</code>命令测试</p>
+<h3 id="安装">安装</h3>
+<p>解压</p>
+<pre><code class="language-shell">tar -xzvf kafka_2.12-3.1.0.tgz -C /opt
+</code></pre>
+<p>建议建立软连接</p>
+<pre><code class="language-shell">ln -s ./kafka_2.12-3.1.0 kafka/
+</code></pre>
+<p>查看目录结构</p>
+<pre><code class="language-shell">▶ ll /opt/kafka/
+total 64K
+drwxr-xr-x. 3 root root 4.0K Jan 12 17:04 bin
+drwxr-xr-x. 3 root root 4.0K Mar  8 14:36 config
+drwxr-xr-x. 2 root root 8.0K Mar  8 14:32 libs
+-rw-r--r--. 1 root root  15K Jan 12 17:01 LICENSE
+drwxr-xr-x. 2 root root  262 Jan 12 17:04 licenses
+drwxr-xr-x. 2 root root  237 Mar  8 14:41 logs
+-rw-r--r--. 1 root root  28K Jan 12 17:01 NOTICE
+drwxr-xr-x. 2 root root   44 Jan 12 17:04 site-docs
+</code></pre>
+<h2 id="kafka常用命令">Kafka常用命令</h2>
+<h3 id="管理">管理</h3>
+<pre><code class="language-shell">#启动zookeeper
+bin/zookeeper-server-start.sh -daemon config/zookeeper.properties 
+
+#启动Kafka
+bin/kafka-server-start.sh -daemon config/server.properties
+
+## 创建topic（1个分区，2个副本）
+bin/kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 1 --partitions 1 --topic test
+
+## 创建topic (新版本)kafka版本 &gt;= 2.2
+bin/kafka-topics.sh --create --bootstrap-server localhost:9092 --replication-factor 1 --partitions 1 --topic test
+
+## 分区扩容
+# kafka版本 &lt; 2.2
+bin/kafka-topics.sh --zookeeper localhost:2181 --alter --topic topic1 --partitions 2
+
+# kafka版本 &gt;= 2.2
+bin/kafka-topics.sh --bootstrap-server broker_host:port --alter --topic topic1 --partitions 2
+
+## 删除topic
+bin/kafka-topics.sh --zookeeper localhost:2181 --delete --topic test
+</code></pre>
+<h3 id="查询">查询</h3>
+<pre><code class="language-shell">## 查询集群描述
+bin/kafka-topics.sh --describe --zookeeper 127.0.0.1:2181
+
+## topic列表查询
+bin/kafka-topics.sh --list --zookeeper localhost:2181
+
+## topic列表查询（支持0.9版本+）
+bin/kafka-topics.sh --list --bootstrap-server localhost:9092
+
+## 新消费者列表查询（支持0.9版本+）
+bin/kafka-consumer-groups.sh --new-consumer --bootstrap-server localhost:9092 --list
+
+## 新消费者列表查询（支持0.10版本+）
+bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092 --list
+
+## 显示某个消费组的消费详情（仅支持offset存储在zookeeper上的）
+bin/kafka-run-class.sh kafka.tools.ConsumerOffsetChecker --zookeeper localhost:2181 --group test
+
+## 显示某个消费组的消费详情（0.9版本 - 0.10.1.0 之前）
+bin/kafka-consumer-groups.sh --new-consumer --bootstrap-server localhost:9092 --describe --group test-consumer-group
+
+## 显示某个消费组的消费详情（0.10.1.0版本+）
+bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092 --describe --group my-group
+</code></pre>
+<h3 id="生产和消费">生产和消费</h3>
+<pre><code>## 生产者
+bin/kafka-console-producer.sh --broker-list localhost:9092 --topic test
+
+## 消费者
+bin/kafka-console-consumer.sh --zookeeper localhost:2181 --topic test
+
+## 新生产者（支持0.9版本+）
+bin/kafka-console-producer.sh --broker-list localhost:9092 --topic test --producer.config config/producer.properties
+
+## 新消费者（支持0.9版本+）
+bin/kafka-console-consumer.sh --bootstrap-server localhost:9092  --from-beginning --consumer.config config/consumer.properties --topic test
+
+## kafka-verifiable-consumer.sh（消费者事件，例如：offset提交等）
+bin/kafka-verifiable-consumer.sh --broker-list localhost:9092 --topic test --group-id groupName
+
+## 高级点的用法
+bin/kafka-simple-consumer-shell.sh --brist localhost:9092 --topic test --partition 0 --offset 1234  --max-messages 10
+</code></pre>
+<hr>
+<h2 id="clickhouse使用kafka外表进行数据的增量更新">ClickHouse使用Kafka外表进行数据的增量更新</h2>
+<h3 id="kafka">kafka:</h3>
+<ol>
+<li>创建topic</li>
+</ol>
+<pre><code>bin/kafka-topic --create --bootstrap-server localhost:9092 --replication-factors 1 --partitions 1 --topic tdf
+</code></pre>
+<h3 id="clickhouse">clickhouse:</h3>
+<ol>
+<li>创建Kafka消费表(Kafka引擎)</li>
+</ol>
+<pre><code class="language-sql">CREATE TABLE default.toll_detail_final_kafka
+(
+    `id` Int64,
+    `toll_detail_id` Int64,
+    `order_id` String,
+    `toll_duty_id` String,
+    `park_id` Int64,
+    `licence_plate` String,
+    `brand` String,
+    `toll_man_name` String,
+    `toll_man_id` Int64,
+    `in_time` Nullable(DateTime64(3, 'Asia/Shanghai')) ,
+    `out_time` Nullable(DateTime64(3, 'Asia/Shanghai')) ,
+    `event_time` DateTime64(3, 'Asia/Shanghai'),
+    `in_location` String,
+    `in_camera_id` Int64,
+    `out_location` String,
+    `out_camera_id` Int64,
+    `fee_expected` Decimal(15,2),
+    `fee_cash` Decimal(15,2),
+    `fee_third_part` Decimal(15,2),
+    `fee_third_part_real` Decimal(15,2),
+    `fee_member_point` Decimal(15,2),
+    `fee_member_benefit` Decimal(15,2),
+    `fee_etc` Decimal(15,2),
+    `fee_third_part_deduction` Decimal(15,2),
+    `fee_cash_by_pos` Decimal(15,2),
+    `fee_online` Decimal(15,2),
+    `fee_coupon` Decimal(15,2),
+    `paper_coupon_fee` Decimal(15,2),
+    `elec_coupon_fee` Decimal(15,2),
+    `paper_coupon_hours` Int64,
+    `elec_coupon_hours` Int64,
+    `free_reason` String,
+    `free_amount` Decimal(15,2),
+    `fee_balance` Decimal(15,2),
+    `owner_id` Int64,
+    `owner_name` String,
+    `car_type` String,
+    `note` String,
+    `lift_by_hand` Int32,
+    `in_exception_type` String,
+    `out_exception_type` String,
+    `status` Int32,
+    `updated_at` DateTime64(3, 'Asia/Shanghai'),
+    `created_at` DateTime64(3, 'Asia/Shanghai'),
+    `description` String,
+    `fee_exception` Decimal(15,2),
+    `fee_reserved1` Decimal(15,2),
+    `fee_reserved2` Decimal(15,2)
+)
+ENGINE = Kafka()
+SETTINGS 
+kafka_broker_list = '47.104.137.184:9092',
+kafka_topic_list = 'toll_detail_final',
+kafka_group_name = 'tdfConsumerGroup',
+kafka_format = 'JSONEachRow',
+kafka_skip_broken_messages = 10;
+</code></pre>
+<ol start="2">
+<li>创建实体表实际存数据(MergeTree引擎)</li>
+</ol>
+<p>已经创建的tdf和tt表(以toll_detail_final表举例)</p>
+<pre><code class="language-sql">CREATE TABLE default.toll_detail_final
+(
+ `id` Int64,
+ `toll_detail_id` Int64,
+ `order_id` String,
+ `toll_duty_id` String,
+ `park_id` Int64,
+ `licence_plate` String,
+ `brand` String,
+ `toll_man_name` String,
+ `toll_man_id` Int64,
+ `in_time` Nullable(DateTime64(3, 'Asia/Shanghai')),
+ `out_time` Nullable(DateTime64(3, 'Asia/Shanghai')),
+ `event_time` Nullable(DateTime64(3, 'Asia/Shanghai')),
+ `in_location` String,
+ `in_camera_id` Int64,
+ `out_location` String,
+ `out_camera_id` Int64,
+ `fee_expected` Decimal(15, 2),
+ `fee_cash` Decimal(15, 2),
+ `fee_third_part` Decimal(15, 2),
+ `fee_third_part_real` Decimal(15, 2),
+ `fee_member_point` Decimal(15, 2),
+ `fee_member_benefit` Decimal(15, 2),
+ `fee_etc` Decimal(15, 2),
+ `fee_third_part_deduction` Decimal(15, 2),
+ `fee_cash_by_pos` Decimal(15, 2),
+ `fee_online` Decimal(15, 2),
+ `fee_coupon` Decimal(15, 2),
+ `paper_coupon_fee` Decimal(15, 2),
+ `elec_coupon_fee` Decimal(15, 2),
+ `paper_coupon_hours` Int64,
+ `elec_coupon_hours` Int64,
+ `free_reason` String,
+ `free_amount` Decimal(15, 2),
+ `fee_balance` Decimal(15, 2),
+ `owner_id` Int64,
+ `owner_name` String,
+ `car_type` String,
+ `note` String,
+ `lift_by_hand` Int32,
+ `in_exception_type` String,
+ `out_exception_type` String,
+ `status` Int32,
+ `updated_at` DateTime64(3, 'Asia/Shanghai'),
+ `created_at` DateTime64(3, 'Asia/Shanghai'),
+ `description` String,
+ `fee_exception` Decimal(15, 2),
+ `fee_reserved1` Decimal(15, 2),
+ `fee_reserved2` Decimal(15, 2)
+)
+ENGINE = ReplacingMergeTree(updated_at)
+ORDER BY id
+SETTINGS index_granularity = 8192
+</code></pre>
+<ol start="3">
+<li>创建物化视图，联系kafka消费表和实体表</li>
+</ol>
+<pre><code class="language-sql">create materialized view view_tdf_consumer TO toll_detail_final as
+select id,toll_detail_id,order_id,toll_duty_id,park_id,licence_plate,brand,toll_man_name,toll_man_id,in_time,out_time,event_time,in_location,in_camera_id,out_location,out_camera_id,fee_expected,fee_cash,fee_third_part,fee_third_part_real,fee_member_point,description,fee_etc,fee_third_part_deduction,fee_cash_by_pos,fee_online,fee_coupon,paper_coupon_fee,elec_coupon_fee,paper_coupon_hours,elec_coupon_hours,free_reason,free_amount,fee_balance,owner_id,owner_name,car_type,note,lift_by_hand,in_exception_type,out_exception_type,status,updated_at,created_at,fee_member_benefit,fee_exception,fee_reserved1,fee_reserved2 from toll_detail_final_kafka;
+</code></pre>
+<ol start="4">
+<li>关联/卸载视图</li>
+</ol>
+<pre><code class="language-shell"># 卸载视图:
+detach view view_tdf_consumer;
+
+# 关联视图:
+attach table view_tdf_consumer;
+</code></pre>
+<p>kafka生产消息，kafka消费表会拉取消息，物化视图将它转换为实体表中的记录。</p>
+<p>消息样式举例：</p>
+<pre><code class="language-json">{&quot;fee_exception&quot;:100.0,&quot;out_exception_type&quot;:&quot;&quot;,&quot;paper_coupon_fee&quot;:0.0,&quot;fee_cash&quot;:0.0,&quot;out_camera_id&quot;:1538,&quot;owner_id&quot;:0,&quot;description&quot;:&quot;&quot;,&quot;created_at&quot;:1649317245039,&quot;fee_reserved1&quot;:0.0,&quot;fee_etc&quot;:0.0,&quot;fee_reserved2&quot;:0.0,&quot;elec_coupon_hours&quot;:0,&quot;out_location&quot;:&quot;车道2&quot;,&quot;car_type&quot;:&quot;visitor&quot;,&quot;fee_expected&quot;:100.0,&quot;fee_balance&quot;:0.0,&quot;updated_at&quot;:1649315050000,&quot;toll_man_name&quot;:&quot;&quot;,&quot;fee_online&quot;:0.0,&quot;elec_coupon_fee&quot;:0.0,&quot;in_camera_id&quot;:1539,&quot;id&quot;:5816289,&quot;in_exception_type&quot;:&quot;&quot;,&quot;brand&quot;:&quot;&quot;,&quot;in_location&quot;:&quot;车道1&quot;,&quot;free_amount&quot;:0.0,&quot;out_time&quot;:1649223909000,&quot;fee_third_part_real&quot;:0.0,&quot;fee_member_benefit&quot;:0.0,&quot;owner_name&quot;:&quot;&quot;,&quot;toll_duty_id&quot;:&quot;&quot;,&quot;paper_coupon_hours&quot;:0,&quot;toll_detail_id&quot;:0,&quot;park_id&quot;:2803,&quot;fee_third_part&quot;:0.0,&quot;fee_third_part_deduction&quot;:0.0,&quot;licence_plate&quot;:&quot;贵Z005A1&quot;,&quot;fee_coupon&quot;:0.0,&quot;in_time&quot;:1649176380000,&quot;fee_cash_by_pos&quot;:0.0,&quot;fee_member_point&quot;:0.0,&quot;order_id&quot;:&quot;C2803153920220406003300143&quot;,&quot;event_time&quot;:1649314955000,&quot;lift_by_hand&quot;:0,&quot;status&quot;:2}
+</code></pre>
+]]></content>
+    </entry>
     <entry>
         <title type="html"><![CDATA[ClickHouse安装与使用]]></title>
         <id>https://nnego.github.io/VphV8ID1D/</id>
@@ -1292,164 +1546,6 @@ public class CGLibProxy implements MethodInterceptor {
 <li>如果是树化，遍历链表，新建树形结点，复制数据，建立树的连接。</li>
 <li>然后让桶中的第一个元素指向新创建的树根结点，替换桶的链表内容为树形化内容。</li>
 </ol>
-]]></content>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[MySQL其一]]></title>
-        <id>https://nnego.github.io/GSGgVwW_1/</id>
-        <link href="https://nnego.github.io/GSGgVwW_1/">
-        </link>
-        <updated>2021-02-03T02:24:45.000Z</updated>
-        <summary type="html"><![CDATA[<p>索引，事务隔离级别和MVCC</p>
-]]></summary>
-        <content type="html"><![CDATA[<p>索引，事务隔离级别和MVCC</p>
-<!-- more -->
-<h3 id="mysql索引">MySQL索引</h3>
-<pre><code class="language-markdown"># 1. 什么是索引
-- 官方定义：一种帮助MySQL提高查询效率的数据结构
-- 索引的优点：
-          1. 大大加快数据查询效率
-- 索引的缺点：
-          1. 维护索引需要耗费数据库资源
-          2. 索引需要占据磁盘空间
-          3. 对表的数据进行增删改查的时候，因为要维护索引，所以速度会受到影响。  
-
-# 2. 索引的分类
-- InnoDB
-- a. 主键索引
-            设定为主键后，数据库会自动创建索引，InnoDB为聚簇索引。 主键索引列值不能为null 
-
-- b. 单值索引(普通索引)
-            一个索引只包含单个列，一个表可以有多个单值索引。  
-
-- c. 唯一索引允许有空值
-            索引列的值必须唯一，但允许有空值。 唯一索引可以为null，但是只能有一个。
-
-- d. 复合索引
-            一个索引包含多个列
-
-- MyISAM
-- e Full Text 全文索引
-            full text 在定义索引的列上支持值的全文查找，允许在这些索引列中插入控空值和重复值
-</code></pre>
-<pre><code class="language-markdown"># 3. 索引的使用
--1. 主键索引 逐渐自动创建主键索引
-            查看表的索引 
-            show index from [table];
-
--2. 单值索引(普通索引)
-     -- 建表时创建索引 
-             create table t_user(id varchar(20) primary key, name varchar(20),key(name));
-             '注意 默认创建的索引名和列名一致'
-
-     -- 建表后创建索引
-             create index 索引名 on 表名(列名);
-
-    -- 删除索引
-            drop index 索引名 on 表名;
-
--3.  唯一索引
-    -- 建表时创建索引
-            create table t_user(id varchar(20) primary key, name varchar(20),unique(name));
-
-    -- 建表后创建索引
-            create unique index 索引名 on 表名(列名)
-
--4.  复合索引
-    -- 建表时创建索引
-            create table t_user(id varchar(20) primary key, name varchar(20), age int, dir varchar(20), key(name,age,dir));
-
-
-    -- 建表后创建索引
-            create index 索引名 on 表名(列名1, 列名2，……)
-
-    -- 使用复合索引
-
-            例：
-            (name,age,dir) 索引
-            # 1. 最左前缀原则
-            # 2. MySQL引擎会动态调整查询字段顺序，以更好地利用索引
-
-            查询顺序                 能否使用索引
-            ----------------------------------
-            name dir age    可以 ，调整顺序
-            name age dir    可以
-            name dir                不可以
-            name age                可以 ，符合最左前缀原则
-            age name                可以 ，调整顺序之后符合左前缀
-            age dir                    不可以， 调整了也不符合左前缀
-</code></pre>
-<pre><code class="language-markdown"># 4. 索引的底层原理
-- InnoDB存储引擎的底层数据结构  B+树
-
-- B+树与B树区别：
-        1. 非叶子结点只存储键值信息。
-        2. 所有叶子结点之间都有一个链指针。
-        3. 数据记录都存放在叶子结点。
-
-- InnoDB存储引擎页大小16K，指针类型占用4-8位，一般3层树高的B+Tree能存10亿条 左右数据。
-- 一般MySQL数据库中，B+Tree树高2-4层。一般InnoDB设计时是将根节点常驻内存的，因此某一键值的行记录查询只要1—3次磁盘IO
-
-# 5. 聚簇索引和非聚簇索引
-    -- 聚簇索引： 数据存储和索引放在一起，索引结构的叶子结点保留了行数据。 
-    -- 非聚簇索引： 将数据和索引分开存储，索引结构的叶子结点指向了数据对应的存放位置(存主键索引树上的键，而不是地址，因为地址会变，要维护很麻烦)。
-
-    - 主键索引一定是聚簇索引；聚簇索引不一定是主键索引。
-
-    - 在聚簇索引上建立的索引被称为 辅助索引 ，非聚簇索引都是辅助索引。普通索引(单值索引)、复合索引、唯一索引叶子结点存储的不再是行的物理位置，而是主键值。辅助索引查找数据总是要二次查找。
-</code></pre>
-<h3 id="mysql事务隔离级别">MySQL事务隔离级别</h3>
-<table>
-<thead>
-<tr>
-<th>隔离级别</th>
-<th>解决的问题</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>未提交读 Read Uncommited</td>
-<td>-</td>
-</tr>
-<tr>
-<td>已提交读 Read Commited</td>
-<td>脏读</td>
-</tr>
-<tr>
-<td>可重复读 *默认级别 Repeatable Read</td>
-<td>不可重复读</td>
-</tr>
-<tr>
-<td>可串行化 Serializible</td>
-<td>幻读</td>
-</tr>
-</tbody>
-</table>
-<p>脏读：A事务能读取到B事务中未提交的数据，称为脏读。</p>
-<p>不可重复读：数据修改ABA问题。A读，B改，A再读，不一致了。</p>
-<p>幻读：类似ABA问题。重点在于新增或者删除记录条数。</p>
-<h3 id="mysql多版本并发控制mvcc">MySQL多版本并发控制MVCC</h3>
-<pre><code class="language-markdown"># 1. MVCC与行级锁的关系
-    -- MYSQL的支持事务的引擎实现的都不是简单的行级锁，基于并发考虑，一般会实现了多版本并发控制。
-    -- 可以认为MVCC是行级锁的一个变种，但是它在很多情况加避免了加锁操作，因此开销更低。
-
-# 2. MVCC是如何实现的
-    MVCC的实现，是通过保存数据在某个时间点的快照来实现的。不同引擎实现方式不同，分为乐观并发控制和悲观并发控制。
-    以InnoDB为例：
-    InnoDB的MVCC，是通过在每行记录后面保存两个隐藏的列来实现的。这两个列，一个保存了行的创建时间，一个保存行的过期时间（或者删除时间）。这里的时间并不是实际的时间值，而是系统版本号（system version number）。每开始一个新的事务，系统版本号回自动递增。事务开始时刻的系统版本号会作为&lt;事务的版本号&gt;，用来和查询到的每行记录的版本号作比较。在repeatable read 隔离级别下的MVCC具体操作：
-    SELECT
-        只会查找行数据版本号早于或等于当前事务版本号的 target_version &lt;= cur_version
-        大于当前事务版本号的数据，可能是其他事务修改过的
-
-    INSERT
-      InnoDB为新插入的行保存当前版本号为系统版本号。
-
-    DELETE
-      InnoDB为删除的行数据保存当前系统版本号作为行删除标识。
-
-    UPDATE
-</code></pre>
-<h3 id="mysql优化策略">MySQL优化策略</h3>
 ]]></content>
     </entry>
 </feed>
