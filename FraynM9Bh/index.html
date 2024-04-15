@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+ <head>
+     <meta charset="utf-8" />
+  <title>CentOS对时服务Chrony | 苏小霂的博客</title>
+  <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
+  <link rel="stylesheet" href="http://nnego.github.io/styles/main.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+   <script src="https://cdn.staticfile.org/highlight.js/9.15.9/highlight.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+ </head>
+ <body>
+     <div class="sidebar animated fadeInDown">
+   <div class="logo-title">
+    <div class="title">
+     <img src="http://nnego.github.io/images/avatar.png?v=1713197377138" style="width:127px;" />
+
+     <div class="description">
+      <p></p>
+     </div>
+    </div>
+   </div>
+   <ul class="social-links">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+   </ul>
+   <div class="footer">
+    <div class="by_farbox">
+   
+    </div>
+    
+
+    </div>
+   </div>
+  </div>
+  <div class="main">
+     <div class="page-top animated fadeInDown">
+    <div class="nav">
+    
+     <li><a  href="/">首页</a></li>
+
+     <li><a  href="/archives">归档</a></li>
+
+     <li><a  href="/tags">标签</a></li>
+
+    </div>
+    <div class="information">
+     <div class="back_btn">
+      <li><a class="fa fa-chevron-left" onclick="window.history.go(-1)"> </a></li>
+     </div>
+    </div>
+   </div>
+   <div class="autopagerize_page_element">
+    <div class="content">
+     <div class="post-page">
+      <div class="post animated fadeInDown">
+       <div class="post-title">
+        <h3><a>CentOS对时服务Chrony</a></h3>
+       </div>
+       <div class="post-content">
+        <!-- more -->
+<h3 id="安装chrony">安装chrony</h3>
+<pre><code class="language-shell">yum install chrony -y
+</code></pre>
+<h3 id="查看chrony的程序运行环境">查看chrony的程序运行环境</h3>
+<pre><code class="language-shell">▶ rpm -ql chrony
+/etc/NetworkManager/dispatcher.d/20-chrony
+/etc/chrony.conf 主配置文件
+/etc/chrony.keys
+/etc/dhcp/dhclient.d/chrony.sh
+/etc/logrotate.d/chrony
+/etc/sysconfig/chronyd
+/usr/bin/chronyc 客户端可执行文件
+...
+</code></pre>
+<p>使用<code>man chrony.conf</code>了解配置文件的格式</p>
+<h3 id="配置">配置</h3>
+<ol>
+<li>配置chronyd服务开机自启</li>
+</ol>
+<p><code>systemctl enable chronyd.service</code></p>
+<ol start="2">
+<li>重启chronyd服务</li>
+</ol>
+<p><code>systemctl restart chronyd.service</code></p>
+<ol start="3">
+<li>查看chronyd服务状态</li>
+</ol>
+<p><code>systemctl status chronyd.service</code></p>
+<p>编辑<code>/etc/chrony.conf</code>配置文件:</p>
+<pre><code class="language-properties">  1 # Use public servers from the pool.ntp.org project.
+  2 # Please consider joining the pool (http://www.pool.ntp.org/join.html).
+  3 #server 0.centos.pool.ntp.org iburst
+  4 #server 1.centos.pool.ntp.org iburst
+  5 #server 2.centos.pool.ntp.org iburst
+  6 #server 3.centos.pool.ntp.org iburst
+  7 
+  8 server ntp1.aliyun.com iburst # 替换为aliyun服务器
+  9 server ntp2.aliyun.com iburst
+ 10 server ntp3.aliyun.com iburst
+ 11 server ntp4.aliyun.com iburst
+ 12 
+ 13 # Record the rate at which the system clock gains/losses time.
+ 14 driftfile /var/lib/chrony/drift
+ 15 
+ 16 # Allow the system clock to be stepped in the first three updates
+ 17 # if its offset is larger than 1 second.
+ 18 makestep 1.0 3
+ 19 
+ 20 # Enable kernel synchronization of the real-time clock (RTC).
+ 21 rtcsync
+ 22 
+ 23 # Enable hardware timestamping on all interfaces that support it.
+ 24 #hwtimestamp *
+ 25 
+ 26 # Increase the minimum number of selectable sources required to adjust
+ 27 # the system clock.
+ 28 #minsources 2
+ 29 
+ 30 # Allow NTP client access from local network.
+ 31 #allow 192.168.0.0/16
+ 32 
+ 33 # Serve time even if not synchronized to a time source.
+ 34 #local stratum 10
+ 35 
+ 36 # Specify file containing keys for NTP authentication.
+ 37 #keyfile /etc/chrony.keys
+ 38 
+ 39 # Specify directory for log files.
+ 40 logdir /var/log/chrony
+ 41 
+ 42 # Select which information is logged.
+ 43 #log measurements statistics tracking
+</code></pre>
+<h3 id="手动强制同步系统时钟">手动强制同步系统时钟</h3>
+<pre><code class="language-shell">chronyc -a makestep
+</code></pre>
+
+       </div>
+       <div class="post-footer">
+        <div class="meta">
+         <div class="info">
+          <i class="fa fa-sun-o"></i>
+          <span class="date">2021-01-19</span>
+          <i class="fa fa-tag"></i>
+          
+          <a class="tag" href="http://nnego.github.io/zbYEzMCQk/" title="Linux">Linux </a>
+          
+         </div>
+        </div>
+       </div>
+      </div>
+      <div class="share">
+       <div class="evernote">
+        <a class="fa fa-bookmark" href="javascript:(function(){EN_CLIP_HOST='http://www.evernote.com';try{var%20x=document.createElement('SCRIPT');x.type='text/javascript';x.src=EN_CLIP_HOST+'/public/bookmarkClipper.js?'+(new%20Date().getTime()/100000);document.getElementsByTagName('head')[0].appendChild(x);}catch(e){location.href=EN_CLIP_HOST+'/clip.action?url='+encodeURIComponent(location.href)+'&amp;title='+encodeURIComponent(document.title);}})();" ref="nofollow" target="_blank"></a>
+       </div>
+       <div class="weibo">
+        <a class="fa fa-weibo" href="javascript:void((function(s,d,e){try{}catch(e){}var f='http://service.weibo.com/share/share.php?',u=d.location.href,p=['url=',e(u),'&amp;title=',e(d.title),'&amp;appkey=2924220432'].join('');function a(){if(!window.open([f,p].join(''),'mb',['toolbar=0,status=0,resizable=1,width=620,height=450,left=',(s.width-620)/2,',top=',(s.height-450)/2].join('')))u.href=[f,p].join('');};if(/Firefox/.test(navigator.userAgent)){setTimeout(a,0)}else{a()}})(screen,document,encodeURIComponent));"></a>
+       </div>
+       <div class="twitter">
+        <a class="fa fa-twitter" href="http://twitter.com/home?status=,http://nnego.github.io/FraynM9Bh/,;"></a>
+       </div>
+      </div>
+      <div class="pagination">
+       <ul class="clearfix">
+
+        <li class="pre pagbuttons"><a class="btn" role="navigation" href="http://nnego.github.io/GSGgVwW_1/" title="MySQL索引与事务隔离级别">上一篇</a></li>
+         
+        
+        <li class="next pagbuttons"><a class="btn" role="navigation" href="http://nnego.github.io/x6uhqGdh2/" title=" Maven仓库配置阿里云镜像">下一篇</a></li>
+        
+       </ul>
+      </div>
+        
+     </div>
+    </div>
+   </div>
+  </div>
+  <script src="http://nnego.github.io/media/scripts/jquery.js"></script>
+  <script src="http://nnego.github.io/media/scripts/jquery-migrate-1.2.1.min.js"></script>
+  <script src="http://nnego.github.io/media/scripts/jquery.appear.js"></script>
+
+
+ </body>
+</html>

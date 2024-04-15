@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+ <head>
+     <meta charset="utf-8" />
+  <title>Kafka快速入门 | 苏小霂的博客</title>
+  <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
+  <link rel="stylesheet" href="http://nnego.github.io/styles/main.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+   <script src="https://cdn.staticfile.org/highlight.js/9.15.9/highlight.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+ </head>
+ <body>
+     <div class="sidebar animated fadeInDown">
+   <div class="logo-title">
+    <div class="title">
+     <img src="http://nnego.github.io/images/avatar.png?v=1713197377138" style="width:127px;" />
+
+     <div class="description">
+      <p></p>
+     </div>
+    </div>
+   </div>
+   <ul class="social-links">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+   </ul>
+   <div class="footer">
+    <div class="by_farbox">
+   
+    </div>
+    
+
+    </div>
+   </div>
+  </div>
+  <div class="main">
+     <div class="page-top animated fadeInDown">
+    <div class="nav">
+    
+     <li><a  href="/">首页</a></li>
+
+     <li><a  href="/archives">归档</a></li>
+
+     <li><a  href="/tags">标签</a></li>
+
+    </div>
+    <div class="information">
+     <div class="back_btn">
+      <li><a class="fa fa-chevron-left" onclick="window.history.go(-1)"> </a></li>
+     </div>
+    </div>
+   </div>
+   <div class="autopagerize_page_element">
+    <div class="content">
+     <div class="post-page">
+      <div class="post animated fadeInDown">
+       <div class="post-title">
+        <h3><a>Kafka快速入门</a></h3>
+       </div>
+       <div class="post-content">
+        <blockquote>
+<p>Kafka的下载安装与常用命令</p>
+</blockquote>
+<!-- more -->
+<h2 id="kafka下载与安装">Kafka下载与安装</h2>
+<h3 id="下载">下载</h3>
+<p>官网下载 :</p>
+<p><a href="https://kafka.apache.org/downloads">Apache Kafka</a></p>
+<p>确保已经安装jdk8+环境，使用<code>javac</code>命令测试</p>
+<h3 id="安装">安装</h3>
+<p>解压</p>
+<pre><code class="language-shell">tar -xzvf kafka_2.12-3.1.0.tgz -C /opt
+</code></pre>
+<p>建议建立软连接</p>
+<pre><code class="language-shell">ln -s ./kafka_2.12-3.1.0 kafka/
+</code></pre>
+<p>查看目录结构</p>
+<pre><code class="language-shell">▶ ll /opt/kafka/
+total 64K
+drwxr-xr-x. 3 root root 4.0K Jan 12 17:04 bin
+drwxr-xr-x. 3 root root 4.0K Mar  8 14:36 config
+drwxr-xr-x. 2 root root 8.0K Mar  8 14:32 libs
+-rw-r--r--. 1 root root  15K Jan 12 17:01 LICENSE
+drwxr-xr-x. 2 root root  262 Jan 12 17:04 licenses
+drwxr-xr-x. 2 root root  237 Mar  8 14:41 logs
+-rw-r--r--. 1 root root  28K Jan 12 17:01 NOTICE
+drwxr-xr-x. 2 root root   44 Jan 12 17:04 site-docs
+</code></pre>
+<h2 id="kafka常用命令">Kafka常用命令</h2>
+<h3 id="管理">管理</h3>
+<pre><code class="language-shell">## 创建topic（4个分区，2个副本）
+bin/kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 2 --partitions 4 --topic test
+
+## kafka版本 &gt;= 2.2
+bin/kafka-topics.sh --create --bootstrap-server localhost:9092 --replication-factor 1 --partitions 1 --topic test
+
+## 分区扩容
+# kafka版本 &lt; 2.2
+bin/kafka-topics.sh --zookeeper localhost:2181 --alter --topic topic1 --partitions 2
+
+# kafka版本 &gt;= 2.2
+bin/kafka-topics.sh --bootstrap-server broker_host:port --alter --topic topic1 --partitions 2
+
+## 删除topic
+bin/kafka-topics.sh --zookeeper localhost:2181 --delete --topic test
+</code></pre>
+<h3 id="查询">查询</h3>
+<pre><code class="language-shell">## 查询集群描述
+bin/kafka-topics.sh --describe --zookeeper 127.0.0.1:2181
+
+## topic列表查询
+bin/kafka-topics.sh --zookeeper 127.0.0.1:2181 --list
+
+## topic列表查询（支持0.9版本+）
+bin/kafka-topics.sh --list --bootstrap-server localhost:9092
+
+## 新消费者列表查询（支持0.9版本+）
+bin/kafka-consumer-groups.sh --new-consumer --bootstrap-server localhost:9092 --list
+
+## 新消费者列表查询（支持0.10版本+）
+bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092 --list
+
+## 显示某个消费组的消费详情（仅支持offset存储在zookeeper上的）
+bin/kafka-run-class.sh kafka.tools.ConsumerOffsetChecker --zookeeper localhost:2181 --group test
+
+## 显示某个消费组的消费详情（0.9版本 - 0.10.1.0 之前）
+bin/kafka-consumer-groups.sh --new-consumer --bootstrap-server localhost:9092 --describe --group test-consumer-group
+
+## 显示某个消费组的消费详情（0.10.1.0版本+）
+bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092 --describe --group my-group
+</code></pre>
+<h3 id="生产和消费">生产和消费</h3>
+<pre><code>## 生产者
+bin/kafka-console-producer.sh --broker-list localhost:9092 --topic test
+
+## 消费者
+bin/kafka-console-consumer.sh --zookeeper localhost:2181 --topic test
+
+## 新生产者（支持0.9版本+）
+bin/kafka-console-producer.sh --broker-list localhost:9092 --topic test --producer.config config/producer.properties
+
+## 新消费者（支持0.9版本+）
+bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic test --new-consumer --from-beginning --consumer.config config/consumer.properties
+
+## kafka-verifiable-consumer.sh（消费者事件，例如：offset提交等）
+bin/kafka-verifiable-consumer.sh --broker-list localhost:9092 --topic test --group-id groupName
+
+## 高级点的用法
+bin/kafka-simple-consumer-shell.sh --brist localhost:9092 --topic test --partition 0 --offset 1234  --max-messages 10
+</code></pre>
+<hr>
+
+       </div>
+       <div class="post-footer">
+        <div class="meta">
+         <div class="info">
+          <i class="fa fa-sun-o"></i>
+          <span class="date">2022-02-02</span>
+          <i class="fa fa-tag"></i>
+          
+          <a class="tag" href="http://nnego.github.io/-6P-8v24W/" title="Kafka">Kafka </a>
+          
+          <a class="tag" href="http://nnego.github.io/Hz4tSIzgi-/" title="消息队列">消息队列 </a>
+          
+         </div>
+        </div>
+       </div>
+      </div>
+      <div class="share">
+       <div class="evernote">
+        <a class="fa fa-bookmark" href="javascript:(function(){EN_CLIP_HOST='http://www.evernote.com';try{var%20x=document.createElement('SCRIPT');x.type='text/javascript';x.src=EN_CLIP_HOST+'/public/bookmarkClipper.js?'+(new%20Date().getTime()/100000);document.getElementsByTagName('head')[0].appendChild(x);}catch(e){location.href=EN_CLIP_HOST+'/clip.action?url='+encodeURIComponent(location.href)+'&amp;title='+encodeURIComponent(document.title);}})();" ref="nofollow" target="_blank"></a>
+       </div>
+       <div class="weibo">
+        <a class="fa fa-weibo" href="javascript:void((function(s,d,e){try{}catch(e){}var f='http://service.weibo.com/share/share.php?',u=d.location.href,p=['url=',e(u),'&amp;title=',e(d.title),'&amp;appkey=2924220432'].join('');function a(){if(!window.open([f,p].join(''),'mb',['toolbar=0,status=0,resizable=1,width=620,height=450,left=',(s.width-620)/2,',top=',(s.height-450)/2].join('')))u.href=[f,p].join('');};if(/Firefox/.test(navigator.userAgent)){setTimeout(a,0)}else{a()}})(screen,document,encodeURIComponent));"></a>
+       </div>
+       <div class="twitter">
+        <a class="fa fa-twitter" href="http://twitter.com/home?status=,http://nnego.github.io/K7Mla-PKG/,;"></a>
+       </div>
+      </div>
+      <div class="pagination">
+       <ul class="clearfix">
+
+        <li class="pre pagbuttons"><a class="btn" role="navigation" href="http://nnego.github.io/VphV8ID1D/" title="ClickHouse安装与使用">上一篇</a></li>
+         
+        
+        <li class="next pagbuttons"><a class="btn" role="navigation" href="http://nnego.github.io/gE6YZduXe/" title=" Android开发(一) 发布release版本与adb调试">下一篇</a></li>
+        
+       </ul>
+      </div>
+        
+     </div>
+    </div>
+   </div>
+  </div>
+  <script src="http://nnego.github.io/media/scripts/jquery.js"></script>
+  <script src="http://nnego.github.io/media/scripts/jquery-migrate-1.2.1.min.js"></script>
+  <script src="http://nnego.github.io/media/scripts/jquery.appear.js"></script>
+
+
+ </body>
+</html>

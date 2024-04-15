@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+ <head>
+     <meta charset="utf-8" />
+  <title>Java并发编程之synchronized关键字 | 苏小霂的博客</title>
+  <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
+  <link rel="stylesheet" href="http://nnego.github.io/styles/main.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+   <script src="https://cdn.staticfile.org/highlight.js/9.15.9/highlight.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+ </head>
+ <body>
+     <div class="sidebar animated fadeInDown">
+   <div class="logo-title">
+    <div class="title">
+     <img src="http://nnego.github.io/images/avatar.png?v=1713197377138" style="width:127px;" />
+
+     <div class="description">
+      <p></p>
+     </div>
+    </div>
+   </div>
+   <ul class="social-links">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+   </ul>
+   <div class="footer">
+    <div class="by_farbox">
+   
+    </div>
+    
+
+    </div>
+   </div>
+  </div>
+  <div class="main">
+     <div class="page-top animated fadeInDown">
+    <div class="nav">
+    
+     <li><a  href="/">首页</a></li>
+
+     <li><a  href="/archives">归档</a></li>
+
+     <li><a  href="/tags">标签</a></li>
+
+    </div>
+    <div class="information">
+     <div class="back_btn">
+      <li><a class="fa fa-chevron-left" onclick="window.history.go(-1)"> </a></li>
+     </div>
+    </div>
+   </div>
+   <div class="autopagerize_page_element">
+    <div class="content">
+     <div class="post-page">
+      <div class="post animated fadeInDown">
+       <div class="post-title">
+        <h3><a>Java并发编程之synchronized关键字</a></h3>
+       </div>
+       <div class="post-content">
+        <!-- more -->
+<p>synchronized通过对象内部的一个叫做<strong>监视器锁</strong>的东西来实现的。</p>
+<p>监视器锁本身依赖于操作系统底层的<strong>互斥锁Mutex Lock</strong>来实现的。</p>
+<p>操作系统实现线程之间的切换需要从<strong>用户态</strong>转换到<strong>核心态</strong>，成本很高，状态转换要花费比较长的时间。</p>
+<p>这就是synchronized效率低的原因。这种依赖于操作系统MutexLock实现的锁成为<strong>重量级锁</strong>。</p>
+<h3 id="synchronized-vs-volatile">synchronized v.s. volatile</h3>
+<p>Volatile：内存可见(不保证原子性，不保证互斥性)；防止CPU指令重排(内存屏障)</p>
+<p>扩展：</p>
+<p>如何保证内存可见？</p>
+<blockquote>
+<p><strong>JMM通过控制主内存与每个线程的本地内存之间的交互，来为Java程序员提供内存可见性保证。</strong></p>
+</blockquote>
+<p>什么是内存屏障？</p>
+<blockquote>
+<p><strong>MM属于语言级的内存模型，它确保在不同的编译器和不同的处理器平台之上，通过禁止特定类型的编译器重排序和处理器重排序，为程序员提供一致的内存可见性保证</strong>。</p>
+</blockquote>
+<h3 id="happens-before规则">happens-before规则</h3>
+<p>happens-before表示的是前一个操作的结果对于后续操作是可见的，它是一种表达多个线程之间对于内存的可见性。所以我们可以认为在 JMM 中，如果一个操作执行的结果需要对另一个操作可见，那么这两个操作必须要存在happens-before关系。这两个操作可以是同一个线程，也可以是不同的线程。</p>
+<h3 id=""></h3>
+
+       </div>
+       <div class="post-footer">
+        <div class="meta">
+         <div class="info">
+          <i class="fa fa-sun-o"></i>
+          <span class="date">2023-06-15</span>
+          <i class="fa fa-tag"></i>
+          
+          <a class="tag" href="http://nnego.github.io/FUkfApRfh/" title="并发编程">并发编程 </a>
+          
+          <a class="tag" href="http://nnego.github.io/vldJYD2YKe/" title="多线程">多线程 </a>
+          
+          <a class="tag" href="http://nnego.github.io/_PzzGB-wA/" title="Java">Java </a>
+          
+         </div>
+        </div>
+       </div>
+      </div>
+      <div class="share">
+       <div class="evernote">
+        <a class="fa fa-bookmark" href="javascript:(function(){EN_CLIP_HOST='http://www.evernote.com';try{var%20x=document.createElement('SCRIPT');x.type='text/javascript';x.src=EN_CLIP_HOST+'/public/bookmarkClipper.js?'+(new%20Date().getTime()/100000);document.getElementsByTagName('head')[0].appendChild(x);}catch(e){location.href=EN_CLIP_HOST+'/clip.action?url='+encodeURIComponent(location.href)+'&amp;title='+encodeURIComponent(document.title);}})();" ref="nofollow" target="_blank"></a>
+       </div>
+       <div class="weibo">
+        <a class="fa fa-weibo" href="javascript:void((function(s,d,e){try{}catch(e){}var f='http://service.weibo.com/share/share.php?',u=d.location.href,p=['url=',e(u),'&amp;title=',e(d.title),'&amp;appkey=2924220432'].join('');function a(){if(!window.open([f,p].join(''),'mb',['toolbar=0,status=0,resizable=1,width=620,height=450,left=',(s.width-620)/2,',top=',(s.height-450)/2].join('')))u.href=[f,p].join('');};if(/Firefox/.test(navigator.userAgent)){setTimeout(a,0)}else{a()}})(screen,document,encodeURIComponent));"></a>
+       </div>
+       <div class="twitter">
+        <a class="fa fa-twitter" href="http://twitter.com/home?status=,http://nnego.github.io/D7arNdIEW/,;"></a>
+       </div>
+      </div>
+      <div class="pagination">
+       <ul class="clearfix">
+
+        <li class="pre pagbuttons"><a class="btn" role="navigation" href="http://nnego.github.io/CeZNMgta1/" title="Java并发编程之线程池">上一篇</a></li>
+         
+        
+        <li class="next pagbuttons"><a class="btn" role="navigation" href="http://nnego.github.io/u2MONV7zD/" title=" Java并发编程之锁与锁升级">下一篇</a></li>
+        
+       </ul>
+      </div>
+        
+     </div>
+    </div>
+   </div>
+  </div>
+  <script src="http://nnego.github.io/media/scripts/jquery.js"></script>
+  <script src="http://nnego.github.io/media/scripts/jquery-migrate-1.2.1.min.js"></script>
+  <script src="http://nnego.github.io/media/scripts/jquery.appear.js"></script>
+
+
+ </body>
+</html>

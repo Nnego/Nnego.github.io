@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+ <head>
+     <meta charset="utf-8" />
+  <title>JVM学习笔记(一) 运行时数据区 | 苏小霂的博客</title>
+  <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
+  <link rel="stylesheet" href="http://nnego.github.io/styles/main.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+   <script src="https://cdn.staticfile.org/highlight.js/9.15.9/highlight.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+ </head>
+ <body>
+     <div class="sidebar animated fadeInDown">
+   <div class="logo-title">
+    <div class="title">
+     <img src="http://nnego.github.io/images/avatar.png?v=1713197377138" style="width:127px;" />
+
+     <div class="description">
+      <p></p>
+     </div>
+    </div>
+   </div>
+   <ul class="social-links">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+   </ul>
+   <div class="footer">
+    <div class="by_farbox">
+   
+    </div>
+    
+
+    </div>
+   </div>
+  </div>
+  <div class="main">
+     <div class="page-top animated fadeInDown">
+    <div class="nav">
+    
+     <li><a  href="/">首页</a></li>
+
+     <li><a  href="/archives">归档</a></li>
+
+     <li><a  href="/tags">标签</a></li>
+
+    </div>
+    <div class="information">
+     <div class="back_btn">
+      <li><a class="fa fa-chevron-left" onclick="window.history.go(-1)"> </a></li>
+     </div>
+    </div>
+   </div>
+   <div class="autopagerize_page_element">
+    <div class="content">
+     <div class="post-page">
+      <div class="post animated fadeInDown">
+       <div class="post-title">
+        <h3><a>JVM学习笔记(一) 运行时数据区</a></h3>
+       </div>
+       <div class="post-content">
+        <h3 id="运行时数据区">运行时数据区</h3>
+<p>Java虚拟机运行时将其管理的内存区域划分为几个数据区。包括以下几个：</p>
+<ul>
+<li>
+<p>虚拟机栈(VM Stack)</p>
+<ul>
+<li>虚拟机栈也是线程私有的。生命周期与线程相同。</li>
+<li>虚拟机栈描述的是<code>Java方法执行的线程内存模型</code>：每个方法执行时，Java虚拟机会同步创建一个<code>栈帧(Stack Frame)</code>用于存储<code>局部变量表</code>，<code>操作数栈</code>，<code>动态链接</code>，<code>方法出口</code>等信息。一个方法从执行到结束，对应着一个栈帧在虚拟机栈中从入栈到出栈的过程。</li>
+<li>对于C/C++中所谓的堆内存和栈内存，在Java中划分的要更为细腻一些。栈通常指的就是这里的虚拟机栈，或者更多情况下指的就是虚拟机栈的<code>局部变量表</code>部分。</li>
+<li>局部变量表存放了编译器克制的各种Java虚拟机基本数据结构(boolean, byte, char, short, int, long, float, double)、对象引用(reference类型，指向对象起始地址的指针，或者指向一个代表对象的句柄或者其他与此对象相关的位置)和returnAddress类型(指向一条字节码指令的地址)。</li>
+<li>上述数据结构在局部变量表中的存储空间以<code>局部变量槽</code>(slot)来表示的。其中64位的long和double型占两个槽，其余占1个。具体的每个槽占32bit还是64bit，取决于具体的虚拟机如何实现。</li>
+<li>《Java虚拟机规范》中，对此内存区域规定了两类异常情况：
+<ol>
+<li>线程请求栈深超过虚拟机所允许栈深，抛<code>StackOverflowError</code>异常。</li>
+<li>若虚拟机栈容量可动态伸展，栈扩展是无法申请足够内存时，抛<code>OutOfMemoryError</code>异常。</li>
+</ol>
+</li>
+</ul>
+</li>
+<li>
+<p>本地方法栈(Native Method Stack)</p>
+<p>该内存区域发挥的作用类似虚拟机栈，只是为本地方法提供服务。有的虚拟机(如HotSpot)直接把本地方法栈和虚拟机栈合为一体。抛异常也同虚拟机栈。</p>
+</li>
+<li>
+<p>程序计数器(Program Counter Register)</p>
+<ul>
+<li>
+<p>是一块较小的<strong>内存空间</strong> 。是程序控制流的指示器。可以看做当前线程所执行java字节码的行号指示器。</p>
+</li>
+<li>
+<p>是程序控制流的指示器，分支、循环、跳转、异常处理、线程恢复等基础功能都要依赖这个计数器来完成。</p>
+</li>
+<li>
+<p>线程私有。</p>
+</li>
+<li>
+<p>若线程执行的是一个Java方法，PCR记录的是<strong>正在执行的虚拟机字节码指令的地址</strong>；如果是本地方法(Native)，这个计数器的值应为空。</p>
+</li>
+</ul>
+</li>
+<li>
+<p>堆区(Heap)</p>
+<ul>
+<li>Java堆(Java Heap)是虚拟机所管理的内存中最大的一块儿。堆是所有线程共享的内存区域，在虚拟机启动时创建。此内存区域的唯一作用就是存放<code>对象实例</code>，java世界里几乎所有的对象实例都在这里分配内存。</li>
+<li>Java堆是<strong>垃圾收集器</strong>管理的内存区域。GC操作的目标区域。</li>
+<li>堆可以处于物理上不连续的内存空间中，但在逻辑上它应该被视为连续的。堆即可被实现为固定的，也可被实现为可扩展的，不过当前主流虚拟机都将其实现为可扩展的。(通过参数 -Xms 和 -Xmx设定)。</li>
+<li>如果在Java堆中没有内存完成实例分配，并且堆也无法再扩展时，抛<code>OutOfMemoryError</code>异常。</li>
+</ul>
+</li>
+<li>
+<p>方法区(Method Area)</p>
+<ul>
+<li>方法区同Java堆一样，是各个线程共享的内存区域，用于存储<strong>已被虚拟机加载</strong>的<code>类型信息</code>、<code>常量</code>、<code>静态变量</code>、<code>即时编译器编译后的代码缓存</code>等数据。《Java虚拟机规范》中把方法区描·述为堆的一个逻辑部分，但它却有一个别名“非堆”(Non-Heap)，目的是与Java堆区分开来。</li>
+<li>**static final Class 常量池 **放在方法区</li>
+</ul>
+</li>
+</ul>
+<p>方法区指的是理论概念。</p>
+<p>持久代/元空间指的是实现机制。</p>
+<blockquote>
+<p>JDK 1.6 及之前：有永久代，字符串常量池和运行时常量池都存在持久代。</p>
+<p>JDK 1.7 ： 有永久代，字符串常量池移到堆区 运行时常量池还在方法区。</p>
+<p>JDK 1.8 及之后 ：无永久代，字符串常量池在堆区，运行时常量池在元空间。</p>
+</blockquote>
+
+       </div>
+       <div class="post-footer">
+        <div class="meta">
+         <div class="info">
+          <i class="fa fa-sun-o"></i>
+          <span class="date">2020-12-14</span>
+          <i class="fa fa-tag"></i>
+          
+          <a class="tag" href="http://nnego.github.io/_PzzGB-wA/" title="Java">Java </a>
+          
+         </div>
+        </div>
+       </div>
+      </div>
+      <div class="share">
+       <div class="evernote">
+        <a class="fa fa-bookmark" href="javascript:(function(){EN_CLIP_HOST='http://www.evernote.com';try{var%20x=document.createElement('SCRIPT');x.type='text/javascript';x.src=EN_CLIP_HOST+'/public/bookmarkClipper.js?'+(new%20Date().getTime()/100000);document.getElementsByTagName('head')[0].appendChild(x);}catch(e){location.href=EN_CLIP_HOST+'/clip.action?url='+encodeURIComponent(location.href)+'&amp;title='+encodeURIComponent(document.title);}})();" ref="nofollow" target="_blank"></a>
+       </div>
+       <div class="weibo">
+        <a class="fa fa-weibo" href="javascript:void((function(s,d,e){try{}catch(e){}var f='http://service.weibo.com/share/share.php?',u=d.location.href,p=['url=',e(u),'&amp;title=',e(d.title),'&amp;appkey=2924220432'].join('');function a(){if(!window.open([f,p].join(''),'mb',['toolbar=0,status=0,resizable=1,width=620,height=450,left=',(s.width-620)/2,',top=',(s.height-450)/2].join('')))u.href=[f,p].join('');};if(/Firefox/.test(navigator.userAgent)){setTimeout(a,0)}else{a()}})(screen,document,encodeURIComponent));"></a>
+       </div>
+       <div class="twitter">
+        <a class="fa fa-twitter" href="http://twitter.com/home?status=,http://nnego.github.io/Eql641qxr/,;"></a>
+       </div>
+      </div>
+      <div class="pagination">
+       <ul class="clearfix">
+
+        <li class="pre pagbuttons"><a class="btn" role="navigation" href="http://nnego.github.io/oe88XIFQm/" title="TCP/IP协议族体系结构及其主要协议">上一篇</a></li>
+         
+        
+       </ul>
+      </div>
+        
+     </div>
+    </div>
+   </div>
+  </div>
+  <script src="http://nnego.github.io/media/scripts/jquery.js"></script>
+  <script src="http://nnego.github.io/media/scripts/jquery-migrate-1.2.1.min.js"></script>
+  <script src="http://nnego.github.io/media/scripts/jquery.appear.js"></script>
+
+
+ </body>
+</html>
