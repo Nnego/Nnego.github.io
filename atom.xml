@@ -1,0 +1,1124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <id>https://suxiaomu.top</id>
+    <title>苏小霂的博客</title>
+    <updated>2024-11-12T15:00:03.481Z</updated>
+    <generator>https://github.com/jpmonette/feed</generator>
+    <link rel="alternate" href="https://suxiaomu.top"/>
+    <link rel="self" href="https://suxiaomu.top/atom.xml"/>
+    <logo>https://suxiaomu.top/images/avatar.png</logo>
+    <icon>https://suxiaomu.top/favicon.ico</icon>
+    <rights>All rights reserved 2024, 苏小霂的博客</rights>
+    <entry>
+        <title type="html"><![CDATA[Java并发编程之线程池]]></title>
+        <id>https://suxiaomu.top/CeZNMgta1/</id>
+        <link href="https://suxiaomu.top/CeZNMgta1/">
+        </link>
+        <updated>2023-06-16T13:15:05.000Z</updated>
+        <summary type="html"><![CDATA[<p>线程池就是创建若干个可执行的线程放入一个池（容器）中，有任务需要处理时，会提交到线程池中的任务队列，处理完之后线程并不会被销毁，而是仍然在线程池中等待下一个任务。</p>
+]]></summary>
+        <content type="html"><![CDATA[<p>线程池就是创建若干个可执行的线程放入一个池（容器）中，有任务需要处理时，会提交到线程池中的任务队列，处理完之后线程并不会被销毁，而是仍然在线程池中等待下一个任务。</p>
+<!-- more -->
+<h2 id="为什么要用线程池">为什么要用线程池？</h2>
+<p>Java 中创建一个线程，需要调用操作系统内核的 API，操作系统要为线程分配一系列的资源，成本很高，所以线程是一个重量级的对象，应该避免频繁创建和销毁。<br>
+使用线程池就能很好地避免频繁创建和销毁。</p>
+<p>为了减少在创建和销毁线程上所花的时间和对系统资源的消耗，解决资源不足的问题。</p>
+<p>如果不适用线程池，有可能造成系统创建大量同类线程而消耗内存挥着”过度切换“问题。</p>
+<h2 id="四种线程池">四种线程池</h2>
+<ul>
+<li><strong>SingleThreadPool</strong>：单个线程线程池，core = max =1，拿一个任务用一个线程</li>
+<li><strong>FixedThreadPool</strong>：指定大小的固定大小线程池，core=max, 都不能回收，无界队列</li>
+<li><strong>CachedThreadPool</strong>：core是0，所有的线程都可回收，无界队列</li>
+<li><strong>ScheduledThreadPool</strong> ： 定时任务专用的线程池</li>
+</ul>
+<p>问题</p>
+<ul>
+<li><strong>FixedThreadPool</strong>和<strong>SingleThreadPool</strong>：允许的<strong>请求队列</strong>长度为Interger.MAX_VALUE，可能会堆积大量请求，造成OOM；</li>
+<li><strong>CachedThreadPool</strong>和<strong>ScheduledThreadPool</strong>：允许的创建线程数量为Integer.MAX_VALUE，可能会创建大量线程，造成OOM。</li>
+</ul>
+<h2 id="线程池参数">线程池参数？</h2>
+<ul>
+<li>corePoolSize：核心线程数量，定义了最小可以同时运行的线程数量，没有任务也不会被回收。</li>
+<li>maximumPoolSize：当线程数量<strong>大于核心线程数</strong>，且队列中存放的任务达到队列容量的时候，继续创建线程。</li>
+<li>keepAliveTime：超过corePoolSize之后”临时线程“的存活时间。</li>
+<li>timeUnit：单位</li>
+<li>workQueue：当新任务来的时候，保存未执行的任务。大于corePoolSize时进入阻塞队列等待。</li>
+<li>threadFactory：线程工厂，用来创建线程，默认就行</li>
+<li>RejectdExecutionHandler handler：拒绝策略，线程数量达到maximumPoolSize大小，且workQueue也塞满的情况下，线程池调用handler拒绝策略来处理请求。</li>
+</ul>
+<p>线程池运行流程：<br>
+1.线程池创建core数量的核心线程准备接受任务<br>
+2.core满了之后，任务进入阻塞队列<br>
+3.阻塞队列慢之后，开新线程执行，开到max<br>
+4.到max之后，max - core 数量的空闲线程会在keepAliveTime指定时间后销毁，最后保持到core数量的线程<br>
+5.max也满了，还有新任务进来，就开始执行线程池的拒绝策略</p>
+<p>举例：<br>
+一个线程池，core5 , max 20 queue 50， 100并发：<br>
+首先5个直接执行。接下来50个进入队列排队，再多开15个继续执行，现在70个被安排了，剩余30个任务进入到默认的拒绝策略处理。</p>
+<h2 id="线程池拒绝策略">线程池拒绝策略：</h2>
+<ul>
+<li>
+<p>AbortPolicy：默认拒绝策略，直接抛异常</p>
+</li>
+<li>
+<p>DiscardPolicy：直接抛弃不处理。</p>
+</li>
+<li>
+<p>DiscardOldestPolicy：丢弃队列中最老的任务。</p>
+</li>
+<li>
+<p>CallerRunsPolicy：将任务分配给当前执行execute方法的线程来执行</p>
+<p>自定义拒绝策略：实现<code>RejectedExecutionHandler</code>接口，可以实现友好的拒绝策略。包括但不限于：将数据存入数据库，用日志处理等。</p>
+</li>
+</ul>
+<p>JDK 的并发工具包里还有一个静态线程池工厂类 Executors，可以方便地创建线程池，但是由于 Executors 创建的线程池内部很多地方用到了无界任务队列，在高并发场景下，无界任务队列会接收过多的任务对象，导致 JVM 抛出OutOfMemoryError，整个 JVM 服务崩溃，影响严重。所以很多公司已经不建议使用 Executors 去创建线程。</p>
+<h2 id="线程池包含哪些状态">线程池包含哪些状态？</h2>
+<p>线程池的5种状态：RUNNING、SHUTDOWN、STOP、TIDYING、TERMINATED。</p>
+<p>见 ThreadPoolExecutor 源码</p>
+<pre><code class="language-java">// runState is stored in the high-order bits
+private static final int RUNNING    = -1 &lt;&lt;COUNT_BITS;
+private static final int SHUTDOWN   =  0 &lt;&lt;COUNT_BITS;
+private static final int STOP       =  1 &lt;&lt;COUNT_BITS;
+private static final int TIDYING    =  2 &lt;&lt;COUNT_BITS;
+private static final int TERMINATED =  3 &lt;&lt;COUNT_BITS;
+</code></pre>
+<ol>
+<li>
+<p>RUNNING：<br>
+线程池一旦被创建，就处于 RUNNING 状态，任务数为 0，能够接收新任务，对已排队的任务进行处理。</p>
+</li>
+<li>
+<p>SHUTDOWN：<br>
+不接收新任务，但能处理已排队的任务。调用线程池的 shutdown() 方法，线程池由 RUNNING 转变为 SHUTDOWN 状态。</p>
+</li>
+<li>
+<p>STOP：<br>
+不接收新任务，不处理已排队的任务，并且会中断正在处理的任务。调用线程池的 shutdownNow() 方法，线程池由(RUNNING 或 SHUTDOWN ) 转变为 STOP 状态。</p>
+</li>
+<li>
+<p>TIDYING：<br>
+SHUTDOWN 状态下，任务数为 0， 其他所有任务已终止，线程池会变为 TIDYING 状态，会执行 terminated() 方法。线程池中的 terminated() 方法是空实现，可以重写该方法进行相应的处理。<br>
+线程池在 SHUTDOWN 状态，任务队列为空且执行中任务为空，线程池就会由 SHUTDOWN 转变为 TIDYING 状态。<br>
+线程池在 STOP 状态，线程池中执行中任务为空时，就会由 STOP 转变为 TIDYING 状态。</p>
+</li>
+<li>
+<p>TERMINATED：<br>
+线程池彻底终止。线程池在 TIDYING 状态执行完 terminated() 方法就会由 TIDYING 转变为 TERMINATED 状态。</p>
+</li>
+</ol>
+<h2 id="线程池关闭方法">线程池关闭方法</h2>
+<h4 id="1shutdown">1.shutdown()</h4>
+<ul>
+<li>有序关闭，已提交任务继续执行</li>
+<li>不接受新任务</li>
+</ul>
+<h4 id="2-shutdownnow">2、shutdownNow()</h4>
+<ul>
+<li>尝试停止所有正在执行的任务</li>
+<li>停止等待执行的任务，并返回等待执行的任务列表</li>
+</ul>
+<h4 id="3-awaitterminationlong-timeout-timeunit-unit">3、awaitTermination(long timeout, TimeUnit unit)</h4>
+<ul>
+<li>收到关闭请求后，所有任务执行完成、超时、线程被打断，阻塞直到三种情况任意一种发生</li>
+<li>参数可以设置超时时间与超时单位</li>
+<li>线程池关闭返回 true；超过设置时间未关闭，返回 false</li>
+</ul>
+<h5 id="总结">总结</h5>
+<pre><code>- 调用 shutdown() 和 shutdownNow() 方法关闭线程池，线程池都无法接收新的任务
+- shutdown() 方法会继续执行正在执行未完成的任务；shutdownNow() 方法会尝试停止所有正在执行的任务
+- shutdown() 方法没有返回值；shutdownNow() 方法返回等待执行的任务列表
+- awaitTermination(long timeout, TimeUnit unit) 方法可以获取线程池是否已经关闭，需要配合 shutdown() 使用
+- shutdownNow() 不一定能够立马结束线程池，该方法会尝试停止所有正在执行的任务，通过调用 Thread.interrupt() 方法来实现的，如果线程中没有 sleep() 、wait()、Condition、定时锁等应用，interrupt() 方法是无法中断当前的线程的。
+</code></pre>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[Java并发编程之synchronized关键字]]></title>
+        <id>https://suxiaomu.top/D7arNdIEW/</id>
+        <link href="https://suxiaomu.top/D7arNdIEW/">
+        </link>
+        <updated>2023-06-15T13:13:40.000Z</updated>
+        <content type="html"><![CDATA[<!-- more -->
+<p>synchronized通过对象内部的一个叫做<strong>监视器锁</strong>的东西来实现的。</p>
+<p>监视器锁本身依赖于操作系统底层的<strong>互斥锁Mutex Lock</strong>来实现的，<strong>同步代码块</strong>是通过<code>monitorenter</code> 和<code>moniterexit</code> 指令来获取线程的执行权。<strong>同步方法</strong>是通过加<code>ACC_SYNCHONIZED</code> 标识获取线程的执行权。</p>
+<p>操作系统实现线程之间的切换需要从<strong>用户态</strong>转换到<strong>核心态</strong>，成本很高，状态转换要花费比较长的时间。</p>
+<p>这就是synchronized效率低的原因。这种依赖于操作系统MutexLock实现的锁成为<strong>重量级锁</strong>。</p>
+<h3 id="synchronized-vs-volatile">synchronized v.s. volatile</h3>
+<p>Volatile：内存可见(不保证原子性，不保证互斥性)；防止CPU指令重排(内存屏障)</p>
+<p>扩展：</p>
+<p>如何保证内存可见？</p>
+<blockquote>
+<p><strong>JMM通过控制主内存与每个线程的本地内存之间的交互，来为Java程序员提供内存可见性保证。</strong></p>
+</blockquote>
+<p>什么是内存屏障？</p>
+<blockquote>
+<p><strong>MM属于语言级的内存模型，它确保在不同的编译器和不同的处理器平台之上，通过禁止特定类型的编译器重排序和处理器重排序，为程序员提供一致的内存可见性保证</strong>。</p>
+</blockquote>
+<h3 id="happens-before规则">happens-before规则</h3>
+<p>happens-before表示的是前一个操作的结果对于后续操作是可见的，它是一种表达多个线程之间对于内存的可见性。所以我们可以认为在 JMM 中，如果一个操作执行的结果需要对另一个操作可见，那么这两个操作必须要存在happens-before关系。这两个操作可以是同一个线程，也可以是不同的线程。</p>
+<h3 id=""></h3>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[Java并发编程之锁与锁升级]]></title>
+        <id>https://suxiaomu.top/u2MONV7zD/</id>
+        <link href="https://suxiaomu.top/u2MONV7zD/">
+        </link>
+        <updated>2023-06-13T13:05:39.000Z</updated>
+        <content type="html"><![CDATA[<!-- more -->
+<h2 id="java中的锁">java中的锁</h2>
+<p>synchronized 关键字锁定代码库<br>
+可重入锁 java.util.concurrent.lock.ReentrantLock<br>
+可重复读写锁 java.util.concurrent.lock.ReentrantReadWriteLock</p>
+<h3 id="可重入锁">可重入锁</h3>
+<ul>
+<li>指在同一个线程在外层方法获取锁的时候，进入内层方法会自动获取锁。JDK 中基本都是可重入锁，避免死锁的发生。上面提到的常见的锁都是可重入锁。</li>
+</ul>
+<h3 id="公平锁-非公平锁">公平锁 / 非公平锁</h3>
+<ul>
+<li>公平锁：多个线程按照申请锁的顺序依次获得锁，如<code>java.util.concurrent.lock.ReentrantLock.FairSync</code></li>
+<li>非公平锁：指多个线程获取锁的顺序并不是按照申请锁的顺序，而是有可能后申请的线程优先获得锁。如<code>synchronized</code>，<code>java.util.concurrent.lock.ReentrantLock.NonfairSync</code>等</li>
+</ul>
+<h3 id="独享锁-共享锁">独享锁 / 共享锁</h3>
+<ul>
+<li>独享：指锁一次只能被一个线程所持有。如<code>synchronized</code> ，<code>java.util.concurrent.lock.ReentrantLock</code> 都是独享锁</li>
+<li>共享：指锁可以被多个线程所持有。<code>ReadWriteLock</code> 返回的 <code>ReadLock</code>  就是共享锁</li>
+</ul>
+<h3 id="悲观锁-乐观锁">悲观锁 / 乐观锁</h3>
+<ul>
+<li>悲观锁：一律会对代码进行加锁，<code>synchronized</code> ，<code>java.util.concurrent.lock.ReentrantLock</code> 都是悲观锁</li>
+<li>乐观锁：默认不会进行并发修改，通常不断采取CAS算法不断尝试更新</li>
+<li>悲观锁适合写多读少的场景 ，乐观锁适合读多写少的场景</li>
+</ul>
+<h3 id="粗粒度锁-细粒度锁">粗粒度锁 / 细粒度锁</h3>
+<ul>
+<li>粗粒度锁，就是把执行的代码块都锁定</li>
+<li>细粒度锁，就是锁住尽可能小的代码块，<code>java.util.concurrent.ConcurrentHashMap</code>  中的分段锁就是一种细粒度锁</li>
+<li>粗粒度锁和细粒度锁是相对的，没有什么标准</li>
+</ul>
+<h3 id="偏向锁-轻量级锁-重量级锁">偏向锁 / 轻量级锁 / 重量级锁</h3>
+<ul>
+<li>JDK 1.5 之后新增锁的升级机制，提升性能。</li>
+<li>通过 synchronized 加锁后，一段同步代码一直被同一个线程所访问，那么该线程获取的就是偏向锁</li>
+<li>偏向锁被一个其他线程访问时，Java 对象的偏向锁就会升级为轻量级锁</li>
+<li>再有其他线程会以自旋的形式尝试获取锁，不会阻塞，自旋一定次数仍然未获取到锁，就会膨胀为重量级锁</li>
+</ul>
+<h3 id="自旋锁">自旋锁</h3>
+<ul>
+<li>自旋锁是指尝试获取锁的线程不会立即阻塞，而是采用循环的方式来获取锁。这样的好处是减少线程的上下文切换消耗，缺点是循环占有，可能会CPU空转，浪费资源。</li>
+</ul>
+<h2 id="锁的升级">锁的升级</h2>
+<p>锁的状态由低到高：</p>
+<p>无锁 -&gt; 偏向锁 -&gt; 轻量级锁 -&gt; 重量级锁</p>
+<p>只能升级，不能降级。</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">锁状态</th>
+<th style="text-align:center">存储内容</th>
+<th style="text-align:center">标志位</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">无锁</td>
+<td style="text-align:center">对象的hashCode，对象分代年龄，是否是偏向锁(0)</td>
+<td style="text-align:center">01</td>
+</tr>
+<tr>
+<td style="text-align:center">偏向锁</td>
+<td style="text-align:center">偏向线程ID，偏向时间戳，对象分代年龄，是否偏向锁(1)</td>
+<td style="text-align:center">01</td>
+</tr>
+<tr>
+<td style="text-align:center">轻量级锁</td>
+<td style="text-align:center">指向栈中锁记录的指针</td>
+<td style="text-align:center">00</td>
+</tr>
+<tr>
+<td style="text-align:center">重量级锁</td>
+<td style="text-align:center">指向互斥量的指针</td>
+<td style="text-align:center">11</td>
+</tr>
+</tbody>
+</table>
+<p>锁的对比</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">锁</th>
+<th style="text-align:center">优点</th>
+<th style="text-align:center">缺点</th>
+<th style="text-align:center">场景</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">偏向锁</td>
+<td style="text-align:center">加解锁不需要额外消耗，和执行非异步方法相比仅存在纳秒级差距。</td>
+<td style="text-align:center">若线程之间存在竞争，会代带来额外的锁撤销的消耗(撤销偏向锁会Stop The World)</td>
+<td style="text-align:center">使用于只有一个线程访问同步代码场景</td>
+</tr>
+<tr>
+<td style="text-align:center">轻量级锁</td>
+<td style="text-align:center">竞争的线程不会阻塞，提高了系统的响应速度</td>
+<td style="text-align:center">始终得不到锁的竞争线程，不断自旋会消耗CPU</td>
+<td style="text-align:center">追求响应速度，同步代码块执行速度非常快</td>
+</tr>
+<tr>
+<td style="text-align:center">重量级锁</td>
+<td style="text-align:center">线程竞争不使用自旋，不会消耗CPU</td>
+<td style="text-align:center">线程阻塞，响应时间慢</td>
+<td style="text-align:center">追求吞吐量，同步块执行速度较慢</td>
+</tr>
+</tbody>
+</table>
+<p>锁如何升级</p>
+<ul>
+<li>
+<p>无锁</p>
+<p>无锁是指线程通过无限循环来执行更新操作，如果执行成功就退出循环，如果执行失败（有其他线程更新了值），则继续执行，直到成功为止。CAS操作就属于无锁。如果从性能的角度来看，无锁状态的性能是非常高的。</p>
+</li>
+<li>
+<p>偏向锁</p>
+<p><strong>偏向锁的前提假设是当一个线程获取锁，后面还有大概率该线程还会需要继续持有这把锁</strong> 。</p>
+<p>当有另外一个线程区尝试获取这个锁的时候，偏向模式就宣告结束。</p>
+<blockquote>
+<p>虚拟机启用偏向锁的参数<code>-XX:UseBiasedLocking</code>。如果当前偏向锁已启动，当锁对象第一次被线程获取的时候，虚拟机将会把对象头中的标志位设为<code>01</code>，即偏向模式。同时使用CAS操作把获取到这个锁的线程的ID记录在对象的Mark Word之中，如果CAS操作成功，持有偏向锁的线程以后每次进入这个锁的同步块时，虚拟机都可以不用再进行同步操作了。</p>
+</blockquote>
+</li>
+<li>
+<p>轻量级锁</p>
+<p><strong>当开始有锁的竞争了，那么偏向锁就会升级到轻量级锁；</strong></p>
+<p>当获取锁冲突多，时间越长的时候，线程肯定无法继续在这里死等了，所以只好先挂起，然后等前面获取锁的线程释放了锁之后，再开启下一轮的锁竞争，而这种形式就是我们的重量级锁。</p>
+<p>在代码进入同步块的时候，如果此同步对象没有被锁定（锁标志位为<code>01</code>状态），虚拟机首先将在当前线程的栈帧中建立一个名为锁记录（Lock Record）的空间，用于存储锁对象目前的Mark Word的拷贝。</p>
+<p>然后，虚拟机将使用CAS操作尝试将对象的Mark Word更新为指向Lock Record的指针。如果这个更新动作成功了，那么这个线程就拥有了该对象的锁，并且对象Mark Word的锁标志位（Mark Word的最后2bit）将转变为<code>00</code>，即表示此对象处于轻量级锁定状态。 <strong>轻量级锁的前提假设是对于绝大部分的锁，在整个同步周期内都是不存在竞争的，通过CAS操作来避免时候互斥锁的开销</strong></p>
+<p>关于自旋锁：</p>
+<blockquote>
+<p>自旋锁是一种通过让线程不释放当前的CPU执行一个忙循环，来尝试获取锁的方式。 <strong>自旋锁的前提假设是锁被其它线程占用的时间很短</strong> 。如果其它线程占用锁的时间很长，那么自旋的线程只会白白消耗处理器资源，而不会做任何有用的工作，反而带来性能上的浪费。自旋次数的默认值是<code>10</code>次，用户可以通过使用参数<code>-XX:PreBlockSpin</code>来更改。</p>
+</blockquote>
+</li>
+<li>
+<p>重量级锁</p>
+<p>当有两个及以上的线程争用同一个锁，那么轻量级锁就不再有效，要膨胀为重量级锁。锁标志的状态值变为<code>10</code>，Mark Word中存储的就是指向重量级锁（互斥量）的指针，后面等待锁的线程也要进入阻塞状态。</p>
+<blockquote>
+<ul>
+<li>偏向锁只有设置了<code>-XX:UseBiasedLocking</code>参数才会存在</li>
+<li>假设启用了偏向锁，对象头的锁标志位是<code>01</code>（和未锁定状态一样），但是存储的内容是偏向线程ID、偏向时间戳</li>
+<li>当线程获取偏向锁是通过CAS操作将对象头中存储的偏向线程ID更新为当前线程的ID</li>
+<li>对象是否被锁定是指对象头是否指向线程的锁记录（Lock Record）</li>
+<li>只有是轻量级锁或者重量级锁时对象才会被锁定</li>
+</ul>
+</blockquote>
+</li>
+</ul>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[Java并发编程之如何保证多线程程序运行的安全性]]></title>
+        <id>https://suxiaomu.top/Q0uGuAKPB/</id>
+        <link href="https://suxiaomu.top/Q0uGuAKPB/">
+        </link>
+        <updated>2023-06-13T11:04:35.000Z</updated>
+        <summary type="html"><![CDATA[<p>原子性，可见性，顺序性如何保证？</p>
+]]></summary>
+        <content type="html"><![CDATA[<p>原子性，可见性，顺序性如何保证？</p>
+<!-- more -->
+<h2 id="多线程程序运行的安全问题体现在">多线程程序运行的安全问题体现在？</h2>
+<ul>
+<li>
+<p>原子性<br>
+一个或多个操作在CPU执行的过程中不被中断的特性</p>
+</li>
+<li>
+<p>可见性<br>
+一个线程对共享变量的修改，另外一个线程能立刻看到</p>
+</li>
+<li>
+<p>有序性<br>
+程序执行的顺序按照代码的先后顺序执行</p>
+<h2 id="导致原因">导致原因</h2>
+<ul>
+<li>线程切换带来的原子性问题</li>
+<li>缓存导致的可见性问题</li>
+<li>编译优化带来的有序性问题</li>
+</ul>
+</li>
+</ul>
+<h2 id="解决方法">解决方法</h2>
+<ul>
+<li>JDK Atomic原子类、synchronized、LOCK，可解决原子性问题</li>
+<li>synchronized、volatile、LOCK，可以解决可见性问题</li>
+<li>Happens-Before规则可以解决有序性问题</li>
+</ul>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[Java并发编程之进程与线程]]></title>
+        <id>https://suxiaomu.top/moQ_RMGta/</id>
+        <link href="https://suxiaomu.top/moQ_RMGta/">
+        </link>
+        <updated>2023-06-12T13:34:44.000Z</updated>
+        <summary type="html"><![CDATA[<p>老生常谈之进程与线程</p>
+]]></summary>
+        <content type="html"><![CDATA[<p>老生常谈之进程与线程</p>
+<!-- more -->
+<h2 id="进程">进程</h2>
+<ul>
+<li>程序执行时的一个实例</li>
+<li>每个进程都有独立的内存地址空间</li>
+<li>是操作系统进行资源分配和调度的基本单位</li>
+<li>进程里的堆，是一个进程中最大的一块内存，被进程中的所有线程共享，进程创建时分配，主要存放new创建的对象实例</li>
+<li>进程的方法区，是用来存放进程中的代码片段的，是线程共享的</li>
+<li>在多线程OS中，进程不是一个可执行的实体，即一个进程至少创建一个线程去执行代码</li>
+</ul>
+<h2 id="线程">线程</h2>
+<ul>
+<li>进程中的一个实体</li>
+<li>进程的一个执行路径</li>
+<li>CPU调度和分派的基本单位</li>
+<li>现成本身是不会独立存在的</li>
+<li>当前线程CPU时间片用完后，会让出CPU等下次轮到自己再执行</li>
+<li>操作系统不会单独为线程分配内存，线程组之间只能共享所属进程的资源</li>
+<li>现成只拥有在运行中必不可少的资源(比如程序计数器、栈)</li>
+<li>线程的程序计数器就是为了记录该线程在让出CPU时候的执行地址，待再次时间片分配到自己时继续执行</li>
+<li>每个线程有自己的栈资源，用于存储该线程的局部变量和调用栈帧，其他线程无权访问</li>
+</ul>
+<h2 id="关系">关系</h2>
+<ul>
+<li>一个程序至少一个进程，一个进程至少有一个线程；进程中的多个线程是互相共享资源的</li>
+<li>Java中启动main函数的时候就启动了一个JVM的进程，main函数所在的线程就是主线程。</li>
+<li>多个线程共享进程的堆空间和方法区资源，每个线程有自己的程序计数器和栈资源。</li>
+</ul>
+<h2 id="区别">区别</h2>
+<ul>
+<li>本质：进程是操作系统进行资源调度和分配的基本单位；线程是任务调度和执行的基本单位</li>
+<li>内存分配：系统在运行的时候会为每个进程分配不同的内存空间，建立数据表来维护代码段、堆栈段和数据段；除了 CPU 外，系统不会为线程分配内存，线程所使用的资源来自其所属进程的资源</li>
+<li>资源拥有：进程之间的资源是独立的，无法共享；同一进程的所有线程共享本进程的资源，如内存，CPU，IO 等</li>
+<li>开销：每个进程都有独立的代码和数据空间，程序之间的切换会有较大的开销；线程可以看做轻量级的进程，同一类线程共享代码和数据空间，每个线程都有自己独立的运行程序计数器和栈，线程之间切换的开销小</li>
+<li>通信：进程间通信 以IPC（管道，信号量，共享内存，消息队列，文件，套接字等）方式通信 ；同一个进程下，线程间可以共享全局变量、静态变量等数据进行通信，做到同步和互斥，以保证数据的一致性</li>
+<li>调度和切换：线程上下文切换比进程上下文切换更快，代价更小</li>
+<li>执行过程：每个进程都有一个程序执行的入口，顺序执行序列；线程不能够独立执行，必须依存在应用程序中，由程序的多线程控制机制控制</li>
+<li>健壮性：每个进程之间的资源是独立的，当一个进程崩溃时，不会影响其他进程；同一进程的线程共享此线程的资源，当一个线程发生崩溃时，此进程也会发生崩溃，稳定性差，容易出现共享与资源竞争产生的各种问题，如死锁等</li>
+</ul>
+<h2 id="为什么要有线程">为什么要有线程</h2>
+<p>每个进程都有自己的地址空间，即进程空间。操作系统为了避免为每个请求都创建进程，引入线程</p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[异步化事务型消息模型]]></title>
+        <id>https://suxiaomu.top/1T9C5Piq8/</id>
+        <link href="https://suxiaomu.top/1T9C5Piq8/">
+        </link>
+        <updated>2023-03-10T13:04:55.000Z</updated>
+        <summary type="html"><![CDATA[<p>事务型消息及分布式事务理论</p>
+]]></summary>
+        <content type="html"><![CDATA[<p>事务型消息及分布式事务理论</p>
+<!--more-->
+<h2 id="异步化事务型消息模型">异步化事务型消息模型</h2>
+<h3 id="事务型消息">事务型消息</h3>
+<p>分布式事务消息适用于所有对数据最终一致性有强需求的场景。</p>
+<ul>
+<li>半事务消息：暂不能投递的消息，发送方已经成功地将消息发送到了消息队列RocketMQ版服务端，但是服务端未收到生产者对该消息的二次确认，此时该消息被标记成“暂不能投递”状态，处于该种状态下的消息即半事务消息。</li>
+<li>消息回查：由于网络闪断、生产者应用重启等原因，导致某条事务消息的二次确认丢失，消息队列RocketMQ版服务端通过扫描发现某条消息长期处于“半事务消息”时，需要主动向消息生产者询问该消息的最终状态（Commit或是Rollback），该询问过程即消息回查。</li>
+</ul>
+<figure data-type="image" tabindex="1"><img src="https://static-aliyun-doc.oss-accelerate.aliyuncs.com/assets/img/zh-CN/1579264061/p177406.png" alt="流程" loading="lazy"></figure>
+<p>事务型消息交互流程</p>
+<ol>
+<li>发送方将半事务消息发送至消息队列RocketMQ版服务端。</li>
+<li>消息队列RocketMQ版服务端将消息持久化成功之后，向发送方返回Ack确认消息已经发送成功，此时消息为半事务消息。</li>
+<li>发送方开始执行本地事务逻辑。</li>
+<li>发送方根据本地事务执行结果向服务端提交二次确认（Commit或是Rollback），服务端收到Commit状态则将半事务消息标记为可投递，订阅方最终将收到该消息；服务端收到Rollback状态则删除半事务消息，订阅方将不会接受该消息。</li>
+</ol>
+<p>事务消息回查步骤如下：</p>
+<ol>
+<li>在断网或者是应用重启的特殊情况下，上述步骤4提交的二次确认最终未到达服务端，经过固定时间后服务端将对该消息发起消息回查。</li>
+<li>发送方收到消息回查后，需要检查对应消息的本地事务执行的最终结果。</li>
+<li>发送方根据检查得到的本地事务的最终状态再次提交二次确认，服务端仍按照步骤4对半事务消息进行操作。</li>
+</ol>
+<h5 id="rocketmq消息的最终状态">RocketMQ消息的最终状态</h5>
+<h2 id="分布式事务">分布式事务</h2>
+<h3 id="base-理论">BASE 理论</h3>
+<ul>
+<li>Basically Available(基本可用)</li>
+<li>Soft state(软状态)</li>
+<li>Eventually consistent(最终一致性)</li>
+</ul>
+<p><strong>基本可用</strong> 是指不追求强可用性，而且强调系统基本能够一直运行对外提供服务。当分布式系统遇到不可预估的故障时，允许一定程度上的不可用，比如：对请求进行限流排队，对非核心服务进行降级。</p>
+<p><strong>软状态</strong> 是指允许系统中的数据存在中间状态，而不是事务的原子性：要么全部成功，要不全部不成功。</p>
+<p><strong>最终一致性</strong> 是指数据不可能一直都是软状态，必须在一个时间期限之后达到各个节点的一致性，在此之后，所有的节点的数据都是一致的，系统达到最终一致性。</p>
+<p><code>BASE</code> 理论的核心思想是：即使无法做到强一致性，但每个应用都可以根据自身业务特点，采用适当的方式来使系统达到最终一致性。</p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[KafKa实现ClickHouse增量同步数据]]></title>
+        <id>https://suxiaomu.top/CbG54JdMQ/</id>
+        <link href="https://suxiaomu.top/CbG54JdMQ/">
+        </link>
+        <updated>2022-02-22T14:22:23.000Z</updated>
+        <summary type="html"><![CDATA[<p>KafKa与ClickHouse</p>
+]]></summary>
+        <content type="html"><![CDATA[<p>KafKa与ClickHouse</p>
+<!-- more -->
+<hr>
+<h2 id="kafka下载与安装">Kafka下载与安装</h2>
+<h3 id="下载">下载</h3>
+<p>官网下载 :</p>
+<p><a href="https://kafka.apache.org/downloads">Apache Kafka</a></p>
+<p>确保已经安装jdk8+环境，使用<code>javac</code>命令测试</p>
+<h3 id="安装">安装</h3>
+<p>解压</p>
+<pre><code class="language-shell">tar -xzvf kafka_2.12-3.1.0.tgz -C /opt
+</code></pre>
+<p>建议建立软连接</p>
+<pre><code class="language-shell">ln -s ./kafka_2.12-3.1.0 kafka/
+</code></pre>
+<p>查看目录结构</p>
+<pre><code class="language-shell">▶ ll /opt/kafka/
+total 64K
+drwxr-xr-x. 3 root root 4.0K Jan 12 17:04 bin
+drwxr-xr-x. 3 root root 4.0K Mar  8 14:36 config
+drwxr-xr-x. 2 root root 8.0K Mar  8 14:32 libs
+-rw-r--r--. 1 root root  15K Jan 12 17:01 LICENSE
+drwxr-xr-x. 2 root root  262 Jan 12 17:04 licenses
+drwxr-xr-x. 2 root root  237 Mar  8 14:41 logs
+-rw-r--r--. 1 root root  28K Jan 12 17:01 NOTICE
+drwxr-xr-x. 2 root root   44 Jan 12 17:04 site-docs
+</code></pre>
+<h2 id="kafka常用命令">Kafka常用命令</h2>
+<h3 id="管理">管理</h3>
+<pre><code class="language-shell">#启动zookeeper
+bin/zookeeper-server-start.sh -daemon config/zookeeper.properties 
+
+#启动Kafka
+bin/kafka-server-start.sh -daemon config/server.properties
+
+## 创建topic（1个分区，2个副本）
+bin/kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 1 --partitions 1 --topic test
+
+## 创建topic (新版本)kafka版本 &gt;= 2.2
+bin/kafka-topics.sh --create --bootstrap-server localhost:9092 --replication-factor 1 --partitions 1 --topic test
+
+## 分区扩容
+# kafka版本 &lt; 2.2
+bin/kafka-topics.sh --zookeeper localhost:2181 --alter --topic topic1 --partitions 2
+
+# kafka版本 &gt;= 2.2
+bin/kafka-topics.sh --bootstrap-server broker_host:port --alter --topic topic1 --partitions 2
+
+## 删除topic
+bin/kafka-topics.sh --zookeeper localhost:2181 --delete --topic test
+</code></pre>
+<h3 id="查询">查询</h3>
+<pre><code class="language-shell">## 查询集群描述
+bin/kafka-topics.sh --describe --zookeeper 127.0.0.1:2181
+
+## topic列表查询
+bin/kafka-topics.sh --list --zookeeper localhost:2181
+
+## topic列表查询（支持0.9版本+）
+bin/kafka-topics.sh --list --bootstrap-server localhost:9092
+
+## 新消费者列表查询（支持0.9版本+）
+bin/kafka-consumer-groups.sh --new-consumer --bootstrap-server localhost:9092 --list
+
+## 新消费者列表查询（支持0.10版本+）
+bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092 --list
+
+## 显示某个消费组的消费详情（仅支持offset存储在zookeeper上的）
+bin/kafka-run-class.sh kafka.tools.ConsumerOffsetChecker --zookeeper localhost:2181 --group test
+
+## 显示某个消费组的消费详情（0.9版本 - 0.10.1.0 之前）
+bin/kafka-consumer-groups.sh --new-consumer --bootstrap-server localhost:9092 --describe --group test-consumer-group
+
+## 显示某个消费组的消费详情（0.10.1.0版本+）
+bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092 --describe --group my-group
+</code></pre>
+<h3 id="生产和消费">生产和消费</h3>
+<pre><code>## 生产者
+bin/kafka-console-producer.sh --broker-list localhost:9092 --topic test
+
+## 消费者
+bin/kafka-console-consumer.sh --zookeeper localhost:2181 --topic test
+
+## 新生产者（支持0.9版本+）
+bin/kafka-console-producer.sh --broker-list localhost:9092 --topic test --producer.config config/producer.properties
+
+## 新消费者（支持0.9版本+）
+bin/kafka-console-consumer.sh --bootstrap-server localhost:9092  --from-beginning --consumer.config config/consumer.properties --topic test
+
+## kafka-verifiable-consumer.sh（消费者事件，例如：offset提交等）
+bin/kafka-verifiable-consumer.sh --broker-list localhost:9092 --topic test --group-id groupName
+
+## 高级点的用法
+bin/kafka-simple-consumer-shell.sh --brist localhost:9092 --topic test --partition 0 --offset 1234  --max-messages 10
+</code></pre>
+<hr>
+<h2 id="clickhouse使用kafka外表进行数据的增量更新">ClickHouse使用Kafka外表进行数据的增量更新</h2>
+<h3 id="kafka">kafka:</h3>
+<ol>
+<li>创建topic</li>
+</ol>
+<pre><code>bin/kafka-topic --create --bootstrap-server localhost:9092 --replication-factors 1 --partitions 1 --topic tdf
+</code></pre>
+<h3 id="clickhouse">clickhouse:</h3>
+<ol>
+<li>创建Kafka消费表(Kafka引擎)</li>
+</ol>
+<pre><code class="language-sql">CREATE TABLE default.toll_detail_final_kafka
+(
+    `id` Int64,
+    `toll_detail_id` Int64,
+    `order_id` String,
+    `toll_duty_id` String,
+    `park_id` Int64,
+    `licence_plate` String,
+    `brand` String,
+    `toll_man_name` String,
+    `toll_man_id` Int64,
+    `in_time` Nullable(DateTime64(3, 'Asia/Shanghai')) ,
+    `out_time` Nullable(DateTime64(3, 'Asia/Shanghai')) ,
+    `event_time` DateTime64(3, 'Asia/Shanghai'),
+    `in_location` String,
+    `in_camera_id` Int64,
+    `out_location` String,
+    `out_camera_id` Int64,
+    `fee_expected` Decimal(15,2),
+    `fee_cash` Decimal(15,2),
+    `fee_third_part` Decimal(15,2),
+    `fee_third_part_real` Decimal(15,2),
+    `fee_member_point` Decimal(15,2),
+    `fee_member_benefit` Decimal(15,2),
+    `fee_etc` Decimal(15,2),
+    `fee_third_part_deduction` Decimal(15,2),
+    `fee_cash_by_pos` Decimal(15,2),
+    `fee_online` Decimal(15,2),
+    `fee_coupon` Decimal(15,2),
+    `paper_coupon_fee` Decimal(15,2),
+    `elec_coupon_fee` Decimal(15,2),
+    `paper_coupon_hours` Int64,
+    `elec_coupon_hours` Int64,
+    `free_reason` String,
+    `free_amount` Decimal(15,2),
+    `fee_balance` Decimal(15,2),
+    `owner_id` Int64,
+    `owner_name` String,
+    `car_type` String,
+    `note` String,
+    `lift_by_hand` Int32,
+    `in_exception_type` String,
+    `out_exception_type` String,
+    `status` Int32,
+    `updated_at` DateTime64(3, 'Asia/Shanghai'),
+    `created_at` DateTime64(3, 'Asia/Shanghai'),
+    `description` String,
+    `fee_exception` Decimal(15,2),
+    `fee_reserved1` Decimal(15,2),
+    `fee_reserved2` Decimal(15,2)
+)
+ENGINE = Kafka()
+SETTINGS 
+kafka_broker_list = '120.0.0.1:9092',
+kafka_topic_list = 'toll_detail_final',
+kafka_group_name = 'tdfConsumerGroup',
+kafka_format = 'JSONEachRow',
+kafka_skip_broken_messages = 10;
+</code></pre>
+<ol start="2">
+<li>创建实体表实际存数据(MergeTree引擎)</li>
+</ol>
+<p>已经创建的tdf和tt表(以toll_detail_final表举例)</p>
+<pre><code class="language-sql">CREATE TABLE default.toll_detail_final
+(
+ `id` Int64,
+ `toll_detail_id` Int64,
+ `order_id` String,
+ `toll_duty_id` String,
+ `park_id` Int64,
+ `licence_plate` String,
+ `brand` String,
+ `toll_man_name` String,
+ `toll_man_id` Int64,
+ `in_time` Nullable(DateTime64(3, 'Asia/Shanghai')),
+ `out_time` Nullable(DateTime64(3, 'Asia/Shanghai')),
+ `event_time` Nullable(DateTime64(3, 'Asia/Shanghai')),
+ `in_location` String,
+ `in_camera_id` Int64,
+ `out_location` String,
+ `out_camera_id` Int64,
+ `fee_expected` Decimal(15, 2),
+ `fee_cash` Decimal(15, 2),
+ `fee_third_part` Decimal(15, 2),
+ `fee_third_part_real` Decimal(15, 2),
+ `fee_member_point` Decimal(15, 2),
+ `fee_member_benefit` Decimal(15, 2),
+ `fee_etc` Decimal(15, 2),
+ `fee_third_part_deduction` Decimal(15, 2),
+ `fee_cash_by_pos` Decimal(15, 2),
+ `fee_online` Decimal(15, 2),
+ `fee_coupon` Decimal(15, 2),
+ `paper_coupon_fee` Decimal(15, 2),
+ `elec_coupon_fee` Decimal(15, 2),
+ `paper_coupon_hours` Int64,
+ `elec_coupon_hours` Int64,
+ `free_reason` String,
+ `free_amount` Decimal(15, 2),
+ `fee_balance` Decimal(15, 2),
+ `owner_id` Int64,
+ `owner_name` String,
+ `car_type` String,
+ `note` String,
+ `lift_by_hand` Int32,
+ `in_exception_type` String,
+ `out_exception_type` String,
+ `status` Int32,
+ `updated_at` DateTime64(3, 'Asia/Shanghai'),
+ `created_at` DateTime64(3, 'Asia/Shanghai'),
+ `description` String,
+ `fee_exception` Decimal(15, 2),
+ `fee_reserved1` Decimal(15, 2),
+ `fee_reserved2` Decimal(15, 2)
+)
+ENGINE = ReplacingMergeTree(updated_at)
+ORDER BY id
+SETTINGS index_granularity = 8192
+</code></pre>
+<ol start="3">
+<li>创建物化视图，联系kafka消费表和实体表</li>
+</ol>
+<pre><code class="language-sql">create materialized view view_tdf_consumer TO toll_detail_final as
+select id,toll_detail_id,order_id,toll_duty_id,park_id,licence_plate,brand,toll_man_name,toll_man_id,in_time,out_time,event_time,in_location,in_camera_id,out_location,out_camera_id,fee_expected,fee_cash,fee_third_part,fee_third_part_real,fee_member_point,description,fee_etc,fee_third_part_deduction,fee_cash_by_pos,fee_online,fee_coupon,paper_coupon_fee,elec_coupon_fee,paper_coupon_hours,elec_coupon_hours,free_reason,free_amount,fee_balance,owner_id,owner_name,car_type,note,lift_by_hand,in_exception_type,out_exception_type,status,updated_at,created_at,fee_member_benefit,fee_exception,fee_reserved1,fee_reserved2 from toll_detail_final_kafka;
+</code></pre>
+<ol start="4">
+<li>关联/卸载视图</li>
+</ol>
+<pre><code class="language-shell"># 卸载视图:
+detach view view_tdf_consumer;
+
+# 关联视图:
+attach table view_tdf_consumer;
+</code></pre>
+<p>kafka生产消息，kafka消费表会拉取消息，物化视图将它转换为实体表中的记录。</p>
+<p>消息样式举例：</p>
+<pre><code class="language-json">{&quot;fee_exception&quot;:100.0,&quot;out_exception_type&quot;:&quot;&quot;,&quot;paper_coupon_fee&quot;:0.0,&quot;fee_cash&quot;:0.0,&quot;out_camera_id&quot;:1538,&quot;owner_id&quot;:0,&quot;description&quot;:&quot;&quot;,&quot;created_at&quot;:1649317245039,&quot;fee_reserved1&quot;:0.0,&quot;fee_etc&quot;:0.0,&quot;fee_reserved2&quot;:0.0,&quot;elec_coupon_hours&quot;:0,&quot;out_location&quot;:&quot;车道2&quot;,&quot;car_type&quot;:&quot;visitor&quot;,&quot;fee_expected&quot;:100.0,&quot;fee_balance&quot;:0.0,&quot;updated_at&quot;:1649315050000,&quot;toll_man_name&quot;:&quot;&quot;,&quot;fee_online&quot;:0.0,&quot;elec_coupon_fee&quot;:0.0,&quot;in_camera_id&quot;:1539,&quot;id&quot;:5816289,&quot;in_exception_type&quot;:&quot;&quot;,&quot;brand&quot;:&quot;&quot;,&quot;in_location&quot;:&quot;车道1&quot;,&quot;free_amount&quot;:0.0,&quot;out_time&quot;:1649223909000,&quot;fee_third_part_real&quot;:0.0,&quot;fee_member_benefit&quot;:0.0,&quot;owner_name&quot;:&quot;&quot;,&quot;toll_duty_id&quot;:&quot;&quot;,&quot;paper_coupon_hours&quot;:0,&quot;toll_detail_id&quot;:0,&quot;park_id&quot;:2803,&quot;fee_third_part&quot;:0.0,&quot;fee_third_part_deduction&quot;:0.0,&quot;licence_plate&quot;:&quot;贵Z005A1&quot;,&quot;fee_coupon&quot;:0.0,&quot;in_time&quot;:1649176380000,&quot;fee_cash_by_pos&quot;:0.0,&quot;fee_member_point&quot;:0.0,&quot;order_id&quot;:&quot;C2803153920220406003300143&quot;,&quot;event_time&quot;:1649314955000,&quot;lift_by_hand&quot;:0,&quot;status&quot;:2}
+</code></pre>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[ClickHouse安装与使用]]></title>
+        <id>https://suxiaomu.top/VphV8ID1D/</id>
+        <link href="https://suxiaomu.top/VphV8ID1D/">
+        </link>
+        <updated>2022-02-22T14:22:22.000Z</updated>
+        <summary type="html"><![CDATA[<blockquote>
+<p>ClickHouse是一个用于联机分析(OLAP)的列式数据库管理系统(DBMS)。</p>
+</blockquote>
+]]></summary>
+        <content type="html"><![CDATA[<blockquote>
+<p>ClickHouse是一个用于联机分析(OLAP)的列式数据库管理系统(DBMS)。</p>
+</blockquote>
+<!-- more -->
+<h3 id="clickhouse-安装">clickhouse 安装</h3>
+<p>环境: CentOS 7 x64<br>
+安装方式: 在线yum安装</p>
+<pre><code class="language-shell">sudo yum install yum-utils
+sudo rpm --import https://repo.clickhouse.tech/CLICKHOUSE-KEY.GPG
+sudo yum-config-manager --add-repo https://repo.clickhouse.tech/rpm/clickhouse.repo
+sudo yum install clickhouse-server clickhouse-client
+</code></pre>
+<p>将clickhouse注册为系统服务</p>
+<pre><code class="language-shell">systemctl enable clockhouse-server.service
+</code></pre>
+<hr>
+<h3 id="clickhouse卸载">clickhouse卸载</h3>
+<ol>
+<li>找出yum安装过的clickhouse程序及依赖：</li>
+</ol>
+<p><code>yum list installed | grep clickhouse</code></p>
+<pre><code>clickhouse-client.noarch           22.2.2.1-2                          @clickhouse-stable
+clickhouse-common-static.x86_64    22.2.2.1-2                          @clickhouse-stable
+clickhouse-server.noarch           22.2.2.1-2                          @clickhouse-stable
+</code></pre>
+<ol start="2">
+<li>依次yum remove</li>
+</ol>
+<p><code>yum remove -y clickhouse-client</code></p>
+<p><code>yum remove -y clickhouse-common-static</code></p>
+<ol start="3">
+<li>删除clickhouse的配置文件和数据文件，日志文件等</li>
+</ol>
+<p><code>rm -rf /var/lib/clickhouse*</code></p>
+<p><code>rm -rf /etc/clickhouse*</code></p>
+<p><code>rm -rf /var/log/clickhouse-server/*</code></p>
+<hr>
+<h3 id="clickhouse-配置">clickhouse 配置</h3>
+<blockquote>
+<p>默认配置文件位置</p>
+</blockquote>
+<p>服务端配置文件: <code>/etc/clickhouse-server</code></p>
+<p><code>config.xml 全局配置文件 </code></p>
+<p><code>user.xml 用户配置文件</code></p>
+<p>数据文件: <code>/var/lib/clickhouse</code></p>
+<p>日志存放目录: <code>/var/log/clickhouse-server</code></p>
+<blockquote>
+<p>开启远程连接</p>
+</blockquote>
+<pre><code class="language-shell"># 1. 编辑配置文件
+vim /etc/clickhouse-server/config.xml
+
+# 2. 找到
+&lt;listen_host&gt;::&lt;/listen_host&gt;
+# 3.去掉注释
+
+# 4.重启服务
+systemctl restart clickhouse-server.service
+</code></pre>
+<blockquote>
+<p>设置密码</p>
+</blockquote>
+<pre><code class="language-shell">vim /etc/clickhouse-server/user.xml
+</code></pre>
+<p>找到<code>&lt;password&gt;</code>标签页，添加密码，保存退出，重启服务即可</p>
+<h3 id="连接到clickhouse-server">连接到ClickHouse-Server</h3>
+<ol>
+<li>命令行工具(clickhouse-client)</li>
+</ol>
+<pre><code>查找配置文件中的tcp端口
+cat /etc/clickhouse-server/config.xml | grep &quot;&lt;tcp_port&gt;&quot;
+
+输出：
+&lt;tcp_port&gt;9001&lt;/tcp_port&gt;
+</code></pre>
+<p>看到tcp端口是9001，用客户端连接：</p>
+<pre><code>clickhouse-client --password 123456 --port 9001
+</code></pre>
+<p>不加 <code>--port</code> 选项，默认是9000端口。</p>
+<ol start="2">
+<li>图形化界面软件(DBeaver, DataGrip)</li>
+</ol>
+<pre><code>查看配置文件，查找http端口，用图形化界面工具连接的时候，端口就填这个
+
+cat /etc/clickhouse-server/config.xml | grep &quot;&lt;http_port&gt;&quot;
+</code></pre>
+<h3 id="clickhouse踩坑">clickhouse踩坑</h3>
+<h4 id="数据格式">数据格式</h4>
+<p>建表语句格式如下</p>
+<pre><code class="language-sql">CREATE TABLE default.toll_transaction
+(
+    `id` Int64,
+    `transaction_id` String,
+    `user_uuid` String,
+    `user_id` Int64,
+    `money_destination` Int32,
+    `trade_type` Enum8('RECHARGE' = 1, 'PAY' = 2, 'CROSS' = 3, 'COUPON' = 4, 'WITHDRAW' = 5, 'REFUND' = 6, 'PENALTY' = 7, 'WASH' = 8, 'CHARGE' = 9, 'VIP' = 10, 'SLOTSOLD' = 11) DEFAULT 'PAY',
+    `pay_type` Enum8('BALANCE' = 1, 'WECHAT' = 2, 'ALIPAY' = 3, 'BANK' = 4, 'PLATFORM' = 5, 'BOC' = 6, 'ALIPAY_NOSENSE' = 7, 'BOC_QUICKPAY' = 8, 'WECHAT_NOSENSE' = 9, 'UNION_SCAN_ALI' = 10, 'UNION_SCAN_WECHAT' = 11, 'UNION_ALI' = 12, 'UNION_WECHAT' = 13, 'BOC_ALI' = 14, 'BOC_WECHAT' = 15, 'BOC_BANK' = 16, 'ICBC_ALI' = 17, 'ICBC_WECHAT' = 18, 'ICBC_QUICKPAY' = 19) DEFAULT 'BALANCE',
+    `amount` Decimal(15, 2),
+    `lucky_money_amount` Decimal(15, 2),
+    `third_party_transaction_id` String,
+    `licence_plate` String,
+    `transaction_time` Int64,
+    `transaction_result` Enum8('SUCCESS' = 1, 'PENDING' = 2, 'FAILED' = 3, 'PROCESSING' = 4),
+    `order_id` String,
+    `park_name` String,
+    `parking_time` Int32,
+    `updated_at` DateTime DEFAULT now(),
+    `created_at` DateTime,
+    `prepay_id` String,
+    `operator_id` Int64,
+    `park_id` Int64,
+    `used_lucky_money_id` Int64 DEFAULT 0,
+    `status` Int32 DEFAULT 0,
+    `slot_renewal_record_id` Int64,
+    `redemption_id` Int64
+)
+ENGINE = ReplacingMergeTree(created_at)
+ORDER BY id
+SETTINGS index_granularity = 8192;
+</code></pre>
+<h5 id="nullable问题">Nullable问题</h5>
+<p>建表时，指定某个字段可为空，语法为 <code>字段名 Nullable(类型)</code> ，这样插入数据时，字段可为Null值。这样会带来性能问题：</p>
+<blockquote>
+<p>表的列中存储 <code>Nullable</code> 类型值，ClickHouse 除了使用带有值的普通文件外，还使用带有 <code>NULL</code> 掩码的单独文件。 掩码文件中的条目允许 ClickHouse 区分每个表行的 <code>NULL</code> 和相应数据类型的默认值。 由于附加了新文件，<code>Nullable</code> 列与类似的普通文件相比消耗额外的存储空间。</p>
+</blockquote>
+<h5 id="枚举类型问题">枚举类型问题</h5>
+<p>clickhouse中的枚举类型和MySQL中的不太一样，声明的时候，格式是这样的：</p>
+<pre><code class="language-shell">licence_plate_type Nullable(Enum8('yellow' = 1, 'blue' = 2, 'green' = 3)),
+</code></pre>
+<h5 id="order-by问题">order by问题</h5>
+<p>千万以上数据集进行order by 查询时需要搭配where 条件和limit语句一起使用。</p>
+<h4 id="去重查询">去重查询</h4>
+<p>用uniqCombined替代distinct性能可提升10倍以上，uniqCombined底层采用类似HyperLogLog算法实现，能接收2%左右的数据误差，可直接使用这种去重方式提升查询性能。</p>
+<h4 id="数据导入编码问题">数据导入编码问题</h4>
+<p><s>latin1字符集导入ck的时候会报错，或许是MySQL数据库版本问题?</s></p>
+<p>MySQL 旧版本的时间日期格式为 <code>0000-00-00 00:00:00</code> 的记录，导入新版MySQL会报错。</p>
+<p>解决方式：</p>
+<pre><code>SELECT @@SESSION.sql_mode;
+</code></pre>
+<p>如果结果有NO_ZERO_DATE和NO_ZERO_IN_DATE，就是我们日期不能设为0000-00-00的原因，把sql_mode中的这两个去掉就行了</p>
+<pre><code>set @@global.sql_mode=(select replace(@@sql_mode,'NO_ZERO_IN_DATE,NO_ZERO_DATE',''));
+</code></pre>
+<h4 id="使用datax导入数据的问题">使用dataX导入数据的问题</h4>
+<h5 id="datax没有clickhouse插件解决方案">dataX没有clickhouse插件解决方案</h5>
+<p>默认下载安装的dataX不包含clickhousereader和clickhousewriter的插件，因此如果要从MySQL导入数据，需要自己手动编译dataX的源码。</p>
+<h5 id="编译失败先准备依赖">编译失败，先准备依赖</h5>
+<p>先下载源码</p>
+<pre><code>git clone git@gitee.com:nnego/eigenbase-properties.git
+#编译为jar
+mvn clean install
+#手动安装jar，改为你自己的目录
+mvn install:install-file -DgroupId=eigenbase -DartifactId=eigenbase-properties -Dversion=1.1.4 -Dpackaging=jar -Dfile=/Users/htc/code/git/eigenbase-properties/target/eigenbase-properties-1.1.7-SNAPSHOT.jar
+</code></pre>
+<p>下载DataX并编译</p>
+<pre><code>#下载DataX源码
+git clone https://github.com/alibaba/DataX.git
+#打开根pom文件，把不需要的子模块注释掉
+#编译dataX
+mvn -U clean package assembly:assembly -Dmaven.test.skip=true
+</code></pre>
+<p>编译成功之后进到 <code>target/datax/datax/plugin</code> 目录中找到clickhouse的读写插件，复制到安装目录对应位置即可。</p>
+<h4 id="其他注意事项">其他注意事项</h4>
+<ul>
+<li>
+<p>clickhouse必须指定密码，否则dataX同步会失败。clickhouse更改密码在配置文件 <code>users.xml</code> 里。</p>
+</li>
+<li>
+<p>显示成功但是实际上并没有导入记录</p>
+</li>
+</ul>
+<p>dataX日志输出显示成功导入数据，但是实际clickhouse数据库里面并没有数据。</p>
+<p><s>观察日志输出？猜想可能出现问题的原因？？</s></p>
+<p>原因：</p>
+<p>采用ReplacingMergeTree，order by id，id是主键，相同主键只保留最新的记录。源数据的多条记录id都是0，所以会触发merge，最终只剩下一条数据，其他数据都被删除了。</p>
+<p>怎么办：</p>
+<p>重新建表，表引擎改为MergeTree即可。</p>
+<h4 id="kafka消息格式问题">kafka消息格式问题</h4>
+<p>json的key，value 大小驼峰 和ORM框架的问题。</p>
+<h4 id="大表join的性能优化问题">大表join的性能优化问题</h4>
+<p>参考链接：</p>
+<p><a href="https://www.jianshu.com/p/f9a54193dc63">从携程性能测试case中重新认识clickhouse - 简书 (jianshu.com)</a></p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[Kafka快速入门]]></title>
+        <id>https://suxiaomu.top/K7Mla-PKG/</id>
+        <link href="https://suxiaomu.top/K7Mla-PKG/">
+        </link>
+        <updated>2022-02-02T02:04:15.000Z</updated>
+        <summary type="html"><![CDATA[<blockquote>
+<p>Kafka的下载安装与常用命令</p>
+</blockquote>
+]]></summary>
+        <content type="html"><![CDATA[<blockquote>
+<p>Kafka的下载安装与常用命令</p>
+</blockquote>
+<!-- more -->
+<h2 id="kafka下载与安装">Kafka下载与安装</h2>
+<h3 id="下载">下载</h3>
+<p>官网下载 :</p>
+<p><a href="https://kafka.apache.org/downloads">Apache Kafka</a></p>
+<p>确保已经安装jdk8+环境，使用<code>javac</code>命令测试</p>
+<h3 id="安装">安装</h3>
+<p>解压</p>
+<pre><code class="language-shell">tar -xzvf kafka_2.12-3.1.0.tgz -C /opt
+</code></pre>
+<p>建议建立软连接</p>
+<pre><code class="language-shell">ln -s ./kafka_2.12-3.1.0 kafka/
+</code></pre>
+<p>查看目录结构</p>
+<pre><code class="language-shell">▶ ll /opt/kafka/
+total 64K
+drwxr-xr-x. 3 root root 4.0K Jan 12 17:04 bin
+drwxr-xr-x. 3 root root 4.0K Mar  8 14:36 config
+drwxr-xr-x. 2 root root 8.0K Mar  8 14:32 libs
+-rw-r--r--. 1 root root  15K Jan 12 17:01 LICENSE
+drwxr-xr-x. 2 root root  262 Jan 12 17:04 licenses
+drwxr-xr-x. 2 root root  237 Mar  8 14:41 logs
+-rw-r--r--. 1 root root  28K Jan 12 17:01 NOTICE
+drwxr-xr-x. 2 root root   44 Jan 12 17:04 site-docs
+</code></pre>
+<h2 id="kafka常用命令">Kafka常用命令</h2>
+<h3 id="管理">管理</h3>
+<pre><code class="language-shell">## 创建topic（4个分区，2个副本）
+bin/kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 2 --partitions 4 --topic test
+
+## kafka版本 &gt;= 2.2
+bin/kafka-topics.sh --create --bootstrap-server localhost:9092 --replication-factor 1 --partitions 1 --topic test
+
+## 分区扩容
+# kafka版本 &lt; 2.2
+bin/kafka-topics.sh --zookeeper localhost:2181 --alter --topic topic1 --partitions 2
+
+# kafka版本 &gt;= 2.2
+bin/kafka-topics.sh --bootstrap-server broker_host:port --alter --topic topic1 --partitions 2
+
+## 删除topic
+bin/kafka-topics.sh --zookeeper localhost:2181 --delete --topic test
+</code></pre>
+<h3 id="查询">查询</h3>
+<pre><code class="language-shell">## 查询集群描述
+bin/kafka-topics.sh --describe --zookeeper 127.0.0.1:2181
+
+## topic列表查询
+bin/kafka-topics.sh --zookeeper 127.0.0.1:2181 --list
+
+## topic列表查询（支持0.9版本+）
+bin/kafka-topics.sh --list --bootstrap-server localhost:9092
+
+## 新消费者列表查询（支持0.9版本+）
+bin/kafka-consumer-groups.sh --new-consumer --bootstrap-server localhost:9092 --list
+
+## 新消费者列表查询（支持0.10版本+）
+bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092 --list
+
+## 显示某个消费组的消费详情（仅支持offset存储在zookeeper上的）
+bin/kafka-run-class.sh kafka.tools.ConsumerOffsetChecker --zookeeper localhost:2181 --group test
+
+## 显示某个消费组的消费详情（0.9版本 - 0.10.1.0 之前）
+bin/kafka-consumer-groups.sh --new-consumer --bootstrap-server localhost:9092 --describe --group test-consumer-group
+
+## 显示某个消费组的消费详情（0.10.1.0版本+）
+bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092 --describe --group my-group
+</code></pre>
+<h3 id="生产和消费">生产和消费</h3>
+<pre><code>## 生产者
+bin/kafka-console-producer.sh --broker-list localhost:9092 --topic test
+
+## 消费者
+bin/kafka-console-consumer.sh --zookeeper localhost:2181 --topic test
+
+## 新生产者（支持0.9版本+）
+bin/kafka-console-producer.sh --broker-list localhost:9092 --topic test --producer.config config/producer.properties
+
+## 新消费者（支持0.9版本+）
+bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic test --new-consumer --from-beginning --consumer.config config/consumer.properties
+
+## kafka-verifiable-consumer.sh（消费者事件，例如：offset提交等）
+bin/kafka-verifiable-consumer.sh --broker-list localhost:9092 --topic test --group-id groupName
+
+## 高级点的用法
+bin/kafka-simple-consumer-shell.sh --brist localhost:9092 --topic test --partition 0 --offset 1234  --max-messages 10
+</code></pre>
+<hr>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[Android开发(一) 发布release版本与adb调试]]></title>
+        <id>https://suxiaomu.top/gE6YZduXe/</id>
+        <link href="https://suxiaomu.top/gE6YZduXe/">
+        </link>
+        <updated>2021-09-10T02:13:20.000Z</updated>
+        <content type="html"><![CDATA[<!-- more -->
+<h4 id="android-studio发布release版本apk">android studio发布release版本apk</h4>
+<ol>
+<li>生成keystore 对应用签名用。</li>
+</ol>
+<pre><code class="language-bash">    keytool -genkey -v -keystore android.keystore -alias android -keyalg RSA -validity 20000
+</code></pre>
+<p>​ 然后按照提示输入即可。</p>
+<ol start="2">
+<li>打包release版本apk安装包。</li>
+</ol>
+<p>Android Studio内点击Build -&gt; Generate Singed Bundle or Apk -&gt; apk -&gt; 选择上一步生成的keystore，然后下一步生成release版本</p>
+<ol start="3">
+<li>自定义打包生成的apk名称。</li>
+</ol>
+<p>默认打包生成的app名字都会是app-release.apk，如果想要打包生成的安装包名字带上日期版本号，在app目录下的build.gradle中加入</p>
+<pre><code class="language-kotlin">defaultConfig {
+       ......
+    }
+
+//加入以下代码
+//和defaultConfig同级
+android.applicationVariants.all {
+        variant -&gt;
+            variant.outputs.all{
+                def date = new Date().format(&quot;yyyyMMdd&quot; , TimeZone.getTimeZone(&quot;GMT+08&quot;))
+                outputFileName = &quot;HtcApp_&quot;+&quot;${variant.buildType.name}_v${versionName}_${date}.apk&quot;
+            }
+    }
+</code></pre>
+<h4 id="用adb工具调试app">用adb工具调试app</h4>
+<p>macos安装adb</p>
+<pre><code class="language-bash">brew install android-platform-tools
+</code></pre>
+<p>adb常用命令</p>
+<pre><code class="language-bash">#测试设备连接
+adb devices
+#会列出所有已经连接开发者模式的设备
+
+#查看设备的安卓版本
+adb shell getprop ro.build.version.release
+
+#安装apk
+adb install [apk文件路径]
+#卸载apk
+adb uninstall [包名]
+
+#启动app
+adb shell am start [包名]/.[Activity名]
+
+#停止app
+adb shell am force-stop [包名]
+
+#抓取日志
+adb shell &quot;ps | grep [包名]&quot; #找出pid
+adb shell &quot;logcat | grep [pid]&quot;
+
+#查看安装了哪些package
+adb shell pm list packages 
+
+adb shell pm list packages -d    #####只输出禁用的包。
+
+adb shell pm list packages -e    #####只输出启用的包。
+
+adb shell pm list packages -s    #####只输出系统的包。
+
+adb shell pm list packages -i   #####只输出包和安装信息（安装来源）。
+
+adb shell pm list packages -u   #####只输出包和未安装包信息（安装来源）。
+
+adb shell pm list packages -i   #####只输出包和安装信息（安装来源）。
+
+adb shell pm list packages -f   #####输出包和包相关联的文件
+
+adb shell pm list packages -3   #####输出所有第三方包。
+
+#查看当前前台运行的Activity
+adb shell dumpsys activity activities | grep mFocusedActivity
+</code></pre>
+<h4 id="抓取指定app日志举例">抓取指定APP日志举例</h4>
+<ol>
+<li>首先使用adb连接到设备</li>
+</ol>
+<pre><code class="language-bash">adb devices
+</code></pre>
+<p>成功连接会显示如下:</p>
+<pre><code>List of devices attached
+SCOPA7O3AOVRQG  device
+</code></pre>
+<ol start="2">
+<li>查找出app的包名</li>
+</ol>
+<pre><code class="language-bash">adb shell pm list packages -3
+</code></pre>
+<p>找到包名为<code>net.htc.app</code>，就是我们要找的app的包名</p>
+<ol start="3">
+<li>查看对应app是否在运行</li>
+</ol>
+<pre><code class="language-bash">adb shell &quot;ps | grep net.htc.app&quot;
+</code></pre>
+<p>若正在运行，会输出</p>
+<pre><code class="language-bash">u0_a29    1696  191   813900 80368    ep_poll b1cff1a8 S net.htc.app
+</code></pre>
+<p>其中<code>1696</code>就是当前app的进程号(pid)</p>
+<p>如果没有输出，则表示app已经停止运行。</p>
+<ol start="4">
+<li>根据进程号过滤日志</li>
+</ol>
+<pre><code class="language-bash">adb shell &quot;logcat -d *:D | grep [pid] &quot;
+</code></pre>
+<pre><code class="language-shell">adb logcat &gt; D:\log.txt
+</code></pre>
+]]></content>
+    </entry>
+</feed>
