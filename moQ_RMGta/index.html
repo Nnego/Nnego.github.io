@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>Java并发编程之进程与线程 | 苏小霂的博客</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://suxiaomu.top/favicon.ico?v=1741488094257">
+<link rel="stylesheet" href="https://suxiaomu.top/styles/main.css">
+
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+
+
+    <meta name="description" content="老生常谈之进程与线程
+
+进程
+
+程序执行时的一个实例
+每个进程都有独立的内存地址空间
+是操作系统进行资源分配和调度的基本单位
+进程里的堆，是一个进程中最大的一块内存，被进程中的所有线程共享，进程创建时分配，主要存放new创建的对象实例
+进程..." />
+    <meta name="keywords" content="并发编程,多线程,Java" />
+  </head>
+  <body>
+    <div id="app" class="main">
+
+      <div class="sidebar" :class="{ 'full-height': menuVisible }">
+  <div class="top-container" data-aos="fade-right">
+    <div class="top-header-container">
+      <a class="site-title-container" href="https://suxiaomu.top">
+        <img src="https://suxiaomu.top/images/avatar.png?v=1741488094257" class="site-logo">
+        <h1 class="site-title">苏小霂的博客</h1>
+      </a>
+      <div class="menu-btn" @click="menuVisible = !menuVisible">
+        <div class="line"></div>
+      </div>
+    </div>
+    <div>
+      
+        
+          <a href="/" class="site-nav">
+            首页
+          </a>
+        
+      
+        
+          <a href="/archives" class="site-nav">
+            归档
+          </a>
+        
+      
+        
+          <a href="/tags" class="site-nav">
+            标签
+          </a>
+        
+      
+    </div>
+  </div>
+  <div class="bottom-container" data-aos="flip-up" data-aos-offset="0">
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+    <div class="site-description">
+      
+    </div>
+    <div class="site-footer">
+       | <a class="rss" href="https://suxiaomu.top/atom.xml" target="_blank">RSS</a>
+    </div>
+  </div>
+</div>
+
+
+      <div class="main-container">
+        <div class="content-container" data-aos="fade-up">
+          <div class="post-detail">
+            <h2 class="post-title">Java并发编程之进程与线程</h2>
+            <div class="post-date">2023-06-12</div>
+            
+            <div class="post-content" v-pre>
+              <p>老生常谈之进程与线程</p>
+<!-- more -->
+<h2 id="进程">进程</h2>
+<ul>
+<li>程序执行时的一个实例</li>
+<li>每个进程都有独立的内存地址空间</li>
+<li>是操作系统进行资源分配和调度的基本单位</li>
+<li>进程里的堆，是一个进程中最大的一块内存，被进程中的所有线程共享，进程创建时分配，主要存放new创建的对象实例</li>
+<li>进程的方法区，是用来存放进程中的代码片段的，是线程共享的</li>
+<li>在多线程OS中，进程不是一个可执行的实体，即一个进程至少创建一个线程去执行代码</li>
+</ul>
+<h2 id="线程">线程</h2>
+<ul>
+<li>进程中的一个实体</li>
+<li>进程的一个执行路径</li>
+<li>CPU调度和分派的基本单位</li>
+<li>现成本身是不会独立存在的</li>
+<li>当前线程CPU时间片用完后，会让出CPU等下次轮到自己再执行</li>
+<li>操作系统不会单独为线程分配内存，线程组之间只能共享所属进程的资源</li>
+<li>现成只拥有在运行中必不可少的资源(比如程序计数器、栈)</li>
+<li>线程的程序计数器就是为了记录该线程在让出CPU时候的执行地址，待再次时间片分配到自己时继续执行</li>
+<li>每个线程有自己的栈资源，用于存储该线程的局部变量和调用栈帧，其他线程无权访问</li>
+</ul>
+<h2 id="关系">关系</h2>
+<ul>
+<li>一个程序至少一个进程，一个进程至少有一个线程；进程中的多个线程是互相共享资源的</li>
+<li>Java中启动main函数的时候就启动了一个JVM的进程，main函数所在的线程就是主线程。</li>
+<li>多个线程共享进程的堆空间和方法区资源，每个线程有自己的程序计数器和栈资源。</li>
+</ul>
+<h2 id="区别">区别</h2>
+<ul>
+<li>本质：进程是操作系统进行资源调度和分配的基本单位；线程是任务调度和执行的基本单位</li>
+<li>内存分配：系统在运行的时候会为每个进程分配不同的内存空间，建立数据表来维护代码段、堆栈段和数据段；除了 CPU 外，系统不会为线程分配内存，线程所使用的资源来自其所属进程的资源</li>
+<li>资源拥有：进程之间的资源是独立的，无法共享；同一进程的所有线程共享本进程的资源，如内存，CPU，IO 等</li>
+<li>开销：每个进程都有独立的代码和数据空间，程序之间的切换会有较大的开销；线程可以看做轻量级的进程，同一类线程共享代码和数据空间，每个线程都有自己独立的运行程序计数器和栈，线程之间切换的开销小</li>
+<li>通信：进程间通信 以IPC（管道，信号量，共享内存，消息队列，文件，套接字等）方式通信 ；同一个进程下，线程间可以共享全局变量、静态变量等数据进行通信，做到同步和互斥，以保证数据的一致性</li>
+<li>调度和切换：线程上下文切换比进程上下文切换更快，代价更小</li>
+<li>执行过程：每个进程都有一个程序执行的入口，顺序执行序列；线程不能够独立执行，必须依存在应用程序中，由程序的多线程控制机制控制</li>
+<li>健壮性：每个进程之间的资源是独立的，当一个进程崩溃时，不会影响其他进程；同一进程的线程共享此线程的资源，当一个线程发生崩溃时，此进程也会发生崩溃，稳定性差，容易出现共享与资源竞争产生的各种问题，如死锁等</li>
+</ul>
+<h2 id="为什么要有线程">为什么要有线程</h2>
+<p>每个进程都有自己的地址空间，即进程空间。操作系统为了避免为每个请求都创建进程，引入线程</p>
+
+            </div>
+            
+              <div class="tag-container">
+                
+                  <a href="https://suxiaomu.top/FUkfApRfh/" class="tag">
+                    并发编程
+                  </a>
+                
+                  <a href="https://suxiaomu.top/vldJYD2YKe/" class="tag">
+                    多线程
+                  </a>
+                
+                  <a href="https://suxiaomu.top/_PzzGB-wA/" class="tag">
+                    Java
+                  </a>
+                
+              </div>
+            
+            
+              <div class="next-post">
+                <div class="next">下一篇</div>
+                <a href="https://suxiaomu.top/1T9C5Piq8/">
+                  <h3 class="post-title">
+                    异步化事务型消息模型
+                  </h3>
+                </a>
+              </div>
+            
+
+            
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+<script type="application/javascript">
+
+AOS.init();
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+
+  <script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>
+    hljs.initHighlightingOnLoad()
+  </script>
+
+
+
+
+
+  </body>
+</html>

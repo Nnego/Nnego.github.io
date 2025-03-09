@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>TCP/IP协议族体系结构及其主要协议 | 苏小霂的博客</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://suxiaomu.top/favicon.ico?v=1741488094257">
+<link rel="stylesheet" href="https://suxiaomu.top/styles/main.css">
+
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+
+
+    <meta name="description" content="
+与OSI分层模型不同，TCP/IP协议族分为四层。
+自下而上分别为数据链路层，网络层，传输层，应用层。
+数据链路层
+作用：
+该层实现了网卡接口的网络驱动程序。驱动程序隐藏了不同物理网卡设备的不同电气特性，为上层协议提供统一接口。
+该层协议..." />
+    <meta name="keywords" content="计算机网络" />
+  </head>
+  <body>
+    <div id="app" class="main">
+
+      <div class="sidebar" :class="{ 'full-height': menuVisible }">
+  <div class="top-container" data-aos="fade-right">
+    <div class="top-header-container">
+      <a class="site-title-container" href="https://suxiaomu.top">
+        <img src="https://suxiaomu.top/images/avatar.png?v=1741488094257" class="site-logo">
+        <h1 class="site-title">苏小霂的博客</h1>
+      </a>
+      <div class="menu-btn" @click="menuVisible = !menuVisible">
+        <div class="line"></div>
+      </div>
+    </div>
+    <div>
+      
+        
+          <a href="/" class="site-nav">
+            首页
+          </a>
+        
+      
+        
+          <a href="/archives" class="site-nav">
+            归档
+          </a>
+        
+      
+        
+          <a href="/tags" class="site-nav">
+            标签
+          </a>
+        
+      
+    </div>
+  </div>
+  <div class="bottom-container" data-aos="flip-up" data-aos-offset="0">
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+    <div class="site-description">
+      
+    </div>
+    <div class="site-footer">
+       | <a class="rss" href="https://suxiaomu.top/atom.xml" target="_blank">RSS</a>
+    </div>
+  </div>
+</div>
+
+
+      <div class="main-container">
+        <div class="content-container" data-aos="fade-up">
+          <div class="post-detail">
+            <h2 class="post-title">TCP/IP协议族体系结构及其主要协议</h2>
+            <div class="post-date">2020-12-19</div>
+            
+            <div class="post-content" v-pre>
+              <figure data-type="image" tabindex="1"><img src="https://pic2.58cdn.com.cn/nowater/webim/big/n_v2b9effb0cc9484715a876ef50da85c5b3.png" alt="image-20201219124556640.png" loading="lazy"></figure>
+<p>与OSI分层模型不同，TCP/IP协议族分为四层。</p>
+<p>自下而上分别为<code>数据链路层</code>，<code>网络层</code>，<code>传输层</code>，<code>应用层</code>。</p>
+<h4 id="数据链路层">数据链路层</h4>
+<h5 id="作用">作用：</h5>
+<p>该层实现了网卡接口的网络驱动程序。驱动程序隐藏了不同物理网卡设备的不同电气特性，为上层协议提供统一接口。</p>
+<h5 id="该层协议">该层协议：</h5>
+<p>ARP协议和RARP协议。他们的作用是实现IP地址与物理地址(通常是MAC地址)之间的相互转换。网络层用IP定位(寻址)一台机器，而数据链路层用MAC地址寻址一台机器。因此网络层必须先将目标机器的IP地址转化为物理地址，才能够使用数据链路层提供的服务。这就是ARP协议的用途。</p>
+<blockquote>
+<p>ARP 协议(Adress Resolve Protocol, 地址解析协议)</p>
+</blockquote>
+<blockquote>
+<p>RARP协议(Reverse Address Resolve Protocol)</p>
+</blockquote>
+<h4 id="网络层">网络层</h4>
+<h5 id="作用-2">作用：</h5>
+<p>实现数据包的路由(route)和转发。</p>
+<h5 id="该层协议-2">该层协议：</h5>
+<p>IP协议和ICMP协议。</p>
+<p>IP协议主要是用来选址。根据数据包的目的IP地址，IP协议来决定将它投递至何处，若不能直接投递至目标主机，则寻找一个合适的下一跳(next hop)路由器，并将数据包交付给路由器转发。多次重复此过程直至到达目标主机。</p>
+<p>ICMP(Internet Control Message Protocol，因特网控制报文协议)是IP协议的重要补充，主要用于检测网络连接，报文格式如图：</p>
+<figure data-type="image" tabindex="2"><img src="https://pic7.58cdn.com.cn/nowater/webim/big/n_v2b1720fb2743b4a9083e6cc8f67a2ac19.png" alt="image-20201219131946311.png" loading="lazy"></figure>
+<p>8位类型字段主要用于区分报文类型。它将ICMP报文分为两大类：</p>
+<ul>
+<li>
+<p>差错报文</p>
+<p>此类报文用来回应网络错误，如目标不可达(类型为3)和重定向(类型为5)</p>
+</li>
+<li>
+<p>查询报文</p>
+<p>此类报文用来查询网络信息。如ping程序就是用ICMP报文查看目标是否可达(类型为8)。</p>
+</li>
+</ul>
+<p>8位代码字段可能还被用于进一步细分不同条件。</p>
+<p>16位校验和用于对整个报文进行CRC校验。</p>
+<p><em>ICMP协议严格来讲并非网络层协议，因为它使用同一层的IP协议提供的服务。一般来讲上层协议使用下层协议提供的服务，使用网络层协议提供的服务，可以算是网络层的上层协议了……</em></p>
+<h4 id="传输层">传输层</h4>
+<h5 id="作用-3">作用：</h5>
+<p>为<code>两台主机</code>上的<code>应用程序</code>提供<code>端对端</code>的服务。不关心中途流转途径。</p>
+<p>这里的<code>应用程序</code>其实指的是<code>进程</code>。<code>进程</code>便是<code>应用程序</code>这一概念的实例化。</p>
+<h5 id="该层协议-3">该层协议：</h5>
+<p>传输层协议主要有三个：<code>TCP协议</code>，<code>UDP协议</code>，<code>SCTP协议</code></p>
+<p>TCP协议(Transmission Control Protocol 传输控制协议)为<code>应用层</code>提供可靠的、面向连接的和基于流(stream)的服务。</p>
+<ul>
+<li>可靠：利用超时重传，拥塞控制，数据确认等方式来确保数据包被正确地传到目的端。</li>
+<li>面向连接：要做到可靠性的要求，数据传输双方必须先建立连接。并在内核中为该连接维持一定的数据结构，比如连接的状态，读写缓冲区，以及诸多缓定时器。当通信结束时，必须关闭连接以释放内核中的相关数据。</li>
+<li>基于流：基于流的数据没有长度限制，它源源不断地从一端流向另一端。发送端可以逐字节向数据流中中写入数据，接收端也可以逐字节将它们取出。</li>
+</ul>
+<p>UDP协议(User Datagram Protocol，用户数据报协议)则是提供不可靠，无连接，基于数据报的服务。</p>
+<ul>
+<li>不可靠：数据丢了或是错了，UDP协议只是通知应用程序发送失败。所以使用UDP协议的app要自己控制数据确认超时重传等逻辑</li>
+<li>无连接：不同于TCP，不需要连接，也就不需要将数据拷贝一份放在所谓的发送数据缓冲区。因此要指定目标地址。</li>
+<li>基于数据报：相对于流而言，每个udp数据报都有一个长度，超过此长度的数据会被截断。</li>
+</ul>
+<h4 id="应用层">应用层</h4>
+<h5 id="作用-4">作用：</h5>
+<p>处理应用程序的逻辑。</p>
+<p>数据链路层、网络层、传输层负责网络通信的细节，因此必须稳定而高效地运行，因此他们都在内核空间中实现。</p>
+<p>而应用层则在用户空间实现，因为它负责许多的逻辑，例如文件传输、名称查询、网络管理等。这些逻辑要是在内核中实现，必然会使得内核变得十分臃肿。</p>
+<h5 id="该层协议-4">该层协议：</h5>
+<p>应用层协议较多</p>
+<ul>
+<li>ping：应用程序而非协议，利用ICMP协议检测网络连接，是调试网络的工具。</li>
+<li>telnet：一种远程登录协议</li>
+<li>OSPF：(Open Shortest Path First，开放最短路径优先)，是一种动态路由更新协议，用于路由器之间的通信，以便告知对方各自的路由信息。</li>
+<li>DNS(Domain Name Service，域名服务)：该协议提供机器域名到IP地址的转换。</li>
+</ul>
+<p>应用层协议(或程序)可能直接跳过传输层协议而直接使用网络层的协议。比如ping程序和OSPF协议。</p>
+<p>应用层协议(或程序)通常既可使用TCP服务，又可使用UDP服务，如DNS。</p>
+<p>可以查看<code>/etc/services</code>文件查找所有知名的应用层协议，以及他们都能使用哪些传输层服务。</p>
+
+            </div>
+            
+              <div class="tag-container">
+                
+                  <a href="https://suxiaomu.top/m597yoqXr/" class="tag">
+                    计算机网络
+                  </a>
+                
+              </div>
+            
+            
+
+            
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+<script type="application/javascript">
+
+AOS.init();
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+
+  <script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>
+    hljs.initHighlightingOnLoad()
+  </script>
+
+
+
+
+
+  </body>
+</html>

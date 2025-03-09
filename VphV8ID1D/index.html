@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>ClickHouse安装与使用 | 苏小霂的博客</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://suxiaomu.top/favicon.ico?v=1741488094257">
+<link rel="stylesheet" href="https://suxiaomu.top/styles/main.css">
+
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+
+
+    <meta name="description" content="
+ClickHouse是一个用于联机分析(OLAP)的列式数据库管理系统(DBMS)。
+
+
+clickhouse 安装
+环境: CentOS 7 x64
+安装方式: 在线yum安装
+sudo yum install yum-utils
+su..." />
+    <meta name="keywords" content="ClickHouse" />
+  </head>
+  <body>
+    <div id="app" class="main">
+
+      <div class="sidebar" :class="{ 'full-height': menuVisible }">
+  <div class="top-container" data-aos="fade-right">
+    <div class="top-header-container">
+      <a class="site-title-container" href="https://suxiaomu.top">
+        <img src="https://suxiaomu.top/images/avatar.png?v=1741488094257" class="site-logo">
+        <h1 class="site-title">苏小霂的博客</h1>
+      </a>
+      <div class="menu-btn" @click="menuVisible = !menuVisible">
+        <div class="line"></div>
+      </div>
+    </div>
+    <div>
+      
+        
+          <a href="/" class="site-nav">
+            首页
+          </a>
+        
+      
+        
+          <a href="/archives" class="site-nav">
+            归档
+          </a>
+        
+      
+        
+          <a href="/tags" class="site-nav">
+            标签
+          </a>
+        
+      
+    </div>
+  </div>
+  <div class="bottom-container" data-aos="flip-up" data-aos-offset="0">
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+    <div class="site-description">
+      
+    </div>
+    <div class="site-footer">
+       | <a class="rss" href="https://suxiaomu.top/atom.xml" target="_blank">RSS</a>
+    </div>
+  </div>
+</div>
+
+
+      <div class="main-container">
+        <div class="content-container" data-aos="fade-up">
+          <div class="post-detail">
+            <h2 class="post-title">ClickHouse安装与使用</h2>
+            <div class="post-date">2022-02-22</div>
+            
+            <div class="post-content" v-pre>
+              <blockquote>
+<p>ClickHouse是一个用于联机分析(OLAP)的列式数据库管理系统(DBMS)。</p>
+</blockquote>
+<!-- more -->
+<h3 id="clickhouse-安装">clickhouse 安装</h3>
+<p>环境: CentOS 7 x64<br>
+安装方式: 在线yum安装</p>
+<pre><code class="language-shell">sudo yum install yum-utils
+sudo rpm --import https://repo.clickhouse.tech/CLICKHOUSE-KEY.GPG
+sudo yum-config-manager --add-repo https://repo.clickhouse.tech/rpm/clickhouse.repo
+sudo yum install clickhouse-server clickhouse-client
+</code></pre>
+<p>将clickhouse注册为系统服务</p>
+<pre><code class="language-shell">systemctl enable clockhouse-server.service
+</code></pre>
+<hr>
+<h3 id="clickhouse卸载">clickhouse卸载</h3>
+<ol>
+<li>找出yum安装过的clickhouse程序及依赖：</li>
+</ol>
+<p><code>yum list installed | grep clickhouse</code></p>
+<pre><code>clickhouse-client.noarch           22.2.2.1-2                          @clickhouse-stable
+clickhouse-common-static.x86_64    22.2.2.1-2                          @clickhouse-stable
+clickhouse-server.noarch           22.2.2.1-2                          @clickhouse-stable
+</code></pre>
+<ol start="2">
+<li>依次yum remove</li>
+</ol>
+<p><code>yum remove -y clickhouse-client</code></p>
+<p><code>yum remove -y clickhouse-common-static</code></p>
+<ol start="3">
+<li>删除clickhouse的配置文件和数据文件，日志文件等</li>
+</ol>
+<p><code>rm -rf /var/lib/clickhouse*</code></p>
+<p><code>rm -rf /etc/clickhouse*</code></p>
+<p><code>rm -rf /var/log/clickhouse-server/*</code></p>
+<hr>
+<h3 id="clickhouse-配置">clickhouse 配置</h3>
+<blockquote>
+<p>默认配置文件位置</p>
+</blockquote>
+<p>服务端配置文件: <code>/etc/clickhouse-server</code></p>
+<p><code>config.xml 全局配置文件 </code></p>
+<p><code>user.xml 用户配置文件</code></p>
+<p>数据文件: <code>/var/lib/clickhouse</code></p>
+<p>日志存放目录: <code>/var/log/clickhouse-server</code></p>
+<blockquote>
+<p>开启远程连接</p>
+</blockquote>
+<pre><code class="language-shell"># 1. 编辑配置文件
+vim /etc/clickhouse-server/config.xml
+
+# 2. 找到
+&lt;listen_host&gt;::&lt;/listen_host&gt;
+# 3.去掉注释
+
+# 4.重启服务
+systemctl restart clickhouse-server.service
+</code></pre>
+<blockquote>
+<p>设置密码</p>
+</blockquote>
+<pre><code class="language-shell">vim /etc/clickhouse-server/user.xml
+</code></pre>
+<p>找到<code>&lt;password&gt;</code>标签页，添加密码，保存退出，重启服务即可</p>
+<h3 id="连接到clickhouse-server">连接到ClickHouse-Server</h3>
+<ol>
+<li>命令行工具(clickhouse-client)</li>
+</ol>
+<pre><code>查找配置文件中的tcp端口
+cat /etc/clickhouse-server/config.xml | grep &quot;&lt;tcp_port&gt;&quot;
+
+输出：
+&lt;tcp_port&gt;9001&lt;/tcp_port&gt;
+</code></pre>
+<p>看到tcp端口是9001，用客户端连接：</p>
+<pre><code>clickhouse-client --password 123456 --port 9001
+</code></pre>
+<p>不加 <code>--port</code> 选项，默认是9000端口。</p>
+<ol start="2">
+<li>图形化界面软件(DBeaver, DataGrip)</li>
+</ol>
+<pre><code>查看配置文件，查找http端口，用图形化界面工具连接的时候，端口就填这个
+
+cat /etc/clickhouse-server/config.xml | grep &quot;&lt;http_port&gt;&quot;
+</code></pre>
+<h3 id="clickhouse踩坑">clickhouse踩坑</h3>
+<h4 id="数据格式">数据格式</h4>
+<p>建表语句格式如下</p>
+<pre><code class="language-sql">CREATE TABLE default.toll_transaction
+(
+    `id` Int64,
+    `transaction_id` String,
+    `user_uuid` String,
+    `user_id` Int64,
+    `money_destination` Int32,
+    `trade_type` Enum8('RECHARGE' = 1, 'PAY' = 2, 'CROSS' = 3, 'COUPON' = 4, 'WITHDRAW' = 5, 'REFUND' = 6, 'PENALTY' = 7, 'WASH' = 8, 'CHARGE' = 9, 'VIP' = 10, 'SLOTSOLD' = 11) DEFAULT 'PAY',
+    `pay_type` Enum8('BALANCE' = 1, 'WECHAT' = 2, 'ALIPAY' = 3, 'BANK' = 4, 'PLATFORM' = 5, 'BOC' = 6, 'ALIPAY_NOSENSE' = 7, 'BOC_QUICKPAY' = 8, 'WECHAT_NOSENSE' = 9, 'UNION_SCAN_ALI' = 10, 'UNION_SCAN_WECHAT' = 11, 'UNION_ALI' = 12, 'UNION_WECHAT' = 13, 'BOC_ALI' = 14, 'BOC_WECHAT' = 15, 'BOC_BANK' = 16, 'ICBC_ALI' = 17, 'ICBC_WECHAT' = 18, 'ICBC_QUICKPAY' = 19) DEFAULT 'BALANCE',
+    `amount` Decimal(15, 2),
+    `lucky_money_amount` Decimal(15, 2),
+    `third_party_transaction_id` String,
+    `licence_plate` String,
+    `transaction_time` Int64,
+    `transaction_result` Enum8('SUCCESS' = 1, 'PENDING' = 2, 'FAILED' = 3, 'PROCESSING' = 4),
+    `order_id` String,
+    `park_name` String,
+    `parking_time` Int32,
+    `updated_at` DateTime DEFAULT now(),
+    `created_at` DateTime,
+    `prepay_id` String,
+    `operator_id` Int64,
+    `park_id` Int64,
+    `used_lucky_money_id` Int64 DEFAULT 0,
+    `status` Int32 DEFAULT 0,
+    `slot_renewal_record_id` Int64,
+    `redemption_id` Int64
+)
+ENGINE = ReplacingMergeTree(created_at)
+ORDER BY id
+SETTINGS index_granularity = 8192;
+</code></pre>
+<h5 id="nullable问题">Nullable问题</h5>
+<p>建表时，指定某个字段可为空，语法为 <code>字段名 Nullable(类型)</code> ，这样插入数据时，字段可为Null值。这样会带来性能问题：</p>
+<blockquote>
+<p>表的列中存储 <code>Nullable</code> 类型值，ClickHouse 除了使用带有值的普通文件外，还使用带有 <code>NULL</code> 掩码的单独文件。 掩码文件中的条目允许 ClickHouse 区分每个表行的 <code>NULL</code> 和相应数据类型的默认值。 由于附加了新文件，<code>Nullable</code> 列与类似的普通文件相比消耗额外的存储空间。</p>
+</blockquote>
+<h5 id="枚举类型问题">枚举类型问题</h5>
+<p>clickhouse中的枚举类型和MySQL中的不太一样，声明的时候，格式是这样的：</p>
+<pre><code class="language-shell">licence_plate_type Nullable(Enum8('yellow' = 1, 'blue' = 2, 'green' = 3)),
+</code></pre>
+<h5 id="order-by问题">order by问题</h5>
+<p>千万以上数据集进行order by 查询时需要搭配where 条件和limit语句一起使用。</p>
+<h4 id="去重查询">去重查询</h4>
+<p>用uniqCombined替代distinct性能可提升10倍以上，uniqCombined底层采用类似HyperLogLog算法实现，能接收2%左右的数据误差，可直接使用这种去重方式提升查询性能。</p>
+<h4 id="数据导入编码问题">数据导入编码问题</h4>
+<p><s>latin1字符集导入ck的时候会报错，或许是MySQL数据库版本问题?</s></p>
+<p>MySQL 旧版本的时间日期格式为 <code>0000-00-00 00:00:00</code> 的记录，导入新版MySQL会报错。</p>
+<p>解决方式：</p>
+<pre><code>SELECT @@SESSION.sql_mode;
+</code></pre>
+<p>如果结果有NO_ZERO_DATE和NO_ZERO_IN_DATE，就是我们日期不能设为0000-00-00的原因，把sql_mode中的这两个去掉就行了</p>
+<pre><code>set @@global.sql_mode=(select replace(@@sql_mode,'NO_ZERO_IN_DATE,NO_ZERO_DATE',''));
+</code></pre>
+<h4 id="使用datax导入数据的问题">使用dataX导入数据的问题</h4>
+<h5 id="datax没有clickhouse插件解决方案">dataX没有clickhouse插件解决方案</h5>
+<p>默认下载安装的dataX不包含clickhousereader和clickhousewriter的插件，因此如果要从MySQL导入数据，需要自己手动编译dataX的源码。</p>
+<h5 id="编译失败先准备依赖">编译失败，先准备依赖</h5>
+<p>先下载源码</p>
+<pre><code>git clone git@gitee.com:nnego/eigenbase-properties.git
+#编译为jar
+mvn clean install
+#手动安装jar，改为你自己的目录
+mvn install:install-file -DgroupId=eigenbase -DartifactId=eigenbase-properties -Dversion=1.1.4 -Dpackaging=jar -Dfile=/Users/htc/code/git/eigenbase-properties/target/eigenbase-properties-1.1.7-SNAPSHOT.jar
+</code></pre>
+<p>下载DataX并编译</p>
+<pre><code>#下载DataX源码
+git clone https://github.com/alibaba/DataX.git
+#打开根pom文件，把不需要的子模块注释掉
+#编译dataX
+mvn -U clean package assembly:assembly -Dmaven.test.skip=true
+</code></pre>
+<p>编译成功之后进到 <code>target/datax/datax/plugin</code> 目录中找到clickhouse的读写插件，复制到安装目录对应位置即可。</p>
+<h4 id="其他注意事项">其他注意事项</h4>
+<ul>
+<li>
+<p>clickhouse必须指定密码，否则dataX同步会失败。clickhouse更改密码在配置文件 <code>users.xml</code> 里。</p>
+</li>
+<li>
+<p>显示成功但是实际上并没有导入记录</p>
+</li>
+</ul>
+<p>dataX日志输出显示成功导入数据，但是实际clickhouse数据库里面并没有数据。</p>
+<p><s>观察日志输出？猜想可能出现问题的原因？？</s></p>
+<p>原因：</p>
+<p>采用ReplacingMergeTree，order by id，id是主键，相同主键只保留最新的记录。源数据的多条记录id都是0，所以会触发merge，最终只剩下一条数据，其他数据都被删除了。</p>
+<p>怎么办：</p>
+<p>重新建表，表引擎改为MergeTree即可。</p>
+<h4 id="kafka消息格式问题">kafka消息格式问题</h4>
+<p>json的key，value 大小驼峰 和ORM框架的问题。</p>
+<h4 id="大表join的性能优化问题">大表join的性能优化问题</h4>
+<p>参考链接：</p>
+<p><a href="https://www.jianshu.com/p/f9a54193dc63">从携程性能测试case中重新认识clickhouse - 简书 (jianshu.com)</a></p>
+
+            </div>
+            
+              <div class="tag-container">
+                
+                  <a href="https://suxiaomu.top/N63wJxQVO/" class="tag">
+                    ClickHouse
+                  </a>
+                
+              </div>
+            
+            
+              <div class="next-post">
+                <div class="next">下一篇</div>
+                <a href="https://suxiaomu.top/K7Mla-PKG/">
+                  <h3 class="post-title">
+                    Kafka快速入门
+                  </h3>
+                </a>
+              </div>
+            
+
+            
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+<script type="application/javascript">
+
+AOS.init();
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+
+  <script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>
+    hljs.initHighlightingOnLoad()
+  </script>
+
+
+
+
+
+  </body>
+</html>

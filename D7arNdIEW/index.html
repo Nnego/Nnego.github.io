@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>Java并发编程之synchronized关键字 | 苏小霂的博客</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://suxiaomu.top/favicon.ico?v=1741488094257">
+<link rel="stylesheet" href="https://suxiaomu.top/styles/main.css">
+
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+
+
+    <meta name="description" content="
+synchronized通过对象内部的一个叫做监视器锁的东西来实现的。
+监视器锁本身依赖于操作系统底层的互斥锁Mutex Lock来实现的，同步代码块是通过monitorenter 和moniterexit 指令来获取线程的执行权。同步方..." />
+    <meta name="keywords" content="并发编程,多线程,Java" />
+  </head>
+  <body>
+    <div id="app" class="main">
+
+      <div class="sidebar" :class="{ 'full-height': menuVisible }">
+  <div class="top-container" data-aos="fade-right">
+    <div class="top-header-container">
+      <a class="site-title-container" href="https://suxiaomu.top">
+        <img src="https://suxiaomu.top/images/avatar.png?v=1741488094257" class="site-logo">
+        <h1 class="site-title">苏小霂的博客</h1>
+      </a>
+      <div class="menu-btn" @click="menuVisible = !menuVisible">
+        <div class="line"></div>
+      </div>
+    </div>
+    <div>
+      
+        
+          <a href="/" class="site-nav">
+            首页
+          </a>
+        
+      
+        
+          <a href="/archives" class="site-nav">
+            归档
+          </a>
+        
+      
+        
+          <a href="/tags" class="site-nav">
+            标签
+          </a>
+        
+      
+    </div>
+  </div>
+  <div class="bottom-container" data-aos="flip-up" data-aos-offset="0">
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+    <div class="site-description">
+      
+    </div>
+    <div class="site-footer">
+       | <a class="rss" href="https://suxiaomu.top/atom.xml" target="_blank">RSS</a>
+    </div>
+  </div>
+</div>
+
+
+      <div class="main-container">
+        <div class="content-container" data-aos="fade-up">
+          <div class="post-detail">
+            <h2 class="post-title">Java并发编程之synchronized关键字</h2>
+            <div class="post-date">2023-06-15</div>
+            
+            <div class="post-content" v-pre>
+              <!-- more -->
+<p>synchronized通过对象内部的一个叫做<strong>监视器锁</strong>的东西来实现的。</p>
+<p>监视器锁本身依赖于操作系统底层的<strong>互斥锁Mutex Lock</strong>来实现的，<strong>同步代码块</strong>是通过<code>monitorenter</code> 和<code>moniterexit</code> 指令来获取线程的执行权。<strong>同步方法</strong>是通过加<code>ACC_SYNCHONIZED</code> 标识获取线程的执行权。</p>
+<p>操作系统实现线程之间的切换需要从<strong>用户态</strong>转换到<strong>核心态</strong>，成本很高，状态转换要花费比较长的时间。</p>
+<p>这就是synchronized效率低的原因。这种依赖于操作系统MutexLock实现的锁成为<strong>重量级锁</strong>。</p>
+<h3 id="synchronized-vs-volatile">synchronized v.s. volatile</h3>
+<p>Volatile：内存可见(不保证原子性，不保证互斥性)；防止CPU指令重排(内存屏障)</p>
+<p>扩展：</p>
+<p>如何保证内存可见？</p>
+<blockquote>
+<p><strong>JMM通过控制主内存与每个线程的本地内存之间的交互，来为Java程序员提供内存可见性保证。</strong></p>
+</blockquote>
+<p>什么是内存屏障？</p>
+<blockquote>
+<p><strong>MM属于语言级的内存模型，它确保在不同的编译器和不同的处理器平台之上，通过禁止特定类型的编译器重排序和处理器重排序，为程序员提供一致的内存可见性保证</strong>。</p>
+</blockquote>
+<h3 id="happens-before规则">happens-before规则</h3>
+<p>happens-before表示的是前一个操作的结果对于后续操作是可见的，它是一种表达多个线程之间对于内存的可见性。所以我们可以认为在 JMM 中，如果一个操作执行的结果需要对另一个操作可见，那么这两个操作必须要存在happens-before关系。这两个操作可以是同一个线程，也可以是不同的线程。</p>
+<h3 id=""></h3>
+
+            </div>
+            
+              <div class="tag-container">
+                
+                  <a href="https://suxiaomu.top/FUkfApRfh/" class="tag">
+                    并发编程
+                  </a>
+                
+                  <a href="https://suxiaomu.top/vldJYD2YKe/" class="tag">
+                    多线程
+                  </a>
+                
+                  <a href="https://suxiaomu.top/_PzzGB-wA/" class="tag">
+                    Java
+                  </a>
+                
+              </div>
+            
+            
+              <div class="next-post">
+                <div class="next">下一篇</div>
+                <a href="https://suxiaomu.top/u2MONV7zD/">
+                  <h3 class="post-title">
+                    Java并发编程之锁与锁升级
+                  </h3>
+                </a>
+              </div>
+            
+
+            
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+<script type="application/javascript">
+
+AOS.init();
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+
+  <script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>
+    hljs.initHighlightingOnLoad()
+  </script>
+
+
+
+
+
+  </body>
+</html>

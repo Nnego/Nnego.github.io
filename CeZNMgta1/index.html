@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>Java并发编程之线程池 | 苏小霂的博客</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://suxiaomu.top/favicon.ico?v=1741488094257">
+<link rel="stylesheet" href="https://suxiaomu.top/styles/main.css">
+
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+
+
+    <meta name="description" content="线程池就是创建若干个可执行的线程放入一个池（容器）中，有任务需要处理时，会提交到线程池中的任务队列，处理完之后线程并不会被销毁，而是仍然在线程池中等待下一个任务。
+
+为什么要用线程池？
+Java 中创建一个线程，需要调用操作系统内核的 AP..." />
+    <meta name="keywords" content="并发编程,多线程,Java" />
+  </head>
+  <body>
+    <div id="app" class="main">
+
+      <div class="sidebar" :class="{ 'full-height': menuVisible }">
+  <div class="top-container" data-aos="fade-right">
+    <div class="top-header-container">
+      <a class="site-title-container" href="https://suxiaomu.top">
+        <img src="https://suxiaomu.top/images/avatar.png?v=1741488094257" class="site-logo">
+        <h1 class="site-title">苏小霂的博客</h1>
+      </a>
+      <div class="menu-btn" @click="menuVisible = !menuVisible">
+        <div class="line"></div>
+      </div>
+    </div>
+    <div>
+      
+        
+          <a href="/" class="site-nav">
+            首页
+          </a>
+        
+      
+        
+          <a href="/archives" class="site-nav">
+            归档
+          </a>
+        
+      
+        
+          <a href="/tags" class="site-nav">
+            标签
+          </a>
+        
+      
+    </div>
+  </div>
+  <div class="bottom-container" data-aos="flip-up" data-aos-offset="0">
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+    <div class="site-description">
+      
+    </div>
+    <div class="site-footer">
+       | <a class="rss" href="https://suxiaomu.top/atom.xml" target="_blank">RSS</a>
+    </div>
+  </div>
+</div>
+
+
+      <div class="main-container">
+        <div class="content-container" data-aos="fade-up">
+          <div class="post-detail">
+            <h2 class="post-title">Java并发编程之线程池</h2>
+            <div class="post-date">2023-06-16</div>
+            
+            <div class="post-content" v-pre>
+              <p>线程池就是创建若干个可执行的线程放入一个池（容器）中，有任务需要处理时，会提交到线程池中的任务队列，处理完之后线程并不会被销毁，而是仍然在线程池中等待下一个任务。</p>
+<!-- more -->
+<h2 id="为什么要用线程池">为什么要用线程池？</h2>
+<p>Java 中创建一个线程，需要调用操作系统内核的 API，操作系统要为线程分配一系列的资源，成本很高，所以线程是一个重量级的对象，应该避免频繁创建和销毁。<br>
+使用线程池就能很好地避免频繁创建和销毁。</p>
+<p>为了减少在创建和销毁线程上所花的时间和对系统资源的消耗，解决资源不足的问题。</p>
+<p>如果不适用线程池，有可能造成系统创建大量同类线程而消耗内存挥着”过度切换“问题。</p>
+<h2 id="四种线程池">四种线程池</h2>
+<ul>
+<li><strong>SingleThreadPool</strong>：单个线程线程池，core = max =1，拿一个任务用一个线程</li>
+<li><strong>FixedThreadPool</strong>：指定大小的固定大小线程池，core=max, 都不能回收，无界队列</li>
+<li><strong>CachedThreadPool</strong>：core是0，所有的线程都可回收，无界队列</li>
+<li><strong>ScheduledThreadPool</strong> ： 定时任务专用的线程池</li>
+</ul>
+<p>问题</p>
+<ul>
+<li><strong>FixedThreadPool</strong>和<strong>SingleThreadPool</strong>：允许的<strong>请求队列</strong>长度为Interger.MAX_VALUE，可能会堆积大量请求，造成OOM；</li>
+<li><strong>CachedThreadPool</strong>和<strong>ScheduledThreadPool</strong>：允许的创建线程数量为Integer.MAX_VALUE，可能会创建大量线程，造成OOM。</li>
+</ul>
+<h2 id="线程池参数">线程池参数？</h2>
+<ul>
+<li>corePoolSize：核心线程数量，定义了最小可以同时运行的线程数量，没有任务也不会被回收。</li>
+<li>maximumPoolSize：当线程数量<strong>大于核心线程数</strong>，且队列中存放的任务达到队列容量的时候，继续创建线程。</li>
+<li>keepAliveTime：超过corePoolSize之后”临时线程“的存活时间。</li>
+<li>timeUnit：单位</li>
+<li>workQueue：当新任务来的时候，保存未执行的任务。大于corePoolSize时进入阻塞队列等待。</li>
+<li>threadFactory：线程工厂，用来创建线程，默认就行</li>
+<li>RejectdExecutionHandler handler：拒绝策略，线程数量达到maximumPoolSize大小，且workQueue也塞满的情况下，线程池调用handler拒绝策略来处理请求。</li>
+</ul>
+<p>线程池运行流程：<br>
+1.线程池创建core数量的核心线程准备接受任务<br>
+2.core满了之后，任务进入阻塞队列<br>
+3.阻塞队列慢之后，开新线程执行，开到max<br>
+4.到max之后，max - core 数量的空闲线程会在keepAliveTime指定时间后销毁，最后保持到core数量的线程<br>
+5.max也满了，还有新任务进来，就开始执行线程池的拒绝策略</p>
+<p>举例：<br>
+一个线程池，core5 , max 20 queue 50， 100并发：<br>
+首先5个直接执行。接下来50个进入队列排队，再多开15个继续执行，现在70个被安排了，剩余30个任务进入到默认的拒绝策略处理。</p>
+<h2 id="线程池拒绝策略">线程池拒绝策略：</h2>
+<ul>
+<li>
+<p>AbortPolicy：默认拒绝策略，直接抛异常</p>
+</li>
+<li>
+<p>DiscardPolicy：直接抛弃不处理。</p>
+</li>
+<li>
+<p>DiscardOldestPolicy：丢弃队列中最老的任务。</p>
+</li>
+<li>
+<p>CallerRunsPolicy：将任务分配给当前执行execute方法的线程来执行</p>
+<p>自定义拒绝策略：实现<code>RejectedExecutionHandler</code>接口，可以实现友好的拒绝策略。包括但不限于：将数据存入数据库，用日志处理等。</p>
+</li>
+</ul>
+<p>JDK 的并发工具包里还有一个静态线程池工厂类 Executors，可以方便地创建线程池，但是由于 Executors 创建的线程池内部很多地方用到了无界任务队列，在高并发场景下，无界任务队列会接收过多的任务对象，导致 JVM 抛出OutOfMemoryError，整个 JVM 服务崩溃，影响严重。所以很多公司已经不建议使用 Executors 去创建线程。</p>
+<h2 id="线程池包含哪些状态">线程池包含哪些状态？</h2>
+<p>线程池的5种状态：RUNNING、SHUTDOWN、STOP、TIDYING、TERMINATED。</p>
+<p>见 ThreadPoolExecutor 源码</p>
+<pre><code class="language-java">// runState is stored in the high-order bits
+private static final int RUNNING    = -1 &lt;&lt;COUNT_BITS;
+private static final int SHUTDOWN   =  0 &lt;&lt;COUNT_BITS;
+private static final int STOP       =  1 &lt;&lt;COUNT_BITS;
+private static final int TIDYING    =  2 &lt;&lt;COUNT_BITS;
+private static final int TERMINATED =  3 &lt;&lt;COUNT_BITS;
+</code></pre>
+<ol>
+<li>
+<p>RUNNING：<br>
+线程池一旦被创建，就处于 RUNNING 状态，任务数为 0，能够接收新任务，对已排队的任务进行处理。</p>
+</li>
+<li>
+<p>SHUTDOWN：<br>
+不接收新任务，但能处理已排队的任务。调用线程池的 shutdown() 方法，线程池由 RUNNING 转变为 SHUTDOWN 状态。</p>
+</li>
+<li>
+<p>STOP：<br>
+不接收新任务，不处理已排队的任务，并且会中断正在处理的任务。调用线程池的 shutdownNow() 方法，线程池由(RUNNING 或 SHUTDOWN ) 转变为 STOP 状态。</p>
+</li>
+<li>
+<p>TIDYING：<br>
+SHUTDOWN 状态下，任务数为 0， 其他所有任务已终止，线程池会变为 TIDYING 状态，会执行 terminated() 方法。线程池中的 terminated() 方法是空实现，可以重写该方法进行相应的处理。<br>
+线程池在 SHUTDOWN 状态，任务队列为空且执行中任务为空，线程池就会由 SHUTDOWN 转变为 TIDYING 状态。<br>
+线程池在 STOP 状态，线程池中执行中任务为空时，就会由 STOP 转变为 TIDYING 状态。</p>
+</li>
+<li>
+<p>TERMINATED：<br>
+线程池彻底终止。线程池在 TIDYING 状态执行完 terminated() 方法就会由 TIDYING 转变为 TERMINATED 状态。</p>
+</li>
+</ol>
+<h2 id="线程池关闭方法">线程池关闭方法</h2>
+<h4 id="1shutdown">1.shutdown()</h4>
+<ul>
+<li>有序关闭，已提交任务继续执行</li>
+<li>不接受新任务</li>
+</ul>
+<h4 id="2-shutdownnow">2、shutdownNow()</h4>
+<ul>
+<li>尝试停止所有正在执行的任务</li>
+<li>停止等待执行的任务，并返回等待执行的任务列表</li>
+</ul>
+<h4 id="3-awaitterminationlong-timeout-timeunit-unit">3、awaitTermination(long timeout, TimeUnit unit)</h4>
+<ul>
+<li>收到关闭请求后，所有任务执行完成、超时、线程被打断，阻塞直到三种情况任意一种发生</li>
+<li>参数可以设置超时时间与超时单位</li>
+<li>线程池关闭返回 true；超过设置时间未关闭，返回 false</li>
+</ul>
+<h5 id="总结">总结</h5>
+<pre><code>- 调用 shutdown() 和 shutdownNow() 方法关闭线程池，线程池都无法接收新的任务
+- shutdown() 方法会继续执行正在执行未完成的任务；shutdownNow() 方法会尝试停止所有正在执行的任务
+- shutdown() 方法没有返回值；shutdownNow() 方法返回等待执行的任务列表
+- awaitTermination(long timeout, TimeUnit unit) 方法可以获取线程池是否已经关闭，需要配合 shutdown() 使用
+- shutdownNow() 不一定能够立马结束线程池，该方法会尝试停止所有正在执行的任务，通过调用 Thread.interrupt() 方法来实现的，如果线程中没有 sleep() 、wait()、Condition、定时锁等应用，interrupt() 方法是无法中断当前的线程的。
+</code></pre>
+
+            </div>
+            
+              <div class="tag-container">
+                
+                  <a href="https://suxiaomu.top/FUkfApRfh/" class="tag">
+                    并发编程
+                  </a>
+                
+                  <a href="https://suxiaomu.top/vldJYD2YKe/" class="tag">
+                    多线程
+                  </a>
+                
+                  <a href="https://suxiaomu.top/_PzzGB-wA/" class="tag">
+                    Java
+                  </a>
+                
+              </div>
+            
+            
+              <div class="next-post">
+                <div class="next">下一篇</div>
+                <a href="https://suxiaomu.top/D7arNdIEW/">
+                  <h3 class="post-title">
+                    Java并发编程之synchronized关键字
+                  </h3>
+                </a>
+              </div>
+            
+
+            
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+<script type="application/javascript">
+
+AOS.init();
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+
+  <script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>
+    hljs.initHighlightingOnLoad()
+  </script>
+
+
+
+
+
+  </body>
+</html>

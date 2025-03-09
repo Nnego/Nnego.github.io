@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>KafKa实现ClickHouse增量同步数据 | 苏小霂的博客</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://suxiaomu.top/favicon.ico?v=1741488094257">
+<link rel="stylesheet" href="https://suxiaomu.top/styles/main.css">
+
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+
+
+    <meta name="description" content="KafKa与ClickHouse
+
+
+Kafka下载与安装
+下载
+官网下载 :
+Apache Kafka
+确保已经安装jdk8+环境，使用javac命令测试
+安装
+解压
+tar -xzvf kafka_2.12-3.1.0.tgz -C /..." />
+    <meta name="keywords" content="数据库,Kafka,ClickHouse" />
+  </head>
+  <body>
+    <div id="app" class="main">
+
+      <div class="sidebar" :class="{ 'full-height': menuVisible }">
+  <div class="top-container" data-aos="fade-right">
+    <div class="top-header-container">
+      <a class="site-title-container" href="https://suxiaomu.top">
+        <img src="https://suxiaomu.top/images/avatar.png?v=1741488094257" class="site-logo">
+        <h1 class="site-title">苏小霂的博客</h1>
+      </a>
+      <div class="menu-btn" @click="menuVisible = !menuVisible">
+        <div class="line"></div>
+      </div>
+    </div>
+    <div>
+      
+        
+          <a href="/" class="site-nav">
+            首页
+          </a>
+        
+      
+        
+          <a href="/archives" class="site-nav">
+            归档
+          </a>
+        
+      
+        
+          <a href="/tags" class="site-nav">
+            标签
+          </a>
+        
+      
+    </div>
+  </div>
+  <div class="bottom-container" data-aos="flip-up" data-aos-offset="0">
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+    <div class="site-description">
+      
+    </div>
+    <div class="site-footer">
+       | <a class="rss" href="https://suxiaomu.top/atom.xml" target="_blank">RSS</a>
+    </div>
+  </div>
+</div>
+
+
+      <div class="main-container">
+        <div class="content-container" data-aos="fade-up">
+          <div class="post-detail">
+            <h2 class="post-title">KafKa实现ClickHouse增量同步数据</h2>
+            <div class="post-date">2022-02-22</div>
+            
+            <div class="post-content" v-pre>
+              <p>KafKa与ClickHouse</p>
+<!-- more -->
+<hr>
+<h2 id="kafka下载与安装">Kafka下载与安装</h2>
+<h3 id="下载">下载</h3>
+<p>官网下载 :</p>
+<p><a href="https://kafka.apache.org/downloads">Apache Kafka</a></p>
+<p>确保已经安装jdk8+环境，使用<code>javac</code>命令测试</p>
+<h3 id="安装">安装</h3>
+<p>解压</p>
+<pre><code class="language-shell">tar -xzvf kafka_2.12-3.1.0.tgz -C /opt
+</code></pre>
+<p>建议建立软连接</p>
+<pre><code class="language-shell">ln -s ./kafka_2.12-3.1.0 kafka/
+</code></pre>
+<p>查看目录结构</p>
+<pre><code class="language-shell">▶ ll /opt/kafka/
+total 64K
+drwxr-xr-x. 3 root root 4.0K Jan 12 17:04 bin
+drwxr-xr-x. 3 root root 4.0K Mar  8 14:36 config
+drwxr-xr-x. 2 root root 8.0K Mar  8 14:32 libs
+-rw-r--r--. 1 root root  15K Jan 12 17:01 LICENSE
+drwxr-xr-x. 2 root root  262 Jan 12 17:04 licenses
+drwxr-xr-x. 2 root root  237 Mar  8 14:41 logs
+-rw-r--r--. 1 root root  28K Jan 12 17:01 NOTICE
+drwxr-xr-x. 2 root root   44 Jan 12 17:04 site-docs
+</code></pre>
+<h2 id="kafka常用命令">Kafka常用命令</h2>
+<h3 id="管理">管理</h3>
+<pre><code class="language-shell">#启动zookeeper
+bin/zookeeper-server-start.sh -daemon config/zookeeper.properties 
+
+#启动Kafka
+bin/kafka-server-start.sh -daemon config/server.properties
+
+## 创建topic（1个分区，2个副本）
+bin/kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 1 --partitions 1 --topic test
+
+## 创建topic (新版本)kafka版本 &gt;= 2.2
+bin/kafka-topics.sh --create --bootstrap-server localhost:9092 --replication-factor 1 --partitions 1 --topic test
+
+## 分区扩容
+# kafka版本 &lt; 2.2
+bin/kafka-topics.sh --zookeeper localhost:2181 --alter --topic topic1 --partitions 2
+
+# kafka版本 &gt;= 2.2
+bin/kafka-topics.sh --bootstrap-server broker_host:port --alter --topic topic1 --partitions 2
+
+## 删除topic
+bin/kafka-topics.sh --zookeeper localhost:2181 --delete --topic test
+</code></pre>
+<h3 id="查询">查询</h3>
+<pre><code class="language-shell">## 查询集群描述
+bin/kafka-topics.sh --describe --zookeeper 127.0.0.1:2181
+
+## topic列表查询
+bin/kafka-topics.sh --list --zookeeper localhost:2181
+
+## topic列表查询（支持0.9版本+）
+bin/kafka-topics.sh --list --bootstrap-server localhost:9092
+
+## 新消费者列表查询（支持0.9版本+）
+bin/kafka-consumer-groups.sh --new-consumer --bootstrap-server localhost:9092 --list
+
+## 新消费者列表查询（支持0.10版本+）
+bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092 --list
+
+## 显示某个消费组的消费详情（仅支持offset存储在zookeeper上的）
+bin/kafka-run-class.sh kafka.tools.ConsumerOffsetChecker --zookeeper localhost:2181 --group test
+
+## 显示某个消费组的消费详情（0.9版本 - 0.10.1.0 之前）
+bin/kafka-consumer-groups.sh --new-consumer --bootstrap-server localhost:9092 --describe --group test-consumer-group
+
+## 显示某个消费组的消费详情（0.10.1.0版本+）
+bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092 --describe --group my-group
+</code></pre>
+<h3 id="生产和消费">生产和消费</h3>
+<pre><code>## 生产者
+bin/kafka-console-producer.sh --broker-list localhost:9092 --topic test
+
+## 消费者
+bin/kafka-console-consumer.sh --zookeeper localhost:2181 --topic test
+
+## 新生产者（支持0.9版本+）
+bin/kafka-console-producer.sh --broker-list localhost:9092 --topic test --producer.config config/producer.properties
+
+## 新消费者（支持0.9版本+）
+bin/kafka-console-consumer.sh --bootstrap-server localhost:9092  --from-beginning --consumer.config config/consumer.properties --topic test
+
+## kafka-verifiable-consumer.sh（消费者事件，例如：offset提交等）
+bin/kafka-verifiable-consumer.sh --broker-list localhost:9092 --topic test --group-id groupName
+
+## 高级点的用法
+bin/kafka-simple-consumer-shell.sh --brist localhost:9092 --topic test --partition 0 --offset 1234  --max-messages 10
+</code></pre>
+<hr>
+<h2 id="clickhouse使用kafka外表进行数据的增量更新">ClickHouse使用Kafka外表进行数据的增量更新</h2>
+<h3 id="kafka">kafka:</h3>
+<ol>
+<li>创建topic</li>
+</ol>
+<pre><code>bin/kafka-topic --create --bootstrap-server localhost:9092 --replication-factors 1 --partitions 1 --topic tdf
+</code></pre>
+<h3 id="clickhouse">clickhouse:</h3>
+<ol>
+<li>创建Kafka消费表(Kafka引擎)</li>
+</ol>
+<pre><code class="language-sql">CREATE TABLE default.toll_detail_final_kafka
+(
+    `id` Int64,
+    `toll_detail_id` Int64,
+    `order_id` String,
+    `toll_duty_id` String,
+    `park_id` Int64,
+    `licence_plate` String,
+    `brand` String,
+    `toll_man_name` String,
+    `toll_man_id` Int64,
+    `in_time` Nullable(DateTime64(3, 'Asia/Shanghai')) ,
+    `out_time` Nullable(DateTime64(3, 'Asia/Shanghai')) ,
+    `event_time` DateTime64(3, 'Asia/Shanghai'),
+    `in_location` String,
+    `in_camera_id` Int64,
+    `out_location` String,
+    `out_camera_id` Int64,
+    `fee_expected` Decimal(15,2),
+    `fee_cash` Decimal(15,2),
+    `fee_third_part` Decimal(15,2),
+    `fee_third_part_real` Decimal(15,2),
+    `fee_member_point` Decimal(15,2),
+    `fee_member_benefit` Decimal(15,2),
+    `fee_etc` Decimal(15,2),
+    `fee_third_part_deduction` Decimal(15,2),
+    `fee_cash_by_pos` Decimal(15,2),
+    `fee_online` Decimal(15,2),
+    `fee_coupon` Decimal(15,2),
+    `paper_coupon_fee` Decimal(15,2),
+    `elec_coupon_fee` Decimal(15,2),
+    `paper_coupon_hours` Int64,
+    `elec_coupon_hours` Int64,
+    `free_reason` String,
+    `free_amount` Decimal(15,2),
+    `fee_balance` Decimal(15,2),
+    `owner_id` Int64,
+    `owner_name` String,
+    `car_type` String,
+    `note` String,
+    `lift_by_hand` Int32,
+    `in_exception_type` String,
+    `out_exception_type` String,
+    `status` Int32,
+    `updated_at` DateTime64(3, 'Asia/Shanghai'),
+    `created_at` DateTime64(3, 'Asia/Shanghai'),
+    `description` String,
+    `fee_exception` Decimal(15,2),
+    `fee_reserved1` Decimal(15,2),
+    `fee_reserved2` Decimal(15,2)
+)
+ENGINE = Kafka()
+SETTINGS 
+kafka_broker_list = '120.0.0.1:9092',
+kafka_topic_list = 'toll_detail_final',
+kafka_group_name = 'tdfConsumerGroup',
+kafka_format = 'JSONEachRow',
+kafka_skip_broken_messages = 10;
+</code></pre>
+<ol start="2">
+<li>创建实体表实际存数据(MergeTree引擎)</li>
+</ol>
+<p>已经创建的tdf和tt表(以toll_detail_final表举例)</p>
+<pre><code class="language-sql">CREATE TABLE default.toll_detail_final
+(
+ `id` Int64,
+ `toll_detail_id` Int64,
+ `order_id` String,
+ `toll_duty_id` String,
+ `park_id` Int64,
+ `licence_plate` String,
+ `brand` String,
+ `toll_man_name` String,
+ `toll_man_id` Int64,
+ `in_time` Nullable(DateTime64(3, 'Asia/Shanghai')),
+ `out_time` Nullable(DateTime64(3, 'Asia/Shanghai')),
+ `event_time` Nullable(DateTime64(3, 'Asia/Shanghai')),
+ `in_location` String,
+ `in_camera_id` Int64,
+ `out_location` String,
+ `out_camera_id` Int64,
+ `fee_expected` Decimal(15, 2),
+ `fee_cash` Decimal(15, 2),
+ `fee_third_part` Decimal(15, 2),
+ `fee_third_part_real` Decimal(15, 2),
+ `fee_member_point` Decimal(15, 2),
+ `fee_member_benefit` Decimal(15, 2),
+ `fee_etc` Decimal(15, 2),
+ `fee_third_part_deduction` Decimal(15, 2),
+ `fee_cash_by_pos` Decimal(15, 2),
+ `fee_online` Decimal(15, 2),
+ `fee_coupon` Decimal(15, 2),
+ `paper_coupon_fee` Decimal(15, 2),
+ `elec_coupon_fee` Decimal(15, 2),
+ `paper_coupon_hours` Int64,
+ `elec_coupon_hours` Int64,
+ `free_reason` String,
+ `free_amount` Decimal(15, 2),
+ `fee_balance` Decimal(15, 2),
+ `owner_id` Int64,
+ `owner_name` String,
+ `car_type` String,
+ `note` String,
+ `lift_by_hand` Int32,
+ `in_exception_type` String,
+ `out_exception_type` String,
+ `status` Int32,
+ `updated_at` DateTime64(3, 'Asia/Shanghai'),
+ `created_at` DateTime64(3, 'Asia/Shanghai'),
+ `description` String,
+ `fee_exception` Decimal(15, 2),
+ `fee_reserved1` Decimal(15, 2),
+ `fee_reserved2` Decimal(15, 2)
+)
+ENGINE = ReplacingMergeTree(updated_at)
+ORDER BY id
+SETTINGS index_granularity = 8192
+</code></pre>
+<ol start="3">
+<li>创建物化视图，联系kafka消费表和实体表</li>
+</ol>
+<pre><code class="language-sql">create materialized view view_tdf_consumer TO toll_detail_final as
+select id,toll_detail_id,order_id,toll_duty_id,park_id,licence_plate,brand,toll_man_name,toll_man_id,in_time,out_time,event_time,in_location,in_camera_id,out_location,out_camera_id,fee_expected,fee_cash,fee_third_part,fee_third_part_real,fee_member_point,description,fee_etc,fee_third_part_deduction,fee_cash_by_pos,fee_online,fee_coupon,paper_coupon_fee,elec_coupon_fee,paper_coupon_hours,elec_coupon_hours,free_reason,free_amount,fee_balance,owner_id,owner_name,car_type,note,lift_by_hand,in_exception_type,out_exception_type,status,updated_at,created_at,fee_member_benefit,fee_exception,fee_reserved1,fee_reserved2 from toll_detail_final_kafka;
+</code></pre>
+<ol start="4">
+<li>关联/卸载视图</li>
+</ol>
+<pre><code class="language-shell"># 卸载视图:
+detach view view_tdf_consumer;
+
+# 关联视图:
+attach table view_tdf_consumer;
+</code></pre>
+<p>kafka生产消息，kafka消费表会拉取消息，物化视图将它转换为实体表中的记录。</p>
+<p>消息样式举例：</p>
+<pre><code class="language-json">{&quot;fee_exception&quot;:100.0,&quot;out_exception_type&quot;:&quot;&quot;,&quot;paper_coupon_fee&quot;:0.0,&quot;fee_cash&quot;:0.0,&quot;out_camera_id&quot;:1538,&quot;owner_id&quot;:0,&quot;description&quot;:&quot;&quot;,&quot;created_at&quot;:1649317245039,&quot;fee_reserved1&quot;:0.0,&quot;fee_etc&quot;:0.0,&quot;fee_reserved2&quot;:0.0,&quot;elec_coupon_hours&quot;:0,&quot;out_location&quot;:&quot;车道2&quot;,&quot;car_type&quot;:&quot;visitor&quot;,&quot;fee_expected&quot;:100.0,&quot;fee_balance&quot;:0.0,&quot;updated_at&quot;:1649315050000,&quot;toll_man_name&quot;:&quot;&quot;,&quot;fee_online&quot;:0.0,&quot;elec_coupon_fee&quot;:0.0,&quot;in_camera_id&quot;:1539,&quot;id&quot;:5816289,&quot;in_exception_type&quot;:&quot;&quot;,&quot;brand&quot;:&quot;&quot;,&quot;in_location&quot;:&quot;车道1&quot;,&quot;free_amount&quot;:0.0,&quot;out_time&quot;:1649223909000,&quot;fee_third_part_real&quot;:0.0,&quot;fee_member_benefit&quot;:0.0,&quot;owner_name&quot;:&quot;&quot;,&quot;toll_duty_id&quot;:&quot;&quot;,&quot;paper_coupon_hours&quot;:0,&quot;toll_detail_id&quot;:0,&quot;park_id&quot;:2803,&quot;fee_third_part&quot;:0.0,&quot;fee_third_part_deduction&quot;:0.0,&quot;licence_plate&quot;:&quot;贵Z005A1&quot;,&quot;fee_coupon&quot;:0.0,&quot;in_time&quot;:1649176380000,&quot;fee_cash_by_pos&quot;:0.0,&quot;fee_member_point&quot;:0.0,&quot;order_id&quot;:&quot;C2803153920220406003300143&quot;,&quot;event_time&quot;:1649314955000,&quot;lift_by_hand&quot;:0,&quot;status&quot;:2}
+</code></pre>
+
+            </div>
+            
+              <div class="tag-container">
+                
+                  <a href="https://suxiaomu.top/keMTkexIhC/" class="tag">
+                    数据库
+                  </a>
+                
+                  <a href="https://suxiaomu.top/-6P-8v24W/" class="tag">
+                    Kafka
+                  </a>
+                
+                  <a href="https://suxiaomu.top/N63wJxQVO/" class="tag">
+                    ClickHouse
+                  </a>
+                
+              </div>
+            
+            
+              <div class="next-post">
+                <div class="next">下一篇</div>
+                <a href="https://suxiaomu.top/VphV8ID1D/">
+                  <h3 class="post-title">
+                    ClickHouse安装与使用
+                  </h3>
+                </a>
+              </div>
+            
+
+            
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+<script type="application/javascript">
+
+AOS.init();
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+
+  <script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>
+    hljs.initHighlightingOnLoad()
+  </script>
+
+
+
+
+
+  </body>
+</html>

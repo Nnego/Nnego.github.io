@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>Java静态代理与动态代理 | 苏小霂的博客</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://suxiaomu.top/favicon.ico?v=1741488094257">
+<link rel="stylesheet" href="https://suxiaomu.top/styles/main.css">
+
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+
+
+    <meta name="description" content="
+动态代理
+区别静态代理，代理角色是动态生成的。
+分类：1. 基于类(cglib动态代理) 2. 基于接口(JDK动态代理)
+基于JDK的动态代理
+原理：利用反射机制生成一个实现代理接口的匿名类，在调用具体方法前调用InvokeHandle..." />
+    <meta name="keywords" content="Java" />
+  </head>
+  <body>
+    <div id="app" class="main">
+
+      <div class="sidebar" :class="{ 'full-height': menuVisible }">
+  <div class="top-container" data-aos="fade-right">
+    <div class="top-header-container">
+      <a class="site-title-container" href="https://suxiaomu.top">
+        <img src="https://suxiaomu.top/images/avatar.png?v=1741488094257" class="site-logo">
+        <h1 class="site-title">苏小霂的博客</h1>
+      </a>
+      <div class="menu-btn" @click="menuVisible = !menuVisible">
+        <div class="line"></div>
+      </div>
+    </div>
+    <div>
+      
+        
+          <a href="/" class="site-nav">
+            首页
+          </a>
+        
+      
+        
+          <a href="/archives" class="site-nav">
+            归档
+          </a>
+        
+      
+        
+          <a href="/tags" class="site-nav">
+            标签
+          </a>
+        
+      
+    </div>
+  </div>
+  <div class="bottom-container" data-aos="flip-up" data-aos-offset="0">
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+    <div class="site-description">
+      
+    </div>
+    <div class="site-footer">
+       | <a class="rss" href="https://suxiaomu.top/atom.xml" target="_blank">RSS</a>
+    </div>
+  </div>
+</div>
+
+
+      <div class="main-container">
+        <div class="content-container" data-aos="fade-up">
+          <div class="post-detail">
+            <h2 class="post-title">Java静态代理与动态代理</h2>
+            <div class="post-date">2021-04-09</div>
+            
+            <div class="post-content" v-pre>
+              <!-- more -->
+<h2 id="动态代理">动态代理</h2>
+<p>区别静态代理，代理角色是动态生成的。</p>
+<p>分类：1. 基于类(cglib动态代理) 2. 基于接口(JDK动态代理)</p>
+<h3 id="基于jdk的动态代理">基于JDK的动态代理</h3>
+<p>原理：利用<strong>反射机制</strong>生成一个实现代理接口的匿名类，在调用具体方法前调用InvokeHandler来处理。</p>
+<p>InvocationHandler接口：</p>
+<p>Proxy类</p>
+<h3 id="基于cglib的动态代理">基于CGLib的动态代理</h3>
+<p>原理：被代理的对象可以不用实现接口，但是不能为final类，因为其使用asm开源包，对代理对象类的class文件加载进来，通过修改其字节码生成子类来处理。</p>
+<p>MethodInterceptor接口：</p>
+<p>Enhancer类</p>
+<p>代理类实现：</p>
+<pre><code class="language-java">package com.suhang.boot.service.impl;
+
+import org.springframework.cglib.proxy.Enhancer;
+import org.springframework.cglib.proxy.MethodInterceptor;
+import org.springframework.cglib.proxy.MethodProxy;
+import java.lang.reflect.Method;
+
+public class CGLibProxy implements MethodInterceptor {
+    private Object target;
+
+    public void setTarget(Object target) {
+        this.target = target;
+    }
+
+
+    @Override
+    public Object intercept(Object o, Method method, Object[] objects, MethodProxy methodProxy) throws Throwable {
+
+        log();
+        Object invokeSuper = methodProxy.invokeSuper(o, objects);
+        return invokeSuper;
+    }
+
+    /**
+     * 创建代理对象
+     *
+     */
+    public Object getProxyInstance(){
+
+        Enhancer enhancer = new Enhancer();//弟弟类
+        enhancer.setSuperclass(target.getClass());
+        enhancer.setCallback(this);//回调，当前类
+        return enhancer.create();
+
+    }
+
+
+    //要加的东西
+    void log(){
+        System.out.println(&quot;世界父辈阿巴瑟老佛爷&quot;);
+    }
+}
+</code></pre>
+
+            </div>
+            
+              <div class="tag-container">
+                
+                  <a href="https://suxiaomu.top/_PzzGB-wA/" class="tag">
+                    Java
+                  </a>
+                
+              </div>
+            
+            
+              <div class="next-post">
+                <div class="next">下一篇</div>
+                <a href="https://suxiaomu.top/E13nrh1_6/">
+                  <h3 class="post-title">
+                    Java并发编程之锁与线程池
+                  </h3>
+                </a>
+              </div>
+            
+
+            
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+<script type="application/javascript">
+
+AOS.init();
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+
+  <script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>
+    hljs.initHighlightingOnLoad()
+  </script>
+
+
+
+
+
+  </body>
+</html>

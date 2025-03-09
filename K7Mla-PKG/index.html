@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>Kafka快速入门 | 苏小霂的博客</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://suxiaomu.top/favicon.ico?v=1741488094257">
+<link rel="stylesheet" href="https://suxiaomu.top/styles/main.css">
+
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+
+
+    <meta name="description" content="
+Kafka的下载安装与常用命令
+
+
+Kafka下载与安装
+下载
+官网下载 :
+Apache Kafka
+确保已经安装jdk8+环境，使用javac命令测试
+安装
+解压
+tar -xzvf kafka_2.12-3.1.0.tgz -C /..." />
+    <meta name="keywords" content="Kafka,消息队列" />
+  </head>
+  <body>
+    <div id="app" class="main">
+
+      <div class="sidebar" :class="{ 'full-height': menuVisible }">
+  <div class="top-container" data-aos="fade-right">
+    <div class="top-header-container">
+      <a class="site-title-container" href="https://suxiaomu.top">
+        <img src="https://suxiaomu.top/images/avatar.png?v=1741488094257" class="site-logo">
+        <h1 class="site-title">苏小霂的博客</h1>
+      </a>
+      <div class="menu-btn" @click="menuVisible = !menuVisible">
+        <div class="line"></div>
+      </div>
+    </div>
+    <div>
+      
+        
+          <a href="/" class="site-nav">
+            首页
+          </a>
+        
+      
+        
+          <a href="/archives" class="site-nav">
+            归档
+          </a>
+        
+      
+        
+          <a href="/tags" class="site-nav">
+            标签
+          </a>
+        
+      
+    </div>
+  </div>
+  <div class="bottom-container" data-aos="flip-up" data-aos-offset="0">
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+    <div class="site-description">
+      
+    </div>
+    <div class="site-footer">
+       | <a class="rss" href="https://suxiaomu.top/atom.xml" target="_blank">RSS</a>
+    </div>
+  </div>
+</div>
+
+
+      <div class="main-container">
+        <div class="content-container" data-aos="fade-up">
+          <div class="post-detail">
+            <h2 class="post-title">Kafka快速入门</h2>
+            <div class="post-date">2022-02-02</div>
+            
+            <div class="post-content" v-pre>
+              <blockquote>
+<p>Kafka的下载安装与常用命令</p>
+</blockquote>
+<!-- more -->
+<h2 id="kafka下载与安装">Kafka下载与安装</h2>
+<h3 id="下载">下载</h3>
+<p>官网下载 :</p>
+<p><a href="https://kafka.apache.org/downloads">Apache Kafka</a></p>
+<p>确保已经安装jdk8+环境，使用<code>javac</code>命令测试</p>
+<h3 id="安装">安装</h3>
+<p>解压</p>
+<pre><code class="language-shell">tar -xzvf kafka_2.12-3.1.0.tgz -C /opt
+</code></pre>
+<p>建议建立软连接</p>
+<pre><code class="language-shell">ln -s ./kafka_2.12-3.1.0 kafka/
+</code></pre>
+<p>查看目录结构</p>
+<pre><code class="language-shell">▶ ll /opt/kafka/
+total 64K
+drwxr-xr-x. 3 root root 4.0K Jan 12 17:04 bin
+drwxr-xr-x. 3 root root 4.0K Mar  8 14:36 config
+drwxr-xr-x. 2 root root 8.0K Mar  8 14:32 libs
+-rw-r--r--. 1 root root  15K Jan 12 17:01 LICENSE
+drwxr-xr-x. 2 root root  262 Jan 12 17:04 licenses
+drwxr-xr-x. 2 root root  237 Mar  8 14:41 logs
+-rw-r--r--. 1 root root  28K Jan 12 17:01 NOTICE
+drwxr-xr-x. 2 root root   44 Jan 12 17:04 site-docs
+</code></pre>
+<h2 id="kafka常用命令">Kafka常用命令</h2>
+<h3 id="管理">管理</h3>
+<pre><code class="language-shell">## 创建topic（4个分区，2个副本）
+bin/kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 2 --partitions 4 --topic test
+
+## kafka版本 &gt;= 2.2
+bin/kafka-topics.sh --create --bootstrap-server localhost:9092 --replication-factor 1 --partitions 1 --topic test
+
+## 分区扩容
+# kafka版本 &lt; 2.2
+bin/kafka-topics.sh --zookeeper localhost:2181 --alter --topic topic1 --partitions 2
+
+# kafka版本 &gt;= 2.2
+bin/kafka-topics.sh --bootstrap-server broker_host:port --alter --topic topic1 --partitions 2
+
+## 删除topic
+bin/kafka-topics.sh --zookeeper localhost:2181 --delete --topic test
+</code></pre>
+<h3 id="查询">查询</h3>
+<pre><code class="language-shell">## 查询集群描述
+bin/kafka-topics.sh --describe --zookeeper 127.0.0.1:2181
+
+## topic列表查询
+bin/kafka-topics.sh --zookeeper 127.0.0.1:2181 --list
+
+## topic列表查询（支持0.9版本+）
+bin/kafka-topics.sh --list --bootstrap-server localhost:9092
+
+## 新消费者列表查询（支持0.9版本+）
+bin/kafka-consumer-groups.sh --new-consumer --bootstrap-server localhost:9092 --list
+
+## 新消费者列表查询（支持0.10版本+）
+bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092 --list
+
+## 显示某个消费组的消费详情（仅支持offset存储在zookeeper上的）
+bin/kafka-run-class.sh kafka.tools.ConsumerOffsetChecker --zookeeper localhost:2181 --group test
+
+## 显示某个消费组的消费详情（0.9版本 - 0.10.1.0 之前）
+bin/kafka-consumer-groups.sh --new-consumer --bootstrap-server localhost:9092 --describe --group test-consumer-group
+
+## 显示某个消费组的消费详情（0.10.1.0版本+）
+bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092 --describe --group my-group
+</code></pre>
+<h3 id="生产和消费">生产和消费</h3>
+<pre><code>## 生产者
+bin/kafka-console-producer.sh --broker-list localhost:9092 --topic test
+
+## 消费者
+bin/kafka-console-consumer.sh --zookeeper localhost:2181 --topic test
+
+## 新生产者（支持0.9版本+）
+bin/kafka-console-producer.sh --broker-list localhost:9092 --topic test --producer.config config/producer.properties
+
+## 新消费者（支持0.9版本+）
+bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic test --new-consumer --from-beginning --consumer.config config/consumer.properties
+
+## kafka-verifiable-consumer.sh（消费者事件，例如：offset提交等）
+bin/kafka-verifiable-consumer.sh --broker-list localhost:9092 --topic test --group-id groupName
+
+## 高级点的用法
+bin/kafka-simple-consumer-shell.sh --brist localhost:9092 --topic test --partition 0 --offset 1234  --max-messages 10
+</code></pre>
+<hr>
+
+            </div>
+            
+              <div class="tag-container">
+                
+                  <a href="https://suxiaomu.top/-6P-8v24W/" class="tag">
+                    Kafka
+                  </a>
+                
+                  <a href="https://suxiaomu.top/Hz4tSIzgi-/" class="tag">
+                    消息队列
+                  </a>
+                
+              </div>
+            
+            
+              <div class="next-post">
+                <div class="next">下一篇</div>
+                <a href="https://suxiaomu.top/gE6YZduXe/">
+                  <h3 class="post-title">
+                    Android开发(一) 发布release版本与adb调试
+                  </h3>
+                </a>
+              </div>
+            
+
+            
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+<script type="application/javascript">
+
+AOS.init();
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+
+  <script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>
+    hljs.initHighlightingOnLoad()
+  </script>
+
+
+
+
+
+  </body>
+</html>

@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>Maven仓库配置阿里云镜像 | 苏小霂的博客</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://suxiaomu.top/favicon.ico?v=1741488094257">
+<link rel="stylesheet" href="https://suxiaomu.top/styles/main.css">
+
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+
+
+    <meta name="description" content="macOS Maven路径 一般在
+/usr/local/maven/apache-maven-3.6.3
+进入conf目录，修改settings.xml，
+sudo vim /usr/local/maven/apache-maven-3...." />
+    <meta name="keywords" content="Maven" />
+  </head>
+  <body>
+    <div id="app" class="main">
+
+      <div class="sidebar" :class="{ 'full-height': menuVisible }">
+  <div class="top-container" data-aos="fade-right">
+    <div class="top-header-container">
+      <a class="site-title-container" href="https://suxiaomu.top">
+        <img src="https://suxiaomu.top/images/avatar.png?v=1741488094257" class="site-logo">
+        <h1 class="site-title">苏小霂的博客</h1>
+      </a>
+      <div class="menu-btn" @click="menuVisible = !menuVisible">
+        <div class="line"></div>
+      </div>
+    </div>
+    <div>
+      
+        
+          <a href="/" class="site-nav">
+            首页
+          </a>
+        
+      
+        
+          <a href="/archives" class="site-nav">
+            归档
+          </a>
+        
+      
+        
+          <a href="/tags" class="site-nav">
+            标签
+          </a>
+        
+      
+    </div>
+  </div>
+  <div class="bottom-container" data-aos="flip-up" data-aos-offset="0">
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+    <div class="site-description">
+      
+    </div>
+    <div class="site-footer">
+       | <a class="rss" href="https://suxiaomu.top/atom.xml" target="_blank">RSS</a>
+    </div>
+  </div>
+</div>
+
+
+      <div class="main-container">
+        <div class="content-container" data-aos="fade-up">
+          <div class="post-detail">
+            <h2 class="post-title">Maven仓库配置阿里云镜像</h2>
+            <div class="post-date">2021-01-07</div>
+            
+            <div class="post-content" v-pre>
+              <p>macOS Maven路径 一般在<br>
+<code>/usr/local/maven/apache-maven-3.6.3</code><br>
+进入<code>conf</code>目录，修改<code>settings.xml</code>，</p>
+<pre><code class="language-shell">sudo vim /usr/local/maven/apache-maven-3.6.3/conf/settings.xml
+</code></pre>
+<p>找到<code>mirror</code>元素，添加阿里云仓库镜像代码，如下</p>
+<pre><code class="language-xml">&lt;mirrors&gt;
+    &lt;!-- mirror
+     | Specifies a repository mirror site to use instead of a given repository. The repository that
+     | this mirror serves has an ID that matches the mirrorOf element of this mirror. IDs are used
+     | for inheritance and direct lookup purposes, and must be unique across the set of mirrors.
+     |
+    &lt;mirror&gt;
+      &lt;id&gt;mirrorId&lt;/id&gt;
+      &lt;mirrorOf&gt;repositoryId&lt;/mirrorOf&gt;
+      &lt;name&gt;Human Readable Name for this Mirror.&lt;/name&gt;
+      &lt;url&gt;http://my.repository.com/repo/path&lt;/url&gt;
+    &lt;/mirror&gt;
+     --&gt;
+     &lt;mirror&gt;
+      &lt;id&gt;aliyunmaven&lt;/id&gt;
+      &lt;mirrorOf&gt;*&lt;/mirrorOf&gt;
+      &lt;name&gt;Aliyun Maven Public&lt;/name&gt;
+      &lt;url&gt;https://maven.aliyun.com/repository/public&lt;/url&gt;
+    &lt;/mirror&gt;
+  &lt;/mirrors&gt;
+</code></pre>
+<p>接下来在IDE中配置Maven的安装路径和自定义的配置文件路径即可。</p>
+
+            </div>
+            
+              <div class="tag-container">
+                
+                  <a href="https://suxiaomu.top/_lQhKnTlU/" class="tag">
+                    Maven
+                  </a>
+                
+              </div>
+            
+            
+              <div class="next-post">
+                <div class="next">下一篇</div>
+                <a href="https://suxiaomu.top/5eNHby0oy/">
+                  <h3 class="post-title">
+                    pom.xml文件注释说明
+                  </h3>
+                </a>
+              </div>
+            
+
+            
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+<script type="application/javascript">
+
+AOS.init();
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+
+  <script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>
+    hljs.initHighlightingOnLoad()
+  </script>
+
+
+
+
+
+  </body>
+</html>

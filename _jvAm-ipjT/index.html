@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>反射、动态代理与AOP | 苏小霂的博客</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://suxiaomu.top/favicon.ico?v=1741488094257">
+<link rel="stylesheet" href="https://suxiaomu.top/styles/main.css">
+
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+
+
+    <meta name="description" content="
+
+一、什么是反射？优缺点
+反射（Reflection）
+
+定义：Java反射机制允许程序在运行时获取自身的信息，并操作对象的属性和方法，即使这些信息原本是私有的。
+核心API：
+
+Class类：获取类的元数据（如构造器、方法、字段）。
+F..." />
+    <meta name="keywords" content="Java" />
+  </head>
+  <body>
+    <div id="app" class="main">
+
+      <div class="sidebar" :class="{ 'full-height': menuVisible }">
+  <div class="top-container" data-aos="fade-right">
+    <div class="top-header-container">
+      <a class="site-title-container" href="https://suxiaomu.top">
+        <img src="https://suxiaomu.top/images/avatar.png?v=1741488094257" class="site-logo">
+        <h1 class="site-title">苏小霂的博客</h1>
+      </a>
+      <div class="menu-btn" @click="menuVisible = !menuVisible">
+        <div class="line"></div>
+      </div>
+    </div>
+    <div>
+      
+        
+          <a href="/" class="site-nav">
+            首页
+          </a>
+        
+      
+        
+          <a href="/archives" class="site-nav">
+            归档
+          </a>
+        
+      
+        
+          <a href="/tags" class="site-nav">
+            标签
+          </a>
+        
+      
+    </div>
+  </div>
+  <div class="bottom-container" data-aos="flip-up" data-aos-offset="0">
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+    <div class="site-description">
+      
+    </div>
+    <div class="site-footer">
+       | <a class="rss" href="https://suxiaomu.top/atom.xml" target="_blank">RSS</a>
+    </div>
+  </div>
+</div>
+
+
+      <div class="main-container">
+        <div class="content-container" data-aos="fade-up">
+          <div class="post-detail">
+            <h2 class="post-title">反射、动态代理与AOP</h2>
+            <div class="post-date">2023-06-18</div>
+            
+            <div class="post-content" v-pre>
+              <!-- more -->
+<hr>
+<h3 id="一-什么是反射优缺点"><strong>一、什么是反射？优缺点</strong></h3>
+<h4 id="反射reflection"><strong>反射（Reflection）</strong></h4>
+<ul>
+<li><strong>定义</strong>：Java反射机制允许程序在运行时获取自身的信息，并操作对象的属性和方法，即使这些信息原本是私有的。</li>
+<li><strong>核心API</strong>：
+<ul>
+<li><code>Class</code>类：获取类的元数据（如构造器、方法、字段）。</li>
+<li><code>Field</code>：访问类的成员变量。</li>
+<li><code>Method</code>：调用类的方法。</li>
+</ul>
+</li>
+</ul>
+<h4 id="优点"><strong>优点</strong></h4>
+<ol>
+<li><strong>灵活性</strong>：在运行时动态操作对象，无需提前硬编码。</li>
+<li><strong>框架实现基础</strong>：Spring等框架依赖反射进行依赖注入、AOP代理生成。</li>
+<li><strong>调试和工具开发</strong>：用于生成代码文档（如Javadoc）、序列化/反序列化。</li>
+</ol>
+<h4 id="缺点"><strong>缺点</strong></h4>
+<ol>
+<li><strong>性能开销高</strong>：反射操作比直接调用方法慢，频繁使用会显著降低效率。</li>
+<li><strong>破坏封装性</strong>：可以访问私有成员，可能违反设计原则。</li>
+<li><strong>编译时检查缺失</strong>：错误在运行时才会暴露（如方法名拼写错误）。</li>
+</ol>
+<hr>
+<h3 id="二-jdk动态代理-vs-cglib动态代理"><strong>二、JDK动态代理 vs CGLIB动态代理</strong></h3>
+<h4 id="1-jdk动态代理"><strong>1. JDK动态代理</strong></h4>
+<ul>
+<li><strong>实现原理</strong>：
+<ul>
+<li>基于<code>java.lang.reflect.Proxy</code>类，生成一个目标接口的代理实例。</li>
+<li>要求目标对象必须<strong>实现至少一个接口</strong>。</li>
+</ul>
+</li>
+<li><strong>步骤</strong>：<pre><code class="language-java">// 创建InvocationHandler（处理方法调用）
+InvocationHandler handler = new MyInvocationHandler(target);
+
+// 根据接口生成代理类
+Class&lt;?&gt; proxyClass = Proxy.getProxyClass(loader, interfaces);
+
+// 创建代理实例并返回
+return (T) proxyClass.getConstructor(InvocationHandler.class).newInstance(handler);
+</code></pre>
+</li>
+<li><strong>适用场景</strong>：目标对象实现了接口的情况。</li>
+</ul>
+<h4 id="2-cglib动态代理"><strong>2. CGLIB动态代理</strong></h4>
+<ul>
+<li><strong>实现原理</strong>：
+<ul>
+<li>使用<code>net.sf.cglib.proxy.Enhancer</code>生成一个子类（非接口）的代理。</li>
+<li><strong>无需目标对象实现接口</strong>，但目标类不能是<code>final</code>且方法不能是<code>private</code>或<code>static</code>。</li>
+</ul>
+</li>
+<li><strong>步骤</strong>：<pre><code class="language-java">Enhancer enhancer = new Enhancer();
+enhancer.setSuperclass(target.getClass());
+enhancer.setCallback(new MethodInterceptor() {
+    public Object intercept(Object obj, Method method, Object[] args, MethodProxy proxy) throws Throwable {
+        // 执行方法前逻辑（如日志）
+        return method.invoke(target, args); // 调用目标对象的方法
+    }
+});
+
+return (T) enhancer.create();
+</code></pre>
+</li>
+<li><strong>适用场景</strong>：目标对象未实现接口的情况。</li>
+</ul>
+<h4 id="对比总结"><strong>对比总结</strong></h4>
+<table>
+<thead>
+<tr>
+<th>特性</th>
+<th>JDK动态代理</th>
+<th>CGLIB动态代理</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>实现方式</td>
+<td>接口代理</td>
+<td>子类继承</td>
+</tr>
+<tr>
+<td>是否需要接口</td>
+<td>必须</td>
+<td>不需要</td>
+</tr>
+<tr>
+<td>性能</td>
+<td>较慢（反射）</td>
+<td>更快但比直接调用仍慢</td>
+</tr>
+<tr>
+<td>适用场景</td>
+<td>接口场景</td>
+<td>非接口场景</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h3 id="三-什么是aop如何实现"><strong>三、什么是AOP？如何实现？</strong></h3>
+<h4 id="1-aop面向切面编程"><strong>1. AOP（面向切面编程）</strong></h4>
+<ul>
+<li><strong>定义</strong>：将横切关注点（如日志、事务、权限控制）从业务代码中分离，提高模块化。</li>
+<li><strong>核心概念</strong>：
+<ul>
+<li><strong>切面（Aspect）</strong>：封装了横切逻辑的类（如日志功能）。</li>
+<li><strong>连接点（Join Point）</strong>：程序执行过程中的某个具体位置（如方法调用、异常抛出）。</li>
+<li><strong>切入点（Pointcut）</strong>：匹配一组切点的表达式（如<code>execution(* com.example.service.*.*(..))</code>）。</li>
+<li><strong>通知（Advice）</strong>：在特定连接点执行的操作，类型包括：
+<ul>
+<li><code>Before</code>：方法前执行</li>
+<li><code>AfterReturning</code>：方法正常返回后执行</li>
+<li><code>AfterThrowing</code>：抛出异常时执行</li>
+<li><code>Around</code>：环绕目标方法（可控制是否执行）</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h4 id="2-aop实现方式"><strong>2. AOP实现方式</strong></h4>
+<ul>
+<li>
+<p><strong>静态代理</strong>：</p>
+<ul>
+<li>手动为每个类创建代理，代码冗余。</li>
+</ul>
+</li>
+<li>
+<p><strong>动态代理（主流）</strong>：</p>
+<ul>
+<li><strong>JDK动态代理 + CGLIB</strong>：Spring默认使用两者结合（接口用JDK，无接口用CGLIB）。</li>
+<li><strong>AspectJ</strong>：编译时或加载时织入切面，性能更高。</li>
+</ul>
+</li>
+</ul>
+<h4 id="3-spring-aop实现流程"><strong>3. Spring AOP实现流程</strong></h4>
+<ol>
+<li>定义切面类（如<code>@Aspect</code>标注），包含通知逻辑。</li>
+<li>配置切入点表达式（如使用<code>@Pointcut</code>）。</li>
+<li>Spring容器在启动时通过动态代理生成代理对象，将切面织入目标对象。</li>
+</ol>
+<hr>
+<h3 id="四-aop与动态代理的关系"><strong>四、AOP与动态代理的关系</strong></h3>
+<ul>
+<li><strong>AOP依赖动态代理</strong>：Spring AOP默认通过JDK或CGLIB动态代理实现切面的织入（Weaving）。</li>
+<li><strong>织入时机</strong>：
+<ul>
+<li><strong>运行时</strong>：Spring在初始化Bean时生成代理对象。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h3 id="五-示例代码"><strong>五、示例代码</strong></h3>
+<h4 id="1-使用spring-aspect实现aop"><strong>1. 使用Spring @Aspect实现AOP</strong></h4>
+<pre><code class="language-java">// 定义切面类
+@Aspect
+@Component
+public class LoggingAspect {
+    @Before(&quot;execution(* com.example.service.*.*(..))&quot;) // 切入点表达式
+    public void logBefore(JoinPoint joinPoint) {
+        System.out.println(&quot;方法调用前：&quot; + joinPoint.getSignature().getName());
+    }
+}
+</code></pre>
+<h4 id="2-spring配置"><strong>2. Spring配置</strong></h4>
+<pre><code class="language-java">@Configuration
+@EnableAspectJAutoProxy // 开启AOP支持
+public class AppConfig { 
+    @Bean
+    public UserService userService() {
+        return new UserServiceImpl();
+    }
+
+    @Bean
+    public LoggingAspect loggingAspect() {
+        return new LoggingAspect();
+    }
+}
+</code></pre>
+<hr>
+<h3 id="六-总结"><strong>六、总结</strong></h3>
+<ul>
+<li><strong>反射</strong>：运行时动态操作类，但性能较低。</li>
+<li><strong>动态代理</strong>：
+<ul>
+<li>JDK（接口）和CGLIB（无接口）是两种实现方式。</li>
+</ul>
+</li>
+<li><strong>AOP</strong>：
+<ul>
+<li>核心思想是模块化横切关注点，依赖动态代理实现织入。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<details type="reasoning" done="true" duration="25">
+<summary>Thought for 25 seconds</summary>
+> 好的，我现在需要帮助这位Java开发人员解答他在面试中遇到的问题。这些问题涉及反射、动态代理、AOP及其相关知识点，还有一些具体的对比和区别。
+> 
+> 首先，我应该逐个问题来分析，确保每个点都解释清楚，并且提供相关的补充知识。这样可以帮助他全面理解这些概念，为未来的面试或工作做好准备。
+> 
+> 1. **什么是反射？优缺点**
+>    - 反射机制是Java的一个强大功能，允许程序在运行时检查和操作类、方法和字段等元数据。
+>    - 优点包括灵活性高、便于框架实现，缺点则是性能开销较大，可能破坏封装性。
+> 
+> 2. **JDK动态代理和CGLIB动态代理**
+>    - JDK动态代理基于`java.lang.reflect.Proxy`，需要目标对象实现接口。
+>    - CGLIB通过生成子类代理，无需接口支持，但对某些情况有限制（如final类）。
+> 
+> 3. **什么是AOP？如何实现**
+>    - AOP将横切关注点从业务逻辑中分离，常见的有日志、事务管理等。
+>    - 实现方式包括动态代理和静态代理，其中Spring常用动态代理来实现AOP。
+> 
+> 4. **AOP框架有哪些**
+>    - 主要有Spring AOP和AspectJ两种主流框架，各有不同的特点和适用场景。
+> 
+> 5. **Spring AOP与AspectJ的区别**
+>    - Spring AOP基于动态代理，默认使用JDK或CGLIB。
+>    - AspectJ采用编译时或加载时织入，性能更高，支持更复杂的切面功能。
+> 
+> 6. **编译织入、运行织入的区别**
+>    - 编译织入在编译阶段插入切面代码。
+>    - 运行织入在运行时动态生成代理类，Spring AOP采用这种方式。
+> 
+> 在整个思考过程中，我需要确保每个概念都解释清晰，并且提供足够的例子或对比，帮助理解。同时，补充相关的知识点，如反射的应用场景、AOP的核心概念（切面、连接点等），以及不同织入方式的优缺点。
+> 
+> 在编写回答时，我会按照问题顺序逐一展开，用简洁明了的语言进行解释，避免使用过于专业的术语，或者如果用了，就给出简单的定义。同时，提供示例代码或对比表格，帮助读者更好地理解和记忆。
+> 
+> 最后，确保整体结构清晰，逻辑连贯，让这位开发人员能够系统地掌握这些知识点，提升在面试中的表现。
+</details>
+### 什么是反射？优缺点？
+<p><strong>反射机制：</strong><br>
+反射是Java中一个强大的功能，允许程序在运行时检查和操作类、方法和字段等元数据。通过反射，开发者可以动态地调用类的方法，访问私有成员变量，甚至创建对象，而无需在编译时知道这些信息。</p>
+<p><strong>优点：</strong></p>
+<ol>
+<li>
+<p><strong>灵活性高：</strong><br>
+反射使得代码更具灵活性，可以在运行时动态决定如何操作类和对象，而不需要提前编写大量重复的代码。</p>
+</li>
+<li>
+<p><strong>框架实现：</strong><br>
+许多Java框架（如Spring、Hibernate）利用反射机制来实现依赖注入、ORM等功能。通过反射，这些框架能够动态地创建对象并调用方法，而无需预先知道具体的类结构。</p>
+</li>
+<li>
+<p><strong>调试和测试工具：</strong><br>
+反射在调试工具和单元测试框架中也非常有用，允许开发者动态检查和修改程序状态。</p>
+</li>
+</ol>
+<p><strong>缺点：</strong></p>
+<ol>
+<li>
+<p><strong>性能开销大：</strong><br>
+相对于直接使用类和方法，反射操作通常会带来额外的性能开销。动态解析类和方法会导致运行时效率降低。</p>
+</li>
+<li>
+<p><strong>安全性问题：</strong><br>
+反射允许访问私有成员变量和方法，这可能破坏封装性，导致代码维护困难，并增加潜在的安全风险。</p>
+</li>
+<li>
+<p><strong>代码可读性和维护性差：</strong><br>
+过度使用反射可能会使代码难以理解和维护。其他开发者可能难以立即理解反射代码的意图和实现细节。</p>
+</li>
+</ol>
+<p><strong>应用场景举例：</strong></p>
+<ul>
+<li>
+<p><strong>ORM框架（如Hibernate）：</strong><br>
+通过反射访问对象的属性并生成相应的SQL语句。</p>
+</li>
+<li>
+<p><strong>依赖注入容器（如Spring）：</strong><br>
+反射用于动态创建对象并注入依赖。</p>
+</li>
+<li>
+<p><strong>单元测试框架（如JUnit）：</strong><br>
+使用反射调用被测类的方法，无需显式编写测试代码。</p>
+</li>
+</ul>
+<hr>
+<h3 id="jdk动态代理和cglib动态代理">JDK动态代理和CGLIB动态代理</h3>
+<p><strong>JDK动态代理：</strong></p>
+<ol>
+<li>
+<p><strong>原理：</strong><br>
+基于<code>java.lang.reflect.Proxy</code>类，生成一个代理类。该代理类实现了指定的接口，并在运行时根据调用处理程序（InvocationHandler）来分派方法调用。</p>
+</li>
+<li>
+<p><strong>特点：</strong></p>
+<ul>
+<li>只能为实现接口的类创建代理。</li>
+<li>适用于基于接口的编程模型。</li>
+</ul>
+</li>
+<li>
+<p><strong>使用场景：</strong><br>
+当目标对象实现了一个或多个接口时，JDK动态代理是首选方案。由于其内置支持，这种方式性能较好且易于使用。</p>
+</li>
+</ol>
+<p><strong>CGLIB动态代理：</strong></p>
+<ol>
+<li>
+<p><strong>原理：</strong><br>
+使用ASM库动态生成目标类的子类，并在子类中覆盖方法以实现代理功能。</p>
+</li>
+<li>
+<p><strong>特点：</strong></p>
+<ul>
+<li>不需要目标对象实现接口。</li>
+<li>适用于没有接口的情况。</li>
+</ul>
+</li>
+<li>
+<p><strong>使用场景：</strong><br>
+当目标对象没有实现任何接口，或者无法修改其代码来添加接口时，CGLIB动态代理是一个合适的选择。需要注意的是，由于生成子类的方式，CGLIB对某些情况（如final方法或类）有限制。</p>
+</li>
+</ol>
+<p><strong>示例代码对比：</strong></p>
+<h4 id="jdk动态代理">JDK动态代理：</h4>
+<pre><code class="language-java">// 定义接口
+public interface UserService {
+    void doSomething();
+}
+
+// 实现类
+public class UserServiceImpl implements UserService {
+    @Override
+    public void doSomething() {
+        System.out.println(&quot;Doing something...&quot;);
+    }
+}
+
+// 创建代理工厂
+public class UserServiceProxyFactory {
+    public static UserService createProxy(final UserService userService) {
+        return (UserService) Proxy.newProxyInstance(
+                UserService.class.getClassLoader(),
+                new Class&lt;?&gt;[]{UserService.class},
+                new InvocationHandler() {
+                    @Override
+                    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+                        System.out.println(&quot;Before method call&quot;);
+                        Object result = method.invoke(userService, args);
+                        System.out.println(&quot;After method call&quot;);
+                        return result;
+                    }
+                });
+    }
+}
+</code></pre>
+<h4 id="cglib动态代理">CGLIB动态代理：</h4>
+<pre><code class="language-java">// 目标类（无需实现接口）
+public class UserServiceImpl {
+    public void doSomething() {
+        System.out.println(&quot;Doing something...&quot;);
+    }
+}
+
+// 动态代理生成的子类将覆盖此方法
+public class UserServiceProxy extends UserServiceImpl implements MethodInterceptor {
+    @Override
+    public Object intercept(Object obj, Method method, Object[] args, Method proxyMethod) throws Throwable {
+        System.out.println(&quot;Before method call&quot;);
+        Object result = method.invoke(obj, args);
+        System.out.println(&quot;After method call&quot;);
+        return result;
+    }
+
+    public static UserServiceImpl createProxy() {
+        Enhancer enhancer = new Enhancer();
+        enhancer.setSuperclass(UserServiceImpl.class);
+        enhancer.setCallback(new UserServiceProxy());
+        return (UserServiceImpl) enhancer.create();
+    }
+}
+</code></pre>
+<p><strong>选择哪种代理方式：</strong></p>
+<ul>
+<li>如果目标对象实现了接口，优先使用JDK动态代理。</li>
+<li>如果目标对象没有实现接口，则必须使用CGLIB动态代理。</li>
+</ul>
+<hr>
+<h3 id="什么是反射优缺点">什么是反射？优缺点？</h3>
+<p><strong>总结：</strong></p>
+<p>反射是Java中的一个强大机制，允许在运行时检查和操作类、方法和字段。它提供了高度的灵活性，但也带来了性能开销、安全性和维护性问题。在实际开发中，应根据具体需求选择是否使用反射，并权衡其利弊。</p>
+<hr>
+<h3 id="jdk动态代理-vs-cglib动态代理">JDK动态代理 vs CGLIB动态代理</h3>
+<table>
+<thead>
+<tr>
+<th>特性</th>
+<th>JDK动态代理</th>
+<th>CGLIB动态代理</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>代理实现方式</td>
+<td>实现接口，生成代理类</td>
+<td>继承目标类，覆盖方法</td>
+</tr>
+<tr>
+<td>是否需要接口</td>
+<td>是</td>
+<td>否</td>
+</tr>
+<tr>
+<td>性能</td>
+<td>较优</td>
+<td>较差（生成子类的开销）</td>
+</tr>
+<tr>
+<td>应用场景</td>
+<td>接口编程模型</td>
+<td>无接口或无法修改代码的情况</td>
+</tr>
+<tr>
+<td>使用限制</td>
+<td>仅支持接口</td>
+<td>支持所有类，但无法处理final方法/类</td>
+</tr>
+</tbody>
+</table>
+<p><strong>选择建议：</strong></p>
+<ul>
+<li>当目标对象实现了一个或多个接口时，优先使用JDK动态代理。</li>
+<li>当目标对象未实现任何接口且无法修改其代码时，考虑使用CGLIB动态代理。</li>
+</ul>
+<hr>
+<h3 id="如何有效利用反射和动态代理">如何有效利用反射和动态代理？</h3>
+<ol>
+<li>
+<p><strong>避免过度使用反射：</strong></p>
+<ul>
+<li>尽量在编译时解决类和方法的调用，减少运行时解析带来的性能开销。</li>
+</ul>
+</li>
+<li>
+<p><strong>合理选择动态代理方式：</strong></p>
+<ul>
+<li>根据目标对象是否实现接口，选择JDK或CGLIB动态代理。</li>
+</ul>
+</li>
+<li>
+<p><strong>使用框架提供的工具：</strong></p>
+<ul>
+<li>框架如Spring已经封装了反射和动态代理的复杂性，开发者可以专注于业务逻辑而不必直接处理底层细节。</li>
+</ul>
+</li>
+<li>
+<p><strong>确保代码可维护性：</strong></p>
+<ul>
+<li>使用反射和动态代理时，添加足够的注释和文档，方便其他开发者理解和维护代码。</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h3 id="总结">总结</h3>
+<ul>
+<li>
+<p><strong>反射</strong>提供了在运行时操作类和对象的强大能力，但也带来了性能、安全性和维护性的挑战。</p>
+</li>
+<li>
+<p><strong>JDK动态代理</strong>适用于实现接口的场景，具有较高的性能和灵活性。</p>
+</li>
+<li>
+<p><strong>CGLIB动态代理</strong>则适合无法修改代码且目标对象未实现接口的情况，但需注意其限制条件。</p>
+</li>
+</ul>
+<p>在实际开发中，合理使用反射和动态代理可以提升代码的灵活性和复用性，同时避免过度依赖这些技术以保证系统的稳定性和可维护性。</p>
+
+            </div>
+            
+              <div class="tag-container">
+                
+                  <a href="https://suxiaomu.top/_PzzGB-wA/" class="tag">
+                    Java
+                  </a>
+                
+              </div>
+            
+            
+              <div class="next-post">
+                <div class="next">下一篇</div>
+                <a href="https://suxiaomu.top/UceADWQqWT/">
+                  <h3 class="post-title">
+                    常用排序算法实现及单例模式
+                  </h3>
+                </a>
+              </div>
+            
+
+            
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+<script type="application/javascript">
+
+AOS.init();
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+
+  <script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>
+    hljs.initHighlightingOnLoad()
+  </script>
+
+
+
+
+
+  </body>
+</html>

@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>Android开发(一) 发布release版本与adb调试 | 苏小霂的博客</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://suxiaomu.top/favicon.ico?v=1741488094257">
+<link rel="stylesheet" href="https://suxiaomu.top/styles/main.css">
+
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+
+
+    <meta name="description" content="
+android studio发布release版本apk
+
+生成keystore 对应用签名用。
+
+    keytool -genkey -v -keystore android.keystore -alias android -key..." />
+    <meta name="keywords" content="Android" />
+  </head>
+  <body>
+    <div id="app" class="main">
+
+      <div class="sidebar" :class="{ 'full-height': menuVisible }">
+  <div class="top-container" data-aos="fade-right">
+    <div class="top-header-container">
+      <a class="site-title-container" href="https://suxiaomu.top">
+        <img src="https://suxiaomu.top/images/avatar.png?v=1741488094257" class="site-logo">
+        <h1 class="site-title">苏小霂的博客</h1>
+      </a>
+      <div class="menu-btn" @click="menuVisible = !menuVisible">
+        <div class="line"></div>
+      </div>
+    </div>
+    <div>
+      
+        
+          <a href="/" class="site-nav">
+            首页
+          </a>
+        
+      
+        
+          <a href="/archives" class="site-nav">
+            归档
+          </a>
+        
+      
+        
+          <a href="/tags" class="site-nav">
+            标签
+          </a>
+        
+      
+    </div>
+  </div>
+  <div class="bottom-container" data-aos="flip-up" data-aos-offset="0">
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+    <div class="site-description">
+      
+    </div>
+    <div class="site-footer">
+       | <a class="rss" href="https://suxiaomu.top/atom.xml" target="_blank">RSS</a>
+    </div>
+  </div>
+</div>
+
+
+      <div class="main-container">
+        <div class="content-container" data-aos="fade-up">
+          <div class="post-detail">
+            <h2 class="post-title">Android开发(一) 发布release版本与adb调试</h2>
+            <div class="post-date">2021-09-10</div>
+            
+            <div class="post-content" v-pre>
+              <!-- more -->
+<h4 id="android-studio发布release版本apk">android studio发布release版本apk</h4>
+<ol>
+<li>生成keystore 对应用签名用。</li>
+</ol>
+<pre><code class="language-bash">    keytool -genkey -v -keystore android.keystore -alias android -keyalg RSA -validity 20000
+</code></pre>
+<p>​ 然后按照提示输入即可。</p>
+<ol start="2">
+<li>打包release版本apk安装包。</li>
+</ol>
+<p>Android Studio内点击Build -&gt; Generate Singed Bundle or Apk -&gt; apk -&gt; 选择上一步生成的keystore，然后下一步生成release版本</p>
+<ol start="3">
+<li>自定义打包生成的apk名称。</li>
+</ol>
+<p>默认打包生成的app名字都会是app-release.apk，如果想要打包生成的安装包名字带上日期版本号，在app目录下的build.gradle中加入</p>
+<pre><code class="language-kotlin">defaultConfig {
+       ......
+    }
+
+//加入以下代码
+//和defaultConfig同级
+android.applicationVariants.all {
+        variant -&gt;
+            variant.outputs.all{
+                def date = new Date().format(&quot;yyyyMMdd&quot; , TimeZone.getTimeZone(&quot;GMT+08&quot;))
+                outputFileName = &quot;HtcApp_&quot;+&quot;${variant.buildType.name}_v${versionName}_${date}.apk&quot;
+            }
+    }
+</code></pre>
+<h4 id="用adb工具调试app">用adb工具调试app</h4>
+<p>macos安装adb</p>
+<pre><code class="language-bash">brew install android-platform-tools
+</code></pre>
+<p>adb常用命令</p>
+<pre><code class="language-bash">#测试设备连接
+adb devices
+#会列出所有已经连接开发者模式的设备
+
+#查看设备的安卓版本
+adb shell getprop ro.build.version.release
+
+#安装apk
+adb install [apk文件路径]
+#卸载apk
+adb uninstall [包名]
+
+#启动app
+adb shell am start [包名]/.[Activity名]
+
+#停止app
+adb shell am force-stop [包名]
+
+#抓取日志
+adb shell &quot;ps | grep [包名]&quot; #找出pid
+adb shell &quot;logcat | grep [pid]&quot;
+
+#查看安装了哪些package
+adb shell pm list packages 
+
+adb shell pm list packages -d    #####只输出禁用的包。
+
+adb shell pm list packages -e    #####只输出启用的包。
+
+adb shell pm list packages -s    #####只输出系统的包。
+
+adb shell pm list packages -i   #####只输出包和安装信息（安装来源）。
+
+adb shell pm list packages -u   #####只输出包和未安装包信息（安装来源）。
+
+adb shell pm list packages -i   #####只输出包和安装信息（安装来源）。
+
+adb shell pm list packages -f   #####输出包和包相关联的文件
+
+adb shell pm list packages -3   #####输出所有第三方包。
+
+#查看当前前台运行的Activity
+adb shell dumpsys activity activities | grep mFocusedActivity
+</code></pre>
+<h4 id="抓取指定app日志举例">抓取指定APP日志举例</h4>
+<ol>
+<li>首先使用adb连接到设备</li>
+</ol>
+<pre><code class="language-bash">adb devices
+</code></pre>
+<p>成功连接会显示如下:</p>
+<pre><code>List of devices attached
+SCOPA7O3AOVRQG  device
+</code></pre>
+<ol start="2">
+<li>查找出app的包名</li>
+</ol>
+<pre><code class="language-bash">adb shell pm list packages -3
+</code></pre>
+<p>找到包名为<code>net.htc.app</code>，就是我们要找的app的包名</p>
+<ol start="3">
+<li>查看对应app是否在运行</li>
+</ol>
+<pre><code class="language-bash">adb shell &quot;ps | grep net.htc.app&quot;
+</code></pre>
+<p>若正在运行，会输出</p>
+<pre><code class="language-bash">u0_a29    1696  191   813900 80368    ep_poll b1cff1a8 S net.htc.app
+</code></pre>
+<p>其中<code>1696</code>就是当前app的进程号(pid)</p>
+<p>如果没有输出，则表示app已经停止运行。</p>
+<ol start="4">
+<li>根据进程号过滤日志</li>
+</ol>
+<pre><code class="language-bash">adb shell &quot;logcat -d *:D | grep [pid] &quot;
+</code></pre>
+<pre><code class="language-shell">adb logcat &gt; D:\log.txt
+</code></pre>
+
+            </div>
+            
+              <div class="tag-container">
+                
+                  <a href="https://suxiaomu.top/jLUzf0LT8/" class="tag">
+                    Android
+                  </a>
+                
+              </div>
+            
+            
+              <div class="next-post">
+                <div class="next">下一篇</div>
+                <a href="https://suxiaomu.top/Eql641qxr/">
+                  <h3 class="post-title">
+                    JVM学习笔记
+                  </h3>
+                </a>
+              </div>
+            
+
+            
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+<script type="application/javascript">
+
+AOS.init();
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+
+  <script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>
+    hljs.initHighlightingOnLoad()
+  </script>
+
+
+
+
+
+  </body>
+</html>

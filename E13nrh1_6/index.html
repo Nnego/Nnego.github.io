@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>Java并发编程之锁与线程池 | 苏小霂的博客</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://suxiaomu.top/favicon.ico?v=1741488094257">
+<link rel="stylesheet" href="https://suxiaomu.top/styles/main.css">
+
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+
+
+    <meta name="description" content="
+synchronized 关键字
+synchronized通过对象内部的一个叫做监视器锁的东西来实现的。
+监视器锁本身依赖于操作系统底层的互斥锁Mutex Lock来实现的。
+操作系统实现线程之间的切换需要从用户态转换到核心态，成本很高，..." />
+    <meta name="keywords" content="并发编程,多线程,Java" />
+  </head>
+  <body>
+    <div id="app" class="main">
+
+      <div class="sidebar" :class="{ 'full-height': menuVisible }">
+  <div class="top-container" data-aos="fade-right">
+    <div class="top-header-container">
+      <a class="site-title-container" href="https://suxiaomu.top">
+        <img src="https://suxiaomu.top/images/avatar.png?v=1741488094257" class="site-logo">
+        <h1 class="site-title">苏小霂的博客</h1>
+      </a>
+      <div class="menu-btn" @click="menuVisible = !menuVisible">
+        <div class="line"></div>
+      </div>
+    </div>
+    <div>
+      
+        
+          <a href="/" class="site-nav">
+            首页
+          </a>
+        
+      
+        
+          <a href="/archives" class="site-nav">
+            归档
+          </a>
+        
+      
+        
+          <a href="/tags" class="site-nav">
+            标签
+          </a>
+        
+      
+    </div>
+  </div>
+  <div class="bottom-container" data-aos="flip-up" data-aos-offset="0">
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+    <div class="site-description">
+      
+    </div>
+    <div class="site-footer">
+       | <a class="rss" href="https://suxiaomu.top/atom.xml" target="_blank">RSS</a>
+    </div>
+  </div>
+</div>
+
+
+      <div class="main-container">
+        <div class="content-container" data-aos="fade-up">
+          <div class="post-detail">
+            <h2 class="post-title">Java并发编程之锁与线程池</h2>
+            <div class="post-date">2021-04-03</div>
+            
+            <div class="post-content" v-pre>
+              <!-- more -->
+<h2 id="synchronized-关键字">synchronized 关键字</h2>
+<p>synchronized通过对象内部的一个叫做<strong>监视器锁</strong>的东西来实现的。</p>
+<p>监视器锁本身依赖于操作系统底层的<strong>互斥锁Mutex Lock</strong>来实现的。</p>
+<p>操作系统实现线程之间的切换需要从<strong>用户态</strong>转换到<strong>核心态</strong>，成本很高，状态转换要花费比较长的时间。</p>
+<p>这就是synchronized效率低的原因。这种依赖于操作系统MutexLock实现的锁成为<strong>重量级锁</strong>。</p>
+<h3 id="synchronized-vs-volatile">synchronized v.s. volatile</h3>
+<p>Volatile：内存可见(不保证原子性，不保证互斥性)；防止CPU指令重排(内存屏障)</p>
+<p>扩展：</p>
+<p>如何保证内存可见？</p>
+<blockquote>
+<p><strong>JMM通过控制主内存与每个线程的本地内存之间的交互，来为Java程序员提供内存可见性保证。</strong></p>
+</blockquote>
+<p>什么是内存屏障？</p>
+<blockquote>
+<p><strong>MM属于语言级的内存模型，它确保在不同的编译器和不同的处理器平台之上，通过禁止特定类型的编译器重排序和处理器重排序，为程序员提供一致的内存可见性保证</strong>。</p>
+</blockquote>
+<h3 id="happens-before规则">happens-before规则</h3>
+<p>happens-before表示的是前一个操作的结果对于后续操作是可见的，它是一种表达多个线程之间对于内存的可见性。所以我们可以认为在 JMM 中，如果一个操作执行的结果需要对另一个操作可见，那么这两个操作必须要存在happens-before关系。这两个操作可以是同一个线程，也可以是不同的线程。</p>
+<h3 id="synchronized-vs-lock">Synchronized v.s. Lock</h3>
+<p>Synchronized 对象头的偏向锁标志位？</p>
+<h2 id="java中的锁">java中的锁</h2>
+<h4 id="对象头偏向锁">对象头偏向锁</h4>
+<p>锁的状态由低到高：</p>
+<p>无锁 -&gt; 偏向锁 -&gt; 轻量级锁 -&gt; 重量级锁</p>
+<p>只能升级，不能降级。</p>
+<table>
+<thead>
+<tr>
+<th>锁状态</th>
+<th>存储内容</th>
+<th>标志位</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>无锁</td>
+<td>对象的hashCode，对象分代年龄，是否是偏向锁(0)</td>
+<td>01</td>
+</tr>
+<tr>
+<td>偏向锁</td>
+<td>偏向线程ID，偏向时间戳，对象分代年龄，是否偏向锁(1)</td>
+<td>01</td>
+</tr>
+<tr>
+<td>轻量级锁</td>
+<td>指向栈中锁记录的指针</td>
+<td>00</td>
+</tr>
+<tr>
+<td>重量级锁</td>
+<td>指向互斥量的指针</td>
+<td>11</td>
+</tr>
+</tbody>
+</table>
+<p>锁的对比</p>
+<table>
+<thead>
+<tr>
+<th>锁</th>
+<th>优点</th>
+<th>缺点</th>
+<th>场景</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>偏向锁</td>
+<td>加解锁不需要额外消耗，和执行非异步方法相比仅存在纳秒级差距。</td>
+<td>若线程之间存在竞争，会代带来额外的锁撤销的消耗(撤销偏向锁会Stop The World)</td>
+<td>使用于只有一个线程访问同步代码场景</td>
+</tr>
+<tr>
+<td>轻量级锁</td>
+<td>竞争的线程不会阻塞，提高了系统的响应速度</td>
+<td>始终得不到锁的竞争线程，不断自旋会消耗CPU</td>
+<td>追求响应速度，同步代码块执行速度非常快</td>
+</tr>
+<tr>
+<td>重量级锁</td>
+<td>线程竞争不使用自旋，不会消耗CPU</td>
+<td>线程阻塞，响应时间慢</td>
+<td>追求吞吐量，同步块执行速度较慢</td>
+</tr>
+</tbody>
+</table>
+<p>锁如何升级</p>
+<ul>
+<li>
+<p>无锁</p>
+<p>无锁是指线程通过无限循环来执行更新操作，如果执行成功就退出循环，如果执行失败（有其他线程更新了值），则继续执行，直到成功为止。CAS操作就属于无锁。如果从性能的角度来看，无锁状态的性能是非常高的。</p>
+</li>
+<li>
+<p>偏向锁</p>
+<p><strong>偏向锁的前提假设是当一个线程获取锁，后面还有大概率该线程还会需要继续持有这把锁</strong> 。</p>
+<p>当有另外一个线程区尝试获取这个锁的时候，偏向模式就宣告结束。</p>
+<blockquote>
+<p>虚拟机启用偏向锁的参数<code>-XX:UseBiasedLocking</code>。如果当前偏向锁已启动，当锁对象第一次被线程获取的时候，虚拟机将会把对象头中的标志位设为<code>01</code>，即偏向模式。同时使用CAS操作把获取到这个锁的线程的ID记录在对象的Mark Word之中，如果CAS操作成功，持有偏向锁的线程以后每次进入这个锁的同步块时，虚拟机都可以不用再进行同步操作了。</p>
+</blockquote>
+</li>
+<li>
+<p>轻量级锁</p>
+<p><strong>当开始有锁的竞争了，那么偏向锁就会升级到轻量级锁；</strong></p>
+<p>当获取锁冲突多，时间越长的时候，线程肯定无法继续在这里死等了，所以只好先挂起，然后等前面获取锁的线程释放了锁之后，再开启下一轮的锁竞争，而这种形式就是我们的重量级锁。</p>
+<p>在代码进入同步块的时候，如果此同步对象没有被锁定（锁标志位为<code>01</code>状态），虚拟机首先将在当前线程的栈帧中建立一个名为锁记录（Lock Record）的空间，用于存储锁对象目前的Mark Word的拷贝。</p>
+<p>然后，虚拟机将使用CAS操作尝试将对象的Mark Word更新为指向Lock Record的指针。如果这个更新动作成功了，那么这个线程就拥有了该对象的锁，并且对象Mark Word的锁标志位（Mark Word的最后2bit）将转变为<code>00</code>，即表示此对象处于轻量级锁定状态。 <strong>轻量级锁的前提假设是对于绝大部分的锁，在整个同步周期内都是不存在竞争的，通过CAS操作来避免时候互斥锁的开销</strong></p>
+<p>关于自旋锁：</p>
+<blockquote>
+<p>自旋锁是一种通过让线程不释放当前的CPU执行一个忙循环，来尝试获取锁的方式。 <strong>自旋锁的前提假设是锁被其它线程占用的时间很短</strong> 。如果其它线程占用锁的时间很长，那么自旋的线程只会白白消耗处理器资源，而不会做任何有用的工作，反而带来性能上的浪费。自旋次数的默认值是<code>10</code>次，用户可以通过使用参数<code>-XX:PreBlockSpin</code>来更改。</p>
+</blockquote>
+</li>
+<li>
+<p>重量级锁</p>
+<p>当有两个及以上的线程争用同一个锁，那么轻量级锁就不再有效，要膨胀为重量级锁。锁标志的状态值变为<code>10</code>，Mark Word中存储的就是指向重量级锁（互斥量）的指针，后面等待锁的线程也要进入阻塞状态。</p>
+<blockquote>
+<ul>
+<li>偏向锁只有设置了<code>-XX:UseBiasedLocking</code>参数才会存在</li>
+<li>假设启用了偏向锁，对象头的锁标志位是<code>01</code>（和未锁定状态一样），但是存储的内容是偏向线程ID、偏向时间戳</li>
+<li>当线程获取偏向锁是通过CAS操作将对象头中存储的偏向线程ID更新为当前线程的ID</li>
+<li>对象是否被锁定是指对象头是否指向线程的锁记录（Lock Record）</li>
+<li>只有是轻量级锁或者重量级锁时对象才会被锁定</li>
+</ul>
+</blockquote>
+</li>
+</ul>
+<h2 id="callable-vs-runnable">callable vs runnable</h2>
+<ul>
+<li>callable可与Future结合拿到线程结束后的返回值</li>
+<li>callable的Callable的抽象方法有返回值。返回值类型就是泛型类型。</li>
+<li>Callable接口带泛型</li>
+<li>call()方法还能抛出异常。</li>
+</ul>
+<hr>
+<h2 id="线程池">线程池</h2>
+<p>为什么要用线程池？</p>
+<p>为了减少在创建和销毁线程上所花的时间和对系统资源的消耗，解决资源不足的问题。</p>
+<p>如果不适用线程池，有可能造成系统创建大量同类线程而消耗内存挥着”过度切换“问题。</p>
+<p>四种线程池</p>
+<ul>
+<li><strong>SingleThreadPool</strong>：单个线程线程池</li>
+<li><strong>FixedThreadPool</strong>：指定大小的固定大小线程池</li>
+<li><strong>CachedThreadPool</strong>：</li>
+<li><strong>ScheduledThreadPool</strong></li>
+</ul>
+<p>问题</p>
+<ul>
+<li><strong>FixedThreadPool</strong>和<strong>SingleThreadPool</strong>：允许的<strong>请求队列</strong>长度为Interger.MAX_VALUE，可能会堆积大量请求，造成OOM；</li>
+<li><strong>CachedThreadPool</strong>和<strong>ScheduledThreadPool</strong>：允许的创建线程数量为Integer.MAX_VALUE，可能会创建大量线程，造成OOM。</li>
+</ul>
+<p>线程池参数？</p>
+<ul>
+<li>corePoolSize：核心线程数量，定义了最小可以同时运行的线程数量，没有任务也不会被回收。</li>
+<li>maximumPoolSize：当线程数量<strong>大于核心线程数</strong>，且队列中存放的任务达到队列容量的时候，继续创建线程。</li>
+<li>keepalivetime：超过corePoolSize之后”临时线程“的存活时间。</li>
+<li>Time_unit：单位</li>
+<li>workQueue：当新任务来的时候，保存未执行的任务。大于corePoolSize时进入阻塞队列等待。</li>
+<li>threadFactory：线程工厂，用来创建线程，默认就行</li>
+<li>RejectdExecutionHandler handler：拒绝策略，线程数量达到maximumPoolSize大小，且workQueue也塞满的情况下，线程池调用handler拒绝策略来处理请求。</li>
+</ul>
+<p>拒绝策略：</p>
+<ul>
+<li>
+<p>AbortPolicy：默认拒绝策略，直接抛异常</p>
+</li>
+<li>
+<p>DiscardPolicy：直接抛弃不处理。</p>
+</li>
+<li>
+<p>DiscardOldestPolicy：丢弃队列中最老的任务。</p>
+</li>
+<li>
+<p>CallerRunsPolicy：将任务分配给当前执行execute方法的线程来执行</p>
+<p>自定义拒绝策略：实现<code>RejectedExecutionHandler</code>接口，可以实现友好的拒绝策略。包括但不限于：将数据存入数据库，用日志处理等。</p>
+</li>
+</ul>
+
+            </div>
+            
+              <div class="tag-container">
+                
+                  <a href="https://suxiaomu.top/FUkfApRfh/" class="tag">
+                    并发编程
+                  </a>
+                
+                  <a href="https://suxiaomu.top/vldJYD2YKe/" class="tag">
+                    多线程
+                  </a>
+                
+                  <a href="https://suxiaomu.top/_PzzGB-wA/" class="tag">
+                    Java
+                  </a>
+                
+              </div>
+            
+            
+              <div class="next-post">
+                <div class="next">下一篇</div>
+                <a href="https://suxiaomu.top/OgUovHA8F/">
+                  <h3 class="post-title">
+                    HashMap源码解析、扩容及树化
+                  </h3>
+                </a>
+              </div>
+            
+
+            
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+<script type="application/javascript">
+
+AOS.init();
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+
+  <script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>
+    hljs.initHighlightingOnLoad()
+  </script>
+
+
+
+
+
+  </body>
+</html>

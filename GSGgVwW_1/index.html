@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>MySQL索引与事务隔离级别 | 苏小霂的博客</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://suxiaomu.top/favicon.ico?v=1741488094257">
+<link rel="stylesheet" href="https://suxiaomu.top/styles/main.css">
+
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+
+
+    <meta name="description" content="索引，事务隔离级别和MVCC
+
+MySQL索引
+# 1. 什么是索引
+- 官方定义：一种帮助MySQL提高查询效率的数据结构
+- 索引的优点：
+          1. 大大加快数据查询效率
+- 索引的缺点：
+          1. 维护..." />
+    <meta name="keywords" content="MySQL,数据库" />
+  </head>
+  <body>
+    <div id="app" class="main">
+
+      <div class="sidebar" :class="{ 'full-height': menuVisible }">
+  <div class="top-container" data-aos="fade-right">
+    <div class="top-header-container">
+      <a class="site-title-container" href="https://suxiaomu.top">
+        <img src="https://suxiaomu.top/images/avatar.png?v=1741488094257" class="site-logo">
+        <h1 class="site-title">苏小霂的博客</h1>
+      </a>
+      <div class="menu-btn" @click="menuVisible = !menuVisible">
+        <div class="line"></div>
+      </div>
+    </div>
+    <div>
+      
+        
+          <a href="/" class="site-nav">
+            首页
+          </a>
+        
+      
+        
+          <a href="/archives" class="site-nav">
+            归档
+          </a>
+        
+      
+        
+          <a href="/tags" class="site-nav">
+            标签
+          </a>
+        
+      
+    </div>
+  </div>
+  <div class="bottom-container" data-aos="flip-up" data-aos-offset="0">
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+    <div class="site-description">
+      
+    </div>
+    <div class="site-footer">
+       | <a class="rss" href="https://suxiaomu.top/atom.xml" target="_blank">RSS</a>
+    </div>
+  </div>
+</div>
+
+
+      <div class="main-container">
+        <div class="content-container" data-aos="fade-up">
+          <div class="post-detail">
+            <h2 class="post-title">MySQL索引与事务隔离级别</h2>
+            <div class="post-date">2021-02-03</div>
+            
+            <div class="post-content" v-pre>
+              <p>索引，事务隔离级别和MVCC</p>
+<!-- more -->
+<h3 id="mysql索引">MySQL索引</h3>
+<pre><code class="language-markdown"># 1. 什么是索引
+- 官方定义：一种帮助MySQL提高查询效率的数据结构
+- 索引的优点：
+          1. 大大加快数据查询效率
+- 索引的缺点：
+          1. 维护索引需要耗费数据库资源
+          2. 索引需要占据磁盘空间
+          3. 对表的数据进行增删改查的时候，因为要维护索引，所以速度会受到影响。  
+
+# 2. 索引的分类
+- InnoDB
+- a. 主键索引
+            设定为主键后，数据库会自动创建索引，InnoDB为聚簇索引。 主键索引列值不能为null 
+
+- b. 单值索引(普通索引)
+            一个索引只包含单个列，一个表可以有多个单值索引。  
+
+- c. 唯一索引允许有空值
+            索引列的值必须唯一，但允许有空值。 唯一索引可以为null，但是只能有一个。
+
+- d. 复合索引
+            一个索引包含多个列
+
+- MyISAM
+- e Full Text 全文索引
+            full text 在定义索引的列上支持值的全文查找，允许在这些索引列中插入控空值和重复值
+</code></pre>
+<pre><code class="language-markdown"># 3. 索引的使用
+-1. 主键索引 逐渐自动创建主键索引
+            查看表的索引 
+            show index from [table];
+
+-2. 单值索引(普通索引)
+     -- 建表时创建索引 
+             create table t_user(id varchar(20) primary key, name varchar(20),key(name));
+             '注意 默认创建的索引名和列名一致'
+
+     -- 建表后创建索引
+             create index 索引名 on 表名(列名);
+
+    -- 删除索引
+            drop index 索引名 on 表名;
+
+-3.  唯一索引
+    -- 建表时创建索引
+            create table t_user(id varchar(20) primary key, name varchar(20),unique(name));
+
+    -- 建表后创建索引
+            create unique index 索引名 on 表名(列名)
+
+-4.  复合索引
+    -- 建表时创建索引
+            create table t_user(id varchar(20) primary key, name varchar(20), age int, dir varchar(20), key(name,age,dir));
+
+
+    -- 建表后创建索引
+            create index 索引名 on 表名(列名1, 列名2，……)
+
+    -- 使用复合索引
+
+            例：
+            (name,age,dir) 索引
+            # 1. 最左前缀原则
+            # 2. MySQL引擎会动态调整查询字段顺序，以更好地利用索引
+
+            查询顺序                 能否使用索引
+            ----------------------------------
+            name dir age    可以 ，调整顺序
+            name age dir    可以
+            name dir                不可以
+            name age                可以 ，符合最左前缀原则
+            age name                可以 ，调整顺序之后符合左前缀
+            age dir                    不可以， 调整了也不符合左前缀
+</code></pre>
+<pre><code class="language-markdown"># 4. 索引的底层原理
+- InnoDB存储引擎的底层数据结构  B+树
+
+- B+树与B树区别：
+        1. 非叶子结点只存储键值信息。
+        2. 所有叶子结点之间都有一个链指针。
+        3. 数据记录都存放在叶子结点。
+
+- InnoDB存储引擎页大小16K，指针类型占用4-8位，一般3层树高的B+Tree能存10亿条 左右数据。
+- 一般MySQL数据库中，B+Tree树高2-4层。一般InnoDB设计时是将根节点常驻内存的，因此某一键值的行记录查询只要1—3次磁盘IO
+
+# 5. 聚簇索引和非聚簇索引
+    -- 聚簇索引： 数据存储和索引放在一起，索引结构的叶子结点保留了行数据。 
+    -- 非聚簇索引： 将数据和索引分开存储，索引结构的叶子结点指向了数据对应的存放位置(存主键索引树上的键，而不是地址，因为地址会变，要维护很麻烦)。
+
+    - 主键索引一定是聚簇索引；聚簇索引不一定是主键索引。
+
+    - 在聚簇索引上建立的索引被称为 辅助索引 ，非聚簇索引都是辅助索引。普通索引(单值索引)、复合索引、唯一索引叶子结点存储的不再是行的物理位置，而是主键值。辅助索引查找数据总是要二次查找。
+</code></pre>
+<h3 id="mysql事务隔离级别">MySQL事务隔离级别</h3>
+<table>
+<thead>
+<tr>
+<th>隔离级别</th>
+<th>解决的问题</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>未提交读 Read Uncommited</td>
+<td>-</td>
+</tr>
+<tr>
+<td>已提交读 Read Commited</td>
+<td>脏读</td>
+</tr>
+<tr>
+<td>可重复读 *默认级别 Repeatable Read</td>
+<td>不可重复读</td>
+</tr>
+<tr>
+<td>可串行化 Serializible</td>
+<td>幻读</td>
+</tr>
+</tbody>
+</table>
+<p>脏读：A事务能读取到B事务中未提交的数据，称为脏读。</p>
+<p>不可重复读：数据修改ABA问题。A读，B改，A再读，不一致了。</p>
+<p>幻读：类似ABA问题。重点在于新增或者删除记录条数。</p>
+<h3 id="mysql多版本并发控制mvcc">MySQL多版本并发控制MVCC</h3>
+<pre><code class="language-markdown"># 1. MVCC与行级锁的关系
+    -- MYSQL的支持事务的引擎实现的都不是简单的行级锁，基于并发考虑，一般会实现了多版本并发控制。
+    -- 可以认为MVCC是行级锁的一个变种，但是它在很多情况加避免了加锁操作，因此开销更低。
+
+# 2. MVCC是如何实现的
+    MVCC的实现，是通过保存数据在某个时间点的快照来实现的。不同引擎实现方式不同，分为乐观并发控制和悲观并发控制。
+    以InnoDB为例：
+    InnoDB的MVCC，是通过在每行记录后面保存两个隐藏的列来实现的。这两个列，一个保存了行的创建时间，一个保存行的过期时间（或者删除时间）。这里的时间并不是实际的时间值，而是系统版本号（system version number）。每开始一个新的事务，系统版本号回自动递增。事务开始时刻的系统版本号会作为&lt;事务的版本号&gt;，用来和查询到的每行记录的版本号作比较。在repeatable read 隔离级别下的MVCC具体操作：
+    SELECT
+        只会查找行数据版本号早于或等于当前事务版本号的 target_version &lt;= cur_version
+        大于当前事务版本号的数据，可能是其他事务修改过的
+
+    INSERT
+      InnoDB为新插入的行保存当前版本号为系统版本号。
+
+    DELETE
+      InnoDB为删除的行数据保存当前系统版本号作为行删除标识。
+
+    UPDATE
+</code></pre>
+<h3 id="mysql优化策略">MySQL优化策略</h3>
+
+            </div>
+            
+              <div class="tag-container">
+                
+                  <a href="https://suxiaomu.top/3sxM-ny5Q/" class="tag">
+                    MySQL
+                  </a>
+                
+                  <a href="https://suxiaomu.top/keMTkexIhC/" class="tag">
+                    数据库
+                  </a>
+                
+              </div>
+            
+            
+              <div class="next-post">
+                <div class="next">下一篇</div>
+                <a href="https://suxiaomu.top/FraynM9Bh/">
+                  <h3 class="post-title">
+                    CentOS对时服务Chrony
+                  </h3>
+                </a>
+              </div>
+            
+
+            
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+<script type="application/javascript">
+
+AOS.init();
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+
+  <script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>
+    hljs.initHighlightingOnLoad()
+  </script>
+
+
+
+
+
+  </body>
+</html>

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>TCP/UDP的区别 | 苏小霂的博客</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://suxiaomu.top/favicon.ico?v=1741488094257">
+<link rel="stylesheet" href="https://suxiaomu.top/styles/main.css">
+
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+
+
+    <meta name="description" content="**基于连接
+基于连接有几个层面的意思：
+TCP是全双工的。
+连接是一对一的，所以基于广播和多播(目标是多个主机地址)的应用程序不能使用TCP服务。而无连接协议UDP则非常适合于广播和多播。
+基于流
+TCP基于流，UDP基于数据报；这种区别..." />
+    <meta name="keywords" content="计算机网络" />
+  </head>
+  <body>
+    <div id="app" class="main">
+
+      <div class="sidebar" :class="{ 'full-height': menuVisible }">
+  <div class="top-container" data-aos="fade-right">
+    <div class="top-header-container">
+      <a class="site-title-container" href="https://suxiaomu.top">
+        <img src="https://suxiaomu.top/images/avatar.png?v=1741488094257" class="site-logo">
+        <h1 class="site-title">苏小霂的博客</h1>
+      </a>
+      <div class="menu-btn" @click="menuVisible = !menuVisible">
+        <div class="line"></div>
+      </div>
+    </div>
+    <div>
+      
+        
+          <a href="/" class="site-nav">
+            首页
+          </a>
+        
+      
+        
+          <a href="/archives" class="site-nav">
+            归档
+          </a>
+        
+      
+        
+          <a href="/tags" class="site-nav">
+            标签
+          </a>
+        
+      
+    </div>
+  </div>
+  <div class="bottom-container" data-aos="flip-up" data-aos-offset="0">
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+    <div class="site-description">
+      
+    </div>
+    <div class="site-footer">
+       | <a class="rss" href="https://suxiaomu.top/atom.xml" target="_blank">RSS</a>
+    </div>
+  </div>
+</div>
+
+
+      <div class="main-container">
+        <div class="content-container" data-aos="fade-up">
+          <div class="post-detail">
+            <h2 class="post-title">TCP/UDP的区别</h2>
+            <div class="post-date">2020-12-19</div>
+            
+            <div class="post-content" v-pre>
+              <p>**基于连接</p>
+<p>基于连接有几个层面的意思：</p>
+<p>TCP是全双工的。</p>
+<p>连接是一对一的，所以基于广播和多播(目标是多个主机地址)的应用程序不能使用TCP服务。而无连接协议UDP则非常适合于广播和多播。</p>
+<p><strong>基于流</strong></p>
+<p>TCP基于流，UDP基于数据报；这种区别对应到实际编程操作中，体现为通信双方是否必须执行相同次数的读写操作。</p>
+<p>TCP基于流，流没有写入数据大小的限制，我们分好几次写入数据到发送缓冲区，当TCP模块真正开始发数据，可能一个TCP报文段就发完了，所以TCP模块发出TCP报文段的个数和应用程序执行的写操作次数没有固定的数量关系。</p>
+<p>收到一个或多个TCP报文段后，TCP模块将他们携带的应用程序数据按照TCP报文段的序号依次放入TCP接收缓冲区中，并通知应用程序读取数据。接收端应用程序可以一次性将TCP接收缓冲区中的数据全部读出，也可以分多次读，这取决于用户指定的应用程序读缓冲区的大小。</p>
+<p>而UDP，发送端应用程序每执行一次写操作，UDP模块就把它封装为一个UDP数据报并发送之。接收端必须及时针对每一个UDP数据报执行读操作，否则就会丢包。并且，如果用户分配的应用程序缓冲区空间不足，UDP数据将被截断。</p>
+<figure data-type="image" tabindex="1"><img src="https://pic7.58cdn.com.cn/nowater/webim/big/n_v2770d1d26039b4f7d8e6ef4dd28ad13d1.png" alt="image-20201220175635166.png" loading="lazy"></figure>
+<p><strong>可靠的</strong></p>
+<p>TCP通过发送应答、超时重传、窗口控制，排序整理实现可靠交付。</p>
+<p>UDP则是发完就不管了。数据确认和超时重传都需要上层协议来处理。</p>
+
+            </div>
+            
+              <div class="tag-container">
+                
+                  <a href="https://suxiaomu.top/m597yoqXr/" class="tag">
+                    计算机网络
+                  </a>
+                
+              </div>
+            
+            
+              <div class="next-post">
+                <div class="next">下一篇</div>
+                <a href="https://suxiaomu.top/iFKh1fT3l/">
+                  <h3 class="post-title">
+                    socket与TCP/IP协议族的关系
+                  </h3>
+                </a>
+              </div>
+            
+
+            
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+<script type="application/javascript">
+
+AOS.init();
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+
+  <script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>
+    hljs.initHighlightingOnLoad()
+  </script>
+
+
+
+
+
+  </body>
+</html>

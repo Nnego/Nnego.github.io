@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>Linux 常用命令之磁盘占用 | 苏小霂的博客</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://suxiaomu.top/favicon.ico?v=1741488094257">
+<link rel="stylesheet" href="https://suxiaomu.top/styles/main.css">
+
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+
+
+    <meta name="description" content="
+查看磁盘占用
+先查看总计
+df -h
+
+Filesystem                         Size  Used Avail Use% Mounted on
+udev                           ..." />
+    <meta name="keywords" content="Linux" />
+  </head>
+  <body>
+    <div id="app" class="main">
+
+      <div class="sidebar" :class="{ 'full-height': menuVisible }">
+  <div class="top-container" data-aos="fade-right">
+    <div class="top-header-container">
+      <a class="site-title-container" href="https://suxiaomu.top">
+        <img src="https://suxiaomu.top/images/avatar.png?v=1741488094257" class="site-logo">
+        <h1 class="site-title">苏小霂的博客</h1>
+      </a>
+      <div class="menu-btn" @click="menuVisible = !menuVisible">
+        <div class="line"></div>
+      </div>
+    </div>
+    <div>
+      
+        
+          <a href="/" class="site-nav">
+            首页
+          </a>
+        
+      
+        
+          <a href="/archives" class="site-nav">
+            归档
+          </a>
+        
+      
+        
+          <a href="/tags" class="site-nav">
+            标签
+          </a>
+        
+      
+    </div>
+  </div>
+  <div class="bottom-container" data-aos="flip-up" data-aos-offset="0">
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+    <div class="site-description">
+      
+    </div>
+    <div class="site-footer">
+       | <a class="rss" href="https://suxiaomu.top/atom.xml" target="_blank">RSS</a>
+    </div>
+  </div>
+</div>
+
+
+      <div class="main-container">
+        <div class="content-container" data-aos="fade-up">
+          <div class="post-detail">
+            <h2 class="post-title">Linux 常用命令之磁盘占用</h2>
+            <div class="post-date">2021-04-11</div>
+            
+            <div class="post-content" v-pre>
+              <!-- more -->
+<h3 id="查看磁盘占用">查看磁盘占用</h3>
+<p><strong>先查看总计</strong></p>
+<pre><code class="language-bash">df -h
+</code></pre>
+<pre><code>Filesystem                         Size  Used Avail Use% Mounted on
+udev                               462M     0  462M   0% /dev
+tmpfs                               99M  1.1M   98M   2% /run
+/dev/mapper/ubuntu--vg-ubuntu--lv  8.8G  5.6G  2.8G  68% /
+tmpfs                              493M     0  493M   0% /dev/shm
+tmpfs                              5.0M     0  5.0M   0% /run/lock
+tmpfs                              493M     0  493M   0% /sys/fs/cgroup
+/dev/loop0                         100M  100M     0 100% /snap/core/11167
+/dev/loop2                          56M   56M     0 100% /snap/core18/2066
+/dev/loop3                          33M   33M     0 100% /snap/snapd/12057
+/dev/sda2                          976M   80M  830M   9% /boot
+tmpfs                               99M     0   99M   0% /run/user/0
+</code></pre>
+<p><strong>查看具体目录下的大小，并用sort排序</strong></p>
+<pre><code class="language-bash">du -s /* | sort -nr
+</code></pre>
+<pre><code class="language-bash">1803956 /var
+1426132 /usr
+642492  /lib
+597555  /snap
+79056   /boot
+26148   /tmp
+21872   /root
+16072   /bin
+15408   /sbin
+6720    /etc
+1052    /run
+36      /home
+16      /opt
+16      /lost+found
+4       /srv
+4       /mnt
+4       /media
+4       /lib64
+</code></pre>
+<h4 id="查看当前目录下文件及目录大小情况">查看当前目录下文件及目录大小情况</h4>
+<pre><code class="language-bash">du -h --max-depth=1
+</code></pre>
+<h3 id="查看内存占用">查看内存占用</h3>
+<ol>
+<li>top，交互命令界面下，按M，按照内存占用排序</li>
+</ol>
+<pre><code> PID USER      PR  NI    VIRT    RES    SHR S %CPU %MEM     TIME+ COMMAND                         
+  430 root      19  -1  294532  58080  57560 S  0.0  5.8   0:37.33 systemd-journal                 
+ 2294 mysql     20   0 1302768  18244   8564 S  0.0  1.8   3:05.17 mysqld                          
+ 1037 root      20   0  674172  14896   5324 S  0.0  1.5   1:08.17 snapd                           
+ 9818 root      20   0  107992   7064   6048 S  0.3  0.7   0:00.31 sshd                            
+ 9900 root      20   0   52396   6180   4280 S  0.0  0.6   0:00.17 zsh                             
+    1 root      20   0  160180   5860   3628 S  0.0  0.6   0:51.14 systemd                         
+10158 root      20   0   42776   3928   3332 R  0.3  0.4   0:00.06 top                             
+15619 root      20   0   76640   3768   3228 S  0.0  0.4   0:00.04 systemd                         
+  942 root      20   0  286260   2952   2472 S  0.0  0.3   0:06.95 accounts-daemon                 
+  980 root      20   0   70560   2560   2276 S  0.0  0.3   0:00.55 systemd-logind                  
+  447 root      20   0   45980   2484   1484 S  0.0  0.2   0:01.76 systemd-udevd                   
+ 1058 root      20   0  288888   1640   1288 S  0.0  0.2   0:00.13 polkitd                         
+  944 message+  20   0   50192   1636   1192 S  0.0  0.2   0:00.86 dbus-daemon                     
+  986 root      20   0  629764   1468    404 S  0.0  0.1   0:02.04 lxcfs                           
+  873 systemd+  20   0   79920   1272   1116 S  0.0  0.1   0:00.19 systemd-network                 
+ 1038 syslog    20   0  263044    852      0 S  0.0  0.1   0:07.73 rsyslogd                        
+ 1097 root      20   0   72308    744    668 S  0.0  0.1   0:00.01 sshd                            
+ 5329 redis     20   0   50160    640    568 R  0.3  0.1   2:07.54 redis-serve
+</code></pre>
+<ol start="2">
+<li>free</li>
+</ol>
+<pre><code>              total        used        free      shared  buff/cache   available
+Mem:        1008736      145764      246260         852      616712      678708
+Swap:       1852412      362752     1489660
+</code></pre>
+<ol start="3">
+<li>cat /proc/meminfo</li>
+</ol>
+<pre><code>MemTotal:        1008736 kB
+MemFree:          246368 kB
+MemAvailable:     678784 kB
+Buffers:           94612 kB
+Cached:           251232 kB
+SwapCached:        27984 kB
+Active:           258104 kB
+Inactive:         148036 kB
+Active(anon):      19336 kB
+Inactive(anon):    41812 kB
+Active(file):     238768 kB
+Inactive(file):   106224 kB
+Unevictable:           0 kB
+Mlocked:               0 kB
+SwapTotal:       1852412 kB
+SwapFree:        1489660 kB
+Dirty:                 0 kB
+Writeback:             0 kB
+AnonPages:         34640 kB
+Mapped:            81804 kB
+Shmem:               852 kB
+Slab:             307132 kB
+SReclaimable:     270836 kB
+SUnreclaim:        36296 kB
+KernelStack:        2748 kB
+PageTables:         5064 kB
+NFS_Unstable:          0 kB
+Bounce:                0 kB
+WritebackTmp:          0 kB
+CommitLimit:     2356780 kB
+Committed_AS:    1111028 kB
+VmallocTotal:   34359738367 kB
+VmallocUsed:           0 kB
+VmallocChunk:          0 kB
+HardwareCorrupted:     0 kB
+AnonHugePages:         0 kB
+ShmemHugePages:        0 kB
+ShmemPmdMapped:        0 kB
+CmaTotal:              0 kB
+CmaFree:               0 kB
+HugePages_Total:       0
+HugePages_Free:        0
+HugePages_Rsvd:        0
+HugePages_Surp:        0
+Hugepagesize:       2048 kB
+DirectMap4k:      118720 kB
+DirectMap2M:      929792 kB
+</code></pre>
+
+            </div>
+            
+              <div class="tag-container">
+                
+                  <a href="https://suxiaomu.top/zbYEzMCQk/" class="tag">
+                    Linux
+                  </a>
+                
+              </div>
+            
+            
+              <div class="next-post">
+                <div class="next">下一篇</div>
+                <a href="https://suxiaomu.top/3bDeVf7mN/">
+                  <h3 class="post-title">
+                    Java静态代理与动态代理
+                  </h3>
+                </a>
+              </div>
+            
+
+            
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+<script type="application/javascript">
+
+AOS.init();
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+
+  <script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>
+    hljs.initHighlightingOnLoad()
+  </script>
+
+
+
+
+
+  </body>
+</html>

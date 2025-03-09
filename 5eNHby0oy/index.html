@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>pom.xml文件注释说明 | 苏小霂的博客</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://suxiaomu.top/favicon.ico?v=1741488094257">
+<link rel="stylesheet" href="https://suxiaomu.top/styles/main.css">
+
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+
+
+    <meta name="description" content="POM(Project Object Model，项目对象模型)是Maven工程的基本单元，也是Maven的核心。它是一个xml文件，包含项目的基本信息，用于描述项目如何构建、声明项目依赖等。
+在执行任务或目标时，Maven会在当前目录中查..." />
+    <meta name="keywords" content="Maven" />
+  </head>
+  <body>
+    <div id="app" class="main">
+
+      <div class="sidebar" :class="{ 'full-height': menuVisible }">
+  <div class="top-container" data-aos="fade-right">
+    <div class="top-header-container">
+      <a class="site-title-container" href="https://suxiaomu.top">
+        <img src="https://suxiaomu.top/images/avatar.png?v=1741488094257" class="site-logo">
+        <h1 class="site-title">苏小霂的博客</h1>
+      </a>
+      <div class="menu-btn" @click="menuVisible = !menuVisible">
+        <div class="line"></div>
+      </div>
+    </div>
+    <div>
+      
+        
+          <a href="/" class="site-nav">
+            首页
+          </a>
+        
+      
+        
+          <a href="/archives" class="site-nav">
+            归档
+          </a>
+        
+      
+        
+          <a href="/tags" class="site-nav">
+            标签
+          </a>
+        
+      
+    </div>
+  </div>
+  <div class="bottom-container" data-aos="flip-up" data-aos-offset="0">
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+    <div class="site-description">
+      
+    </div>
+    <div class="site-footer">
+       | <a class="rss" href="https://suxiaomu.top/atom.xml" target="_blank">RSS</a>
+    </div>
+  </div>
+</div>
+
+
+      <div class="main-container">
+        <div class="content-container" data-aos="fade-up">
+          <div class="post-detail">
+            <h2 class="post-title">pom.xml文件注释说明</h2>
+            <div class="post-date">2021-01-06</div>
+            
+            <div class="post-content" v-pre>
+              <p>POM(Project Object Model，项目对象模型)是Maven工程的基本单元，也是Maven的核心。它是一个xml文件，包含项目的基本信息，用于描述项目如何构建、声明项目依赖等。<br>
+在执行任务或目标时，Maven会在当前目录中查找pom.xml文件，然后获取所需的配置信息，再执行目标。<br>
+pom.xml通常有以下元素。</p>
+<p>下面是一个完整的<code>pom.xml</code>文件，</p>
+<pre><code class="language-xml">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;project xmlns=&quot;http://maven.apache.org/POM/4.0.0&quot; xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+	xsi:schemaLocation=&quot;http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd&quot;&gt;
+	&lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+
+    &lt;!-- 父项目的坐标，如果项目没规定某个元素的值，那么父项目中的对应值应为项目的默认值，坐标包括groupId artifactId version --&gt;
+	&lt;parent&gt;
+        &lt;!-- 被继承的父项目的唯一标识符 --&gt;
+		&lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+        &lt;!-- 被继承的父项目的构件标识符 --&gt;
+		&lt;artifactId&gt;spring-boot-starter-parent&lt;/artifactId&gt;
+        &lt;!-- 被继承的父项目的版本号 --&gt;
+		&lt;version&gt;2.4.3&lt;/version&gt;
+        &lt;!-- 被继承的父项目的pom.xml文件的相对路径，相对路径允许一个不同的路径，默认值是../pom.xml
+            Maven现在构建当前项目的地方寻找父项目的pom，然后在文件系统的relativePath寻找，最后在远程仓库寻找父项目的pom --&gt;
+		&lt;relativePath/&gt; &lt;!-- lookup parent from repository --&gt;
+	&lt;/parent&gt;
+
+    &lt;!-- 公司或组织的唯一标识(项目的全球唯一标识符)， 通常用全限定包名区分该项目和其他项目。Maven会将该项目生成的jar包放在包名对应的本地路径下 --&gt;
+	&lt;groupId&gt;com.example&lt;/groupId&gt;
+    &lt;!-- 项目的唯一ID，一个groupId下面可能有多个项目，靠artifactId来区分 --&gt;
+	&lt;artifactId&gt;demo&lt;/artifactId&gt;
+    &lt;!-- 版本号， 格式为 主版本.次版本.增量版本-限定版本号 --&gt;
+	&lt;version&gt;0.0.1-SNAPSHOT&lt;/version&gt;
+    &lt;!-- 项目名称，用于Maven产生的文档 --&gt;
+	&lt;name&gt;HelloWorld&lt;/name&gt;
+	&lt;description&gt;Demo project for Spring Boot&lt;/description&gt;
+	&lt;properties&gt;
+        &lt;!-- 项目开发的java版本号 --&gt;
+		&lt;java.version&gt;11&lt;/java.version&gt;
+	&lt;/properties&gt;
+
+    &lt;!-- 项目的依赖项，自动从Maven仓库下载 --&gt;
+	&lt;dependencies&gt;
+		&lt;dependency&gt;
+			&lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+			&lt;artifactId&gt;spring-boot-starter-web&lt;/artifactId&gt;
+		&lt;/dependency&gt;
+
+		&lt;dependency&gt;
+			&lt;groupId&gt;org.projectlombok&lt;/groupId&gt;
+			&lt;artifactId&gt;lombok&lt;/artifactId&gt;
+			&lt;optional&gt;true&lt;/optional&gt;
+		&lt;/dependency&gt;
+		&lt;dependency&gt;
+			&lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+			&lt;artifactId&gt;spring-boot-starter-test&lt;/artifactId&gt;
+			&lt;scope&gt;test&lt;/scope&gt;
+		&lt;/dependency&gt;
+
+		&lt;dependency&gt;
+			&lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+			&lt;artifactId&gt;spring-boot-devtools&lt;/artifactId&gt;
+			&lt;optional&gt;true&lt;/optional&gt;
+		&lt;/dependency&gt;
+
+		&lt;dependency&gt;
+			&lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+			&lt;artifactId&gt;spring-boot-configuration-processor&lt;/artifactId&gt;
+			&lt;optional&gt;true&lt;/optional&gt;
+		&lt;/dependency&gt;
+		&lt;dependency&gt;
+			&lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+			&lt;artifactId&gt;spring-boot&lt;/artifactId&gt;
+			&lt;version&gt;2.4.3&lt;/version&gt;
+		&lt;/dependency&gt;
+		&lt;dependency&gt;
+			&lt;groupId&gt;junit&lt;/groupId&gt;
+			&lt;artifactId&gt;junit&lt;/artifactId&gt;
+			&lt;scope&gt;test&lt;/scope&gt;
+		&lt;/dependency&gt;
+	&lt;/dependencies&gt;
+
+    &lt;!-- 构建项目(打包生成可执行文件)需要的信息 --&gt;
+	&lt;build&gt;
+        &lt;!-- 项目使用的插件列表 --&gt;
+		&lt;plugins&gt;
+			&lt;plugin&gt;
+				&lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+				&lt;artifactId&gt;spring-boot-maven-plugin&lt;/artifactId&gt;
+				&lt;configuration&gt;
+					&lt;excludes&gt;
+						&lt;exclude&gt;
+							&lt;groupId&gt;org.projectlombok&lt;/groupId&gt;
+							&lt;artifactId&gt;lombok&lt;/artifactId&gt;
+						&lt;/exclude&gt;
+					&lt;/excludes&gt;
+				&lt;/configuration&gt;
+			&lt;/plugin&gt;
+
+			&lt;!--build jar 包用的maven插件	--&gt;
+			&lt;plugin&gt;
+				&lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+				&lt;artifactId&gt;spring-boot-maven-plugin&lt;/artifactId&gt;
+			&lt;/plugin&gt;
+		&lt;/plugins&gt;
+	&lt;/build&gt;
+
+&lt;/project&gt;
+
+</code></pre>
+
+            </div>
+            
+              <div class="tag-container">
+                
+                  <a href="https://suxiaomu.top/_lQhKnTlU/" class="tag">
+                    Maven
+                  </a>
+                
+              </div>
+            
+            
+              <div class="next-post">
+                <div class="next">下一篇</div>
+                <a href="https://suxiaomu.top/cM1qxAOaL/">
+                  <h3 class="post-title">
+                    TCP/UDP的区别
+                  </h3>
+                </a>
+              </div>
+            
+
+            
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+<script type="application/javascript">
+
+AOS.init();
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+
+  <script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>
+    hljs.initHighlightingOnLoad()
+  </script>
+
+
+
+
+
+  </body>
+</html>

@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>CentOS对时服务Chrony | 苏小霂的博客</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://suxiaomu.top/favicon.ico?v=1741488094257">
+<link rel="stylesheet" href="https://suxiaomu.top/styles/main.css">
+
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+
+
+    <meta name="description" content="
+安装chrony
+yum install chrony -y
+
+查看chrony的程序运行环境
+▶ rpm -ql chrony
+/etc/NetworkManager/dispatcher.d/20-chrony
+/etc/chrony..." />
+    <meta name="keywords" content="Linux" />
+  </head>
+  <body>
+    <div id="app" class="main">
+
+      <div class="sidebar" :class="{ 'full-height': menuVisible }">
+  <div class="top-container" data-aos="fade-right">
+    <div class="top-header-container">
+      <a class="site-title-container" href="https://suxiaomu.top">
+        <img src="https://suxiaomu.top/images/avatar.png?v=1741488094257" class="site-logo">
+        <h1 class="site-title">苏小霂的博客</h1>
+      </a>
+      <div class="menu-btn" @click="menuVisible = !menuVisible">
+        <div class="line"></div>
+      </div>
+    </div>
+    <div>
+      
+        
+          <a href="/" class="site-nav">
+            首页
+          </a>
+        
+      
+        
+          <a href="/archives" class="site-nav">
+            归档
+          </a>
+        
+      
+        
+          <a href="/tags" class="site-nav">
+            标签
+          </a>
+        
+      
+    </div>
+  </div>
+  <div class="bottom-container" data-aos="flip-up" data-aos-offset="0">
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+    <div class="site-description">
+      
+    </div>
+    <div class="site-footer">
+       | <a class="rss" href="https://suxiaomu.top/atom.xml" target="_blank">RSS</a>
+    </div>
+  </div>
+</div>
+
+
+      <div class="main-container">
+        <div class="content-container" data-aos="fade-up">
+          <div class="post-detail">
+            <h2 class="post-title">CentOS对时服务Chrony</h2>
+            <div class="post-date">2021-01-19</div>
+            
+            <div class="post-content" v-pre>
+              <!-- more -->
+<h3 id="安装chrony">安装chrony</h3>
+<pre><code class="language-shell">yum install chrony -y
+</code></pre>
+<h3 id="查看chrony的程序运行环境">查看chrony的程序运行环境</h3>
+<pre><code class="language-shell">▶ rpm -ql chrony
+/etc/NetworkManager/dispatcher.d/20-chrony
+/etc/chrony.conf 主配置文件
+/etc/chrony.keys
+/etc/dhcp/dhclient.d/chrony.sh
+/etc/logrotate.d/chrony
+/etc/sysconfig/chronyd
+/usr/bin/chronyc 客户端可执行文件
+...
+</code></pre>
+<p>使用<code>man chrony.conf</code>了解配置文件的格式</p>
+<h3 id="配置">配置</h3>
+<ol>
+<li>配置chronyd服务开机自启</li>
+</ol>
+<p><code>systemctl enable chronyd.service</code></p>
+<ol start="2">
+<li>重启chronyd服务</li>
+</ol>
+<p><code>systemctl restart chronyd.service</code></p>
+<ol start="3">
+<li>查看chronyd服务状态</li>
+</ol>
+<p><code>systemctl status chronyd.service</code></p>
+<p>编辑<code>/etc/chrony.conf</code>配置文件:</p>
+<pre><code class="language-properties">  1 # Use public servers from the pool.ntp.org project.
+  2 # Please consider joining the pool (http://www.pool.ntp.org/join.html).
+  3 #server 0.centos.pool.ntp.org iburst
+  4 #server 1.centos.pool.ntp.org iburst
+  5 #server 2.centos.pool.ntp.org iburst
+  6 #server 3.centos.pool.ntp.org iburst
+  7 
+  8 server ntp1.aliyun.com iburst # 替换为aliyun服务器
+  9 server ntp2.aliyun.com iburst
+ 10 server ntp3.aliyun.com iburst
+ 11 server ntp4.aliyun.com iburst
+ 12 
+ 13 # Record the rate at which the system clock gains/losses time.
+ 14 driftfile /var/lib/chrony/drift
+ 15 
+ 16 # Allow the system clock to be stepped in the first three updates
+ 17 # if its offset is larger than 1 second.
+ 18 makestep 1.0 3
+ 19 
+ 20 # Enable kernel synchronization of the real-time clock (RTC).
+ 21 rtcsync
+ 22 
+ 23 # Enable hardware timestamping on all interfaces that support it.
+ 24 #hwtimestamp *
+ 25 
+ 26 # Increase the minimum number of selectable sources required to adjust
+ 27 # the system clock.
+ 28 #minsources 2
+ 29 
+ 30 # Allow NTP client access from local network.
+ 31 #allow 192.168.0.0/16
+ 32 
+ 33 # Serve time even if not synchronized to a time source.
+ 34 #local stratum 10
+ 35 
+ 36 # Specify file containing keys for NTP authentication.
+ 37 #keyfile /etc/chrony.keys
+ 38 
+ 39 # Specify directory for log files.
+ 40 logdir /var/log/chrony
+ 41 
+ 42 # Select which information is logged.
+ 43 #log measurements statistics tracking
+</code></pre>
+<h3 id="手动强制同步系统时钟">手动强制同步系统时钟</h3>
+<pre><code class="language-shell">chronyc -a makestep
+</code></pre>
+
+            </div>
+            
+              <div class="tag-container">
+                
+                  <a href="https://suxiaomu.top/zbYEzMCQk/" class="tag">
+                    Linux
+                  </a>
+                
+              </div>
+            
+            
+              <div class="next-post">
+                <div class="next">下一篇</div>
+                <a href="https://suxiaomu.top/x6uhqGdh2/">
+                  <h3 class="post-title">
+                    Maven仓库配置阿里云镜像
+                  </h3>
+                </a>
+              </div>
+            
+
+            
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+<script type="application/javascript">
+
+AOS.init();
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+
+  <script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>
+    hljs.initHighlightingOnLoad()
+  </script>
+
+
+
+
+
+  </body>
+</html>

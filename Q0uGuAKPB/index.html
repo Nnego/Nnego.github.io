@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>Java并发编程之如何保证多线程程序运行的安全性 | 苏小霂的博客</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://suxiaomu.top/favicon.ico?v=1741488094257">
+<link rel="stylesheet" href="https://suxiaomu.top/styles/main.css">
+
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+
+
+    <meta name="description" content="原子性，可见性，顺序性如何保证？
+
+多线程程序运行的安全问题体现在？
+
+
+原子性
+一个或多个操作在CPU执行的过程中不被中断的特性
+
+
+可见性
+一个线程对共享变量的修改，另外一个线程能立刻看到
+
+
+有序性
+程序执行的顺序按照代码的先后顺序执..." />
+    <meta name="keywords" content="并发编程,多线程,Java" />
+  </head>
+  <body>
+    <div id="app" class="main">
+
+      <div class="sidebar" :class="{ 'full-height': menuVisible }">
+  <div class="top-container" data-aos="fade-right">
+    <div class="top-header-container">
+      <a class="site-title-container" href="https://suxiaomu.top">
+        <img src="https://suxiaomu.top/images/avatar.png?v=1741488094257" class="site-logo">
+        <h1 class="site-title">苏小霂的博客</h1>
+      </a>
+      <div class="menu-btn" @click="menuVisible = !menuVisible">
+        <div class="line"></div>
+      </div>
+    </div>
+    <div>
+      
+        
+          <a href="/" class="site-nav">
+            首页
+          </a>
+        
+      
+        
+          <a href="/archives" class="site-nav">
+            归档
+          </a>
+        
+      
+        
+          <a href="/tags" class="site-nav">
+            标签
+          </a>
+        
+      
+    </div>
+  </div>
+  <div class="bottom-container" data-aos="flip-up" data-aos-offset="0">
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+    <div class="site-description">
+      
+    </div>
+    <div class="site-footer">
+       | <a class="rss" href="https://suxiaomu.top/atom.xml" target="_blank">RSS</a>
+    </div>
+  </div>
+</div>
+
+
+      <div class="main-container">
+        <div class="content-container" data-aos="fade-up">
+          <div class="post-detail">
+            <h2 class="post-title">Java并发编程之如何保证多线程程序运行的安全性</h2>
+            <div class="post-date">2023-06-13</div>
+            
+            <div class="post-content" v-pre>
+              <p>原子性，可见性，顺序性如何保证？</p>
+<!-- more -->
+<h2 id="多线程程序运行的安全问题体现在">多线程程序运行的安全问题体现在？</h2>
+<ul>
+<li>
+<p>原子性<br>
+一个或多个操作在CPU执行的过程中不被中断的特性</p>
+</li>
+<li>
+<p>可见性<br>
+一个线程对共享变量的修改，另外一个线程能立刻看到</p>
+</li>
+<li>
+<p>有序性<br>
+程序执行的顺序按照代码的先后顺序执行</p>
+<h2 id="导致原因">导致原因</h2>
+<ul>
+<li>线程切换带来的原子性问题</li>
+<li>缓存导致的可见性问题</li>
+<li>编译优化带来的有序性问题</li>
+</ul>
+</li>
+</ul>
+<h2 id="解决方法">解决方法</h2>
+<ul>
+<li>JDK Atomic原子类、synchronized、LOCK，可解决原子性问题</li>
+<li>synchronized、volatile、LOCK，可以解决可见性问题</li>
+<li>Happens-Before规则可以解决有序性问题</li>
+</ul>
+
+            </div>
+            
+              <div class="tag-container">
+                
+                  <a href="https://suxiaomu.top/FUkfApRfh/" class="tag">
+                    并发编程
+                  </a>
+                
+                  <a href="https://suxiaomu.top/vldJYD2YKe/" class="tag">
+                    多线程
+                  </a>
+                
+                  <a href="https://suxiaomu.top/_PzzGB-wA/" class="tag">
+                    Java
+                  </a>
+                
+              </div>
+            
+            
+              <div class="next-post">
+                <div class="next">下一篇</div>
+                <a href="https://suxiaomu.top/moQ_RMGta/">
+                  <h3 class="post-title">
+                    Java并发编程之进程与线程
+                  </h3>
+                </a>
+              </div>
+            
+
+            
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+<script type="application/javascript">
+
+AOS.init();
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+
+  <script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>
+    hljs.initHighlightingOnLoad()
+  </script>
+
+
+
+
+
+  </body>
+</html>
