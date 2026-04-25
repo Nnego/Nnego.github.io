@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>Spring事务机制深度解析 | 苏小霂的博客</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://suxiaomu.top/favicon.ico?v=1777096180678">
+<link rel="stylesheet" href="https://suxiaomu.top/styles/main.css">
+
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+
+
+    <meta name="description" content="
+目录
+
+一、Spring事务实现原理
+二、事务传播行为详解
+三、事务失效场景全解析
+四、总结
+
+
+一、Spring事务实现原理
+Spring事务管理是Spring框架最核心的功能之一，它通过AOP和ThreadLocal机制，为开发者提供..." />
+    <meta name="keywords" content="Spring事务,数据库" />
+  </head>
+  <body>
+    <div id="app" class="main">
+
+      <div class="sidebar" :class="{ 'full-height': menuVisible }">
+  <div class="top-container" data-aos="fade-right">
+    <div class="top-header-container">
+      <a class="site-title-container" href="https://suxiaomu.top">
+        <img src="https://suxiaomu.top/images/avatar.png?v=1777096180678" class="site-logo">
+        <h1 class="site-title">苏小霂的博客</h1>
+      </a>
+      <div class="menu-btn" @click="menuVisible = !menuVisible">
+        <div class="line"></div>
+      </div>
+    </div>
+    <div>
+      
+        
+          <a href="/" class="site-nav">
+            首页
+          </a>
+        
+      
+        
+          <a href="/archives" class="site-nav">
+            归档
+          </a>
+        
+      
+        
+          <a href="/tags" class="site-nav">
+            标签
+          </a>
+        
+      
+    </div>
+  </div>
+  <div class="bottom-container" data-aos="flip-up" data-aos-offset="0">
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+    <div class="site-description">
+      
+    </div>
+    <div class="site-footer">
+       | <a class="rss" href="https://suxiaomu.top/atom.xml" target="_blank">RSS</a>
+    </div>
+  </div>
+</div>
+
+
+      <div class="main-container">
+        <div class="content-container" data-aos="fade-up">
+          <div class="post-detail">
+            <h2 class="post-title">Spring事务机制深度解析</h2>
+            <div class="post-date">2023-07-28</div>
+            
+            <div class="post-content" v-pre>
+              <!-- more -->
+<h2 id="目录">目录</h2>
+<ul>
+<li><a href="#%E4%B8%80spring%E4%BA%8B%E5%8A%A1%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86">一、Spring事务实现原理</a></li>
+<li><a href="#%E4%BA%8C%E4%BA%8B%E5%8A%A1%E4%BC%A0%E6%92%AD%E8%A1%8C%E4%B8%BA%E8%AF%A6%E8%A7%A3">二、事务传播行为详解</a></li>
+<li><a href="#%E4%B8%89%E4%BA%8B%E5%8A%A1%E5%A4%B1%E6%95%88%E5%9C%BA%E6%99%AF%E5%85%A8%E8%A7%A3%E6%9E%90">三、事务失效场景全解析</a></li>
+<li><a href="#%E5%9B%9B%E6%80%BB%E7%BB%93">四、总结</a></li>
+</ul>
+<hr>
+<h2 id="一-spring事务实现原理">一、Spring事务实现原理</h2>
+<p>Spring事务管理是Spring框架最核心的功能之一，它通过AOP和ThreadLocal机制，为开发者提供了简洁的事务管理方式。</p>
+<h3 id="11-核心架构">1.1 核心架构</h3>
+<p>Spring事务管理采用分层架构设计：</p>
+<pre><code>┌─────────────────────────────────────┐
+│   TransactionManagement 接口层       │  ← 用户使用
+├─────────────────────────────────────┤
+│   AbstractPlatformTransactionManager│  ← 抽象实现
+├─────────────────────────────────────┤
+│   PlatformTransactionManager 实现类  │  ← 具体数据源
+│   (DataSource/JPA/JTA/Hibernate)    │
+└─────────────────────────────────────┘
+</code></pre>
+<h3 id="12-核心接口">1.2 核心接口</h3>
+<table>
+<thead>
+<tr>
+<th>接口</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>PlatformTransactionManager</code></td>
+<td>事务管理器核心接口</td>
+</tr>
+<tr>
+<td><code>TransactionDefinition</code></td>
+<td>定义事务属性（传播、隔离、超时）</td>
+</tr>
+<tr>
+<td><code>TransactionStatus</code></td>
+<td>事务运行状态</td>
+</tr>
+</tbody>
+</table>
+<h3 id="13-实现原理aop-threadlocal">1.3 实现原理：AOP + ThreadLocal</h3>
+<h4 id="aop动态代理">AOP动态代理</h4>
+<p>当我们使用 <code>@Transactional</code> 注解时，Spring会通过AOP在方法前后添加事务逻辑：</p>
+<pre><code class="language-java">@Transactional
+public void saveOrder(Order order) {
+    // Spring通过AOP在方法前后添加事务逻辑
+}
+</code></pre>
+<p>实际执行流程：</p>
+<pre><code>调用方法 → AOP代理拦截 → 开启事务 → 执行目标方法 → 提交/回滚事务
+</code></pre>
+<h4 id="threadlocal事务绑定">ThreadLocal事务绑定</h4>
+<p>每个线程有独立的 <code>ThreadLocalMap</code>，用于存储事务相关资源：</p>
+<pre><code class="language-java">// 事务绑定到当前线程，确保同一线程内多个操作共享同一事务
+TransactionSynchronizationManager.bindResource(dataSource, connectionHolder);
+</code></pre>
+<p>ThreadLocal存储的内容包括：</p>
+<ul>
+<li>当前数据库连接</li>
+<li>事务同步回调</li>
+<li>事务隔离级别</li>
+</ul>
+<h3 id="14-核心实现流程">1.4 核心实现流程</h3>
+<pre><code class="language-java">// AbstractPlatformTransactionManager 核心逻辑
+public final TransactionStatus getTransaction(TransactionDefinition def) {
+    // 1. 获取现有事务或创建新事务
+    Object transaction = doGetTransaction();
+    
+    // 2. 检查传播行为
+    if (isExistingTransaction(transaction)) {
+        return handleExistingTransaction(def, transaction);
+    }
+    
+    // 3. 开启新事务
+    startTransaction(def, transaction);
+    
+    // 4. 设置隔离级别
+    applyIsolationLevel(transaction, def.getIsolationLevel());
+    
+    return newTransactionStatus(def, transaction);
+}
+</code></pre>
+<h3 id="15-回滚机制">1.5 回滚机制</h3>
+<p>Spring默认只对 <code>RuntimeException</code> 和 <code>Error</code> 进行回滚：</p>
+<pre><code class="language-java">// TransactionAspectSupport 处理回滚
+private void completeTransactionAfterThrowing(TransactionInfo txInfo, Throwable ex) {
+    // 检查异常是否触发回滚（默认 RuntimeException 回滚）
+    if (txInfo.transactionAttribute.rollbackOn(ex)) {
+        txInfo.getTransactionManager().rollback(txInfo.getTransactionStatus());
+    } else {
+        txInfo.getTransactionManager().commit(txInfo.getTransactionStatus());
+    }
+}
+</code></pre>
+<h3 id="16-datasourcetransactionmanager具体实现">1.6 DataSourceTransactionManager具体实现</h3>
+<pre><code class="language-java">protected Object doGetTransaction() {
+    // 从 ThreadLocal 获取当前连接
+    ConnectionHolder holder = (ConnectionHolder) 
+        TransactionSynchronizationManager.getResource(dataSource);
+    
+    return new DataSourceTransactionObject(holder);
+}
+
+protected void doBegin(Object transaction, TransactionDefinition def) {
+    Connection con = dataSource.getConnection();
+    con.setAutoCommit(false);  // 关键：关闭自动提交
+    
+    // 绑定到 ThreadLocal
+    TransactionSynchronizationManager.bindResource(dataSource, 
+        new ConnectionHolder(con));
+}
+</code></pre>
+<h3 id="17-实现原理总结">1.7 实现原理总结</h3>
+<table>
+<thead>
+<tr>
+<th>原理</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>AOP代理</strong></td>
+<td>通过 <code>@Transactional</code> 注解自动代理，方法前后添加事务逻辑</td>
+</tr>
+<tr>
+<td><strong>ThreadLocal</strong></td>
+<td>将数据库连接绑定到线程，确保同线程共享事务</td>
+</tr>
+<tr>
+<td><strong>Connection.setAutoCommit(false)</strong></td>
+<td>核心开关，手动控制提交/回滚</td>
+</tr>
+<tr>
+<td><strong>传播行为</strong></td>
+<td>通过 ThreadLocal 状态判断是否加入/新建事务</td>
+</tr>
+<tr>
+<td><strong>异常回滚规则</strong></td>
+<td>默认 RuntimeException 回滚，可配置</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="二-事务传播行为详解">二、事务传播行为详解</h2>
+<p>Spring定义了7种事务传播行为，定义在 <code>Propagation</code> 枚举中：</p>
+<pre><code class="language-java">public enum Propagation {
+    REQUIRED(0),           // 默认
+    SUPPORTS(1),
+    MANDATORY(2),
+    REQUIRES_NEW(3),
+    NOT_SUPPORTED(4),
+    NEVER(5),
+    NESTED(6);
+}
+</code></pre>
+<h3 id="21-required默认">2.1 REQUIRED（默认）</h3>
+<p><strong>含义</strong>：有事务就加入，没有就新建</p>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>行为</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>当前无事务</td>
+<td>新建事务</td>
+</tr>
+<tr>
+<td>当前有事务</td>
+<td>加入现有事务</td>
+</tr>
+</tbody>
+</table>
+<p><strong>适用场景</strong>：大多数业务场景</p>
+<h3 id="22-supports">2.2 SUPPORTS</h3>
+<p><strong>含义</strong>：有事务就加入，没有就非事务运行</p>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>行为</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>当前无事务</td>
+<td>非事务执行</td>
+</tr>
+<tr>
+<td>当前有事务</td>
+<td>加入现有事务</td>
+</tr>
+</tbody>
+</table>
+<p><strong>适用场景</strong>：查询方法，可复用已有事务</p>
+<h3 id="23-mandatory">2.3 MANDATORY</h3>
+<p><strong>含义</strong>：必须有事务，否则抛异常</p>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>行为</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>当前无事务</td>
+<td>抛 <code>IllegalTransactionStateException</code></td>
+</tr>
+<tr>
+<td>当前有事务</td>
+<td>加入现有事务</td>
+</tr>
+</tbody>
+</table>
+<p><strong>适用场景</strong>：强制要求在事务上下文中调用，防止误用</p>
+<h3 id="24-requires_new">2.4 REQUIRES_NEW</h3>
+<p><strong>含义</strong>：总是新建事务，挂起现有事务</p>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>行为</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>当前无事务</td>
+<td>新建事务</td>
+</tr>
+<tr>
+<td>当前有事务</td>
+<td><strong>挂起现有事务</strong>，新建独立事务</td>
+</tr>
+</tbody>
+</table>
+<p><strong>适用场景</strong>：独立日志记录、独立子任务（失败不影响主事务）</p>
+<h3 id="25-not_supported">2.5 NOT_SUPPORTED</h3>
+<p><strong>含义</strong>：非事务执行，挂起现有事务</p>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>行为</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>当前无事务</td>
+<td>非事务执行</td>
+</tr>
+<tr>
+<td>当前有事务</td>
+<td><strong>挂起现有事务</strong>，非事务执行</td>
+</tr>
+</tbody>
+</table>
+<p><strong>适用场景</strong>：耗时操作、不需要事务的操作</p>
+<h3 id="26-never">2.6 NEVER</h3>
+<p><strong>含义</strong>：必须非事务，否则抛异常</p>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>行为</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>当前无事务</td>
+<td>非事务执行</td>
+</tr>
+<tr>
+<td>当前有事务</td>
+<td>抛 <code>IllegalTransactionStateException</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>适用场景</strong>：严格要求非事务环境</p>
+<h3 id="27-nested">2.7 NESTED</h3>
+<p><strong>含义</strong>：嵌套事务（基于保存点）</p>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>行为</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>当前无事务</td>
+<td>新建事务</td>
+</tr>
+<tr>
+<td>当前有事务</td>
+<td>创建<strong>保存点</strong>，成为嵌套事务</td>
+</tr>
+</tbody>
+</table>
+<p><strong>特点</strong>：</p>
+<ul>
+<li>子事务回滚只回滚到保存点，不影响父事务</li>
+<li>父事务回滚会连带子事务回滚</li>
+</ul>
+<p><strong>适用场景</strong>：需要部分回滚的业务逻辑</p>
+<h3 id="28-传播行为示意图">2.8 传播行为示意图</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────┐
+│                    REQUIRED（加入）                          │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │  父事务                                               │   │
+│  │  ┌─────────────────────────────────────────────┐    │   │
+│  │  │  子方法（加入同一事务）                        │    │   │
+│  │  └─────────────────────────────────────────────┘    │   │
+│  └─────────────────────────────────────────────────────┘   │
+│  一起提交或回滚                                              │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│                    REQUIRES_NEW（新建）                      │
+│  ┌──────────────────────┐      ┌──────────────────────┐    │
+│  │  父事务（挂起）        │ ←──→ │  子事务（独立）       │    │
+│  │  Connection A         │      │  Connection B        │    │
+│  └──────────────────────┘      └──────────────────────┘    │
+│  父子独立，各自提交/回滚                                     │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│                    NESTED（嵌套）                            │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │  事务                                               │   │
+│  │     Savepoint ──────────────────────┐               │   │
+│  │  ┌─────────────────────────────────────────────┐    │   │
+│  │  │  子事务（嵌套）                              │    │   │
+│  │  └─────────────────────────────────────────────┘    │   │
+│  └─────────────────────────────────────────────────────┘   │
+│  子事务回滚到Savepoint，父事务继续；父回滚则子也回滚          │
+└─────────────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="29-实现原理">2.9 实现原理</h3>
+<p>核心实现在 <code>AbstractPlatformTransactionManager.handleExistingTransaction()</code>：</p>
+<pre><code class="language-java">private TransactionStatus handleExistingTransaction(
+        TransactionDefinition definition, Object transaction) {
+    
+    // 1. NEVER - 有事务就抛异常
+    if (definition.getPropagationBehavior() == TransactionDefinition.PROPAGATION_NEVER) {
+        throw new IllegalTransactionStateException(&quot;Existing transaction found for NEVER propagation&quot;);
+    }
+    
+    // 2. NOT_SUPPORTED - 挂起事务，非事务执行
+    if (definition.getPropagationBehavior() == TransactionDefinition.PROPAGATION_NOT_SUPPORTED) {
+        Object suspendedResources = suspend(transaction);
+        return newTransactionStatus(definition, null, suspendedResources);
+    }
+    
+    // 3. REQUIRES_NEW - 挂起现有，新建独立事务
+    if (definition.getPropagationBehavior() == TransactionDefinition.PROPAGATION_REQUIRES_NEW) {
+        SuspendedResourcesHolder suspendedResources = suspend(transaction);
+        try {
+            return startTransaction(definition, transaction, suspendedResources);
+        } catch (Exception ex) {
+            resume(transaction, suspendedResources);  // 新事务失败，恢复原事务
+            throw ex;
+        }
+    }
+    
+    // 4. NESTED - 创建保存点
+    if (definition.getPropagationBehavior() == TransactionDefinition.PROPAGATION_NESTED) {
+        if (!isNestedTransactionAllowed()) {
+            throw new NestedTransactionNotSupportedException(&quot;Nested transactions not supported&quot;);
+        }
+        // 创建保存点
+        Object hold = ((SavepointManager) transaction).createSavepoint();
+        return newTransactionStatus(definition, transaction, hold);
+    }
+    
+    // 5. REQUIRED/SUPPORTS/MANDATORY - 加入现有事务
+    return newTransactionStatus(definition, transaction);
+}
+</code></pre>
+<h4 id="挂起事务suspend">挂起事务（suspend）</h4>
+<pre><code class="language-java">protected SuspendedResourcesHolder suspend(Object transaction) {
+    // 1. 从 ThreadLocal 解绑资源
+    ConnectionHolder holder = (ConnectionHolder) 
+        TransactionSynchronizationManager.unbindResource(dataSource);
+    
+    // 2. 暂存当前事务状态
+    List&lt;TransactionSynchronization&gt; synchronizations = 
+        TransactionSynchronizationManager.getSynchronizations();
+    
+    // 3. 清空 ThreadLocal
+    TransactionSynchronizationManager.clear();
+    
+    // 4. 返回挂起资源，以便后续恢复
+    return new SuspendedResourcesHolder(holder, synchronizations);
+}
+</code></pre>
+<h4 id="恢复事务">恢复事务</h4>
+<pre><code class="language-java">protected void resume(Object transaction, SuspendedResourcesHolder suspendedResources) {
+    // 重新绑定到 ThreadLocal
+    TransactionSynchronizationManager.bindResource(dataSource, suspendedResources.connectionHolder);
+    
+    // 恢复同步回调
+    for (TransactionSynchronization sync : suspendedResources.synchronizations) {
+        TransactionSynchronizationManager.registerSynchronization(sync);
+    }
+}
+</code></pre>
+<h4 id="嵌套事务保存点">嵌套事务保存点</h4>
+<pre><code class="language-java">// 创建保存点
+public Object createSavepoint() throws SQLException {
+    return connection.setSavepoint(&quot;SAVEPOINT_&quot; + savepointCounter++);
+}
+
+// 回滚到保存点
+public void rollbackToSavepoint(Object savepoint) throws SQLException {
+    connection.rollback((Savepoint) savepoint);
+    connection.releaseSavepoint((Savepoint) savepoint);
+}
+</code></pre>
+<h3 id="210-使用示例">2.10 使用示例</h3>
+<pre><code class="language-java">@Service
+public class OrderService {
+    
+    @Autowired
+    private LogService logService;
+    
+    // REQUIRED（默认）
+    @Transactional
+    public void createOrder(Order order) {
+        orderDao.save(order);
+        logService.saveLog(order);  // 加入同一事务
+    }
+}
+
+@Service
+public class LogService {
+    
+    // REQUIRES_NEW：即使订单失败，日志也保存
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void saveLog(Order order) {
+        logDao.save(new Log(order));
+    }
+    
+    // NESTED：部分回滚
+    @Transactional(propagation = Propagation.NESTED)
+    public void processItem(Item item) {
+        // 失败只回滚到保存点，不影响整体
+        itemDao.process(item);
+    }
+}
+</code></pre>
+<h3 id="211-传播行为注意事项">2.11 传播行为注意事项</h3>
+<table>
+<thead>
+<tr>
+<th>传播行为</th>
+<th>注意点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>REQUIRES_NEW</code></td>
+<td>使用<strong>独立连接</strong>，性能开销较大</td>
+</tr>
+<tr>
+<td><code>NESTED</code></td>
+<td>需要 JDBC3.0+ 支持，部分数据库不支持保存点</td>
+</tr>
+<tr>
+<td><code>MANDATORY/NEVER</code></td>
+<td>用于约束调用方，避免误用</td>
+</tr>
+<tr>
+<td><code>NOT_SUPPORTED</code></td>
+<td>挂起事务期间的操作不受事务保护</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="三-事务失效场景全解析">三、事务失效场景全解析</h2>
+<p>了解事务失效的场景对于正确使用Spring事务至关重要。</p>
+<h3 id="31-方法访问权限问题">3.1 方法访问权限问题</h3>
+<h4 id="失效场景">失效场景</h4>
+<pre><code class="language-java">@Service
+public class UserService {
+    
+    @Transactional
+    private void updateUser() {  // ❌ private 方法事务失效
+        userDao.update(user);
+    }
+    
+    @Transactional
+    protected void saveUser() {   // ❌ protected 也可能失效
+        userDao.save(user);
+    }
+    
+    @Transactional
+    public void deleteUser() {    // ✅ public 正常生效
+        userDao.delete(user);
+    }
+}
+</code></pre>
+<h4 id="原因分析">原因分析</h4>
+<p>Spring AOP 使用 CGLIB 或 JDK 动态代理：</p>
+<ul>
+<li><strong>CGLIB</strong>：基于继承，<code>private/protected/final</code> 方法无法被代理</li>
+<li><strong>JDK动态代理</strong>：基于接口，只能代理接口方法</li>
+</ul>
+<pre><code class="language-java">// CGLIB 生成的代理类
+public class UserService$$Proxy extends UserService {
+    
+    @Override
+    public void deleteUser() {  // ✅ 可以重写 public
+        try {
+            transactionManager.begin();
+            super.deleteUser();
+            transactionManager.commit();
+        } catch (Exception e) {
+            transactionManager.rollback();
+        }
+    }
+    
+    // private 方法无法重写，直接调用目标类，绕过代理
+}
+</code></pre>
+<hr>
+<h3 id="32-同类内部方法自调用">3.2 同类内部方法自调用</h3>
+<h4 id="失效场景-2">失效场景</h4>
+<pre><code class="language-java">@Service
+public class OrderService {
+    
+    public void createOrder() {
+        this.saveOrder();      // ❌ 自调用，事务失效
+        this.saveLog();        // ❌ 自调用，事务失效
+    }
+    
+    @Transactional
+    public void saveOrder() {
+        orderDao.save(order);
+    }
+    
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void saveLog() {
+        logDao.save(log);
+    }
+}
+</code></pre>
+<h4 id="原因分析-2">原因分析</h4>
+<p>自调用绕过了代理对象：</p>
+<pre><code>正常调用链：
+Controller → Proxy.saveOrder() → TransactionInterceptor → Target.saveOrder()
+
+自调用链：
+Target.createOrder() → Target.saveOrder()  ← 直接调用，跳过代理！
+</code></pre>
+<h4 id="解决方案">解决方案</h4>
+<p><strong>方案一：注入自身代理</strong></p>
+<pre><code class="language-java">@Service
+public class OrderService {
+    
+    @Autowired
+    private OrderService self;  // 注入代理对象
+    
+    public void createOrder() {
+        self.saveOrder();       // ✅ 通过代理调用
+        self.saveLog();
+    }
+}
+</code></pre>
+<p><strong>方案二：使用AopContext</strong></p>
+<pre><code class="language-java">@Service
+public class OrderService {
+    
+    public void createOrder() {
+        OrderService proxy = (OrderService) AopContext.currentProxy();
+        proxy.saveOrder();      // ✅ 获取当前代理
+    }
+}
+
+// 启用配置
+@EnableAspectJAutoProxy(exposeProxy = true)
+</code></pre>
+<hr>
+<h3 id="33-异常被捕获未抛出">3.3 异常被捕获未抛出</h3>
+<h4 id="失效场景-3">失效场景</h4>
+<pre><code class="language-java">@Service
+public class UserService {
+    
+    @Transactional
+    public void updateUser() {
+        try {
+            userDao.update(user);
+            throw new RuntimeException(&quot;更新失败&quot;);  // 异常被捕获
+        } catch (Exception e) {
+            log.error(&quot;更新失败&quot;, e);  // ❌ 静默处理，事务不回滚
+        }
+    }
+    
+    @Transactional
+    public void saveUser() {
+        try {
+            userDao.save(user);
+            if (user == null) {
+                throw new Exception(&quot;用户为空&quot;);  // checked异常
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);  // ✅ 转换为RuntimeException
+        }
+    }
+}
+</code></pre>
+<h4 id="原因分析-3">原因分析</h4>
+<p>Spring 默认只对 <code>RuntimeException</code> 和 <code>Error</code> 回滚：</p>
+<pre><code class="language-java">// TransactionAspectSupport 默认规则
+public boolean rollbackOn(Throwable ex) {
+    return (ex instanceof RuntimeException || ex instanceof Error);
+}
+</code></pre>
+<h4 id="解决方案-2">解决方案</h4>
+<p><strong>方案一：抛出RuntimeException</strong></p>
+<pre><code class="language-java">@Transactional
+public void updateUser() {
+    try {
+        userDao.update(user);
+    } catch (Exception e) {
+        throw new RuntimeException(e);  // ✅ 抛出 RuntimeException
+    }
+}
+</code></pre>
+<p><strong>方案二：指定回滚异常类型</strong></p>
+<pre><code class="language-java">@Transactional(rollbackFor = Exception.class)  // ✅ 所有异常都回滚
+public void updateUser() {
+    try {
+        userDao.update(user);
+    } catch (Exception e) {
+        // 即使是 checked 异常也回滚
+    }
+}
+</code></pre>
+<hr>
+<h3 id="34-抛出checked异常">3.4 抛出Checked异常</h3>
+<h4 id="失效场景-4">失效场景</h4>
+<pre><code class="language-java">@Service
+public class UserService {
+    
+    @Transactional
+    public void saveUser() throws IOException {
+        userDao.save(user);
+        throw new IOException(&quot;IO异常&quot;);  // ❌ checked异常，默认不回滚
+    }
+    
+    @Transactional
+    public void updateUser() throws SQLException {
+        userDao.update(user);
+        throw new SQLException(&quot;SQL异常&quot;);  // ❌ checked异常，默认不回滚
+    }
+}
+</code></pre>
+<h4 id="原因分析-4">原因分析</h4>
+<p>Checked异常（<code>Exception</code>子类但非<code>RuntimeException</code>）默认不触发回滚。</p>
+<h4 id="解决方案-3">解决方案</h4>
+<pre><code class="language-java">@Transactional(rollbackFor = Exception.class)  // ✅ 指定回滚所有异常
+public void saveUser() throws IOException {
+    userDao.save(user);
+    throw new IOException(&quot;IO异常&quot;);
+}
+</code></pre>
+<hr>
+<h3 id="35-数据库引擎不支持事务">3.5 数据库引擎不支持事务</h3>
+<h4 id="失效场景-5">失效场景</h4>
+<pre><code class="language-java">@Service
+public class UserService {
+    
+    @Transactional
+    public void saveUser() {
+        userDao.save(user);  // MySQL MyISAM 表，不支持事务
+    }
+}
+</code></pre>
+<h4 id="原因分析-5">原因分析</h4>
+<p>MySQL <code>MyISAM</code> 引擎不支持事务，只有 <code>InnoDB</code> 支持。</p>
+<h4 id="验证与修复">验证与修复</h4>
+<pre><code class="language-sql">-- 查看表引擎
+SHOW TABLE STATUS LIKE 'user';
+
+-- 修改引擎
+ALTER TABLE user ENGINE = InnoDB;
+</code></pre>
+<hr>
+<h3 id="36-多线程调用">3.6 多线程调用</h3>
+<h4 id="失效场景-6">失效场景</h4>
+<pre><code class="language-java">@Service
+public class UserService {
+    
+    @Transactional
+    public void batchUpdate(List&lt;User&gt; users) {
+        new Thread(() -&gt; {
+            userDao.update(users.get(0));  // ❌ 新线程，事务不共享
+        }).start();
+        
+        ExecutorService executor = Executors.newFixedThreadPool(10);
+        executor.submit(() -&gt; {
+            userDao.update(users.get(1));  // ❌ 新线程，事务不共享
+        });
+    }
+}
+</code></pre>
+<h4 id="原因分析-6">原因分析</h4>
+<p>事务绑定到 <code>ThreadLocal</code>，不同线程有独立的事务上下文：</p>
+<pre><code class="language-java">// TransactionSynchronizationManager
+private static final ThreadLocal&lt;Map&lt;Object, Object&gt;&gt; resources = 
+    new NamedThreadLocal&lt;&gt;(&quot;Transactional resources&quot;);
+
+// 每个线程独立的 ThreadLocalMap
+Thread A → Connection1 (事务1)
+Thread B → Connection2 (无事务/独立事务)
+</code></pre>
+<hr>
+<h3 id="37-未被spring管理">3.7 未被Spring管理</h3>
+<h4 id="失效场景-7">失效场景</h4>
+<pre><code class="language-java">// ❌ 没有 @Service/@Component 注解
+public class UserService {
+    
+    @Transactional
+    public void saveUser() {
+        userDao.save(user);
+    }
+}
+
+// 或者手动创建对象
+UserService userService = new UserService();  // ❌ 不是Spring Bean
+userService.saveUser();
+</code></pre>
+<h4 id="原因分析-7">原因分析</h4>
+<p><code>@Transactional</code> 是Spring注解，只有Spring管理的Bean才会被AOP处理。</p>
+<hr>
+<h3 id="38-事务传播行为设置不当">3.8 事务传播行为设置不当</h3>
+<h4 id="失效场景-8">失效场景</h4>
+<pre><code class="language-java">@Service
+public class UserService {
+    
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    public void saveUser() {  // ❌ 明确指定非事务执行
+        userDao.save(user);
+    }
+    
+    @Transactional(propagation = Propagation.NEVER)
+    public void updateUser() {  // ❌ 有事务就抛异常
+        userDao.update(user);
+    }
+}
+</code></pre>
+<hr>
+<h3 id="39-事务管理器配置错误">3.9 事务管理器配置错误</h3>
+<h4 id="失效场景-9">失效场景</h4>
+<pre><code class="language-java">@Configuration
+public class DataSourceConfig {
+    
+    @Bean
+    public DataSource dataSourceA() { return ...; }
+    
+    @Bean
+    public DataSource dataSourceB() { return ...; }
+    
+    // ❌ 只配置了一个事务管理器，但使用了另一个数据源
+    @Bean
+    public PlatformTransactionManager transactionManagerA() {
+        return new DataSourceTransactionManager(dataSourceA());
+    }
+}
+
+@Service
+public class UserService {
+    
+    @Transactional  // 默认使用 transactionManagerA
+    public void saveUser() {
+        dataSourceB.save(user);  // ❌ 操作的是 dataSourceB，事务不生效
+    }
+}
+</code></pre>
+<h4 id="解决方案-4">解决方案</h4>
+<pre><code class="language-java">@Transactional(&quot;transactionManagerB&quot;)  // ✅ 指定事务管理器
+public void saveUser() {
+    dataSourceB.save(user);
+}
+</code></pre>
+<hr>
+<h3 id="310-finalstatic-方法">3.10 final/static 方法</h3>
+<h4 id="失效场景-10">失效场景</h4>
+<pre><code class="language-java">@Service
+public class UserService {
+    
+    @Transactional
+    public final void saveUser() {  // ❌ final 无法代理
+        userDao.save(user);
+    }
+    
+    @Transactional
+    public static void updateUser() {  // ❌ static 无法代理
+        userDao.update(user);
+    }
+}
+</code></pre>
+<h4 id="原因分析-8">原因分析</h4>
+<p>CGLIB 通过继承代理，<code>final/static</code> 方法无法被重写。</p>
+<hr>
+<h3 id="311-事务失效场景总结表">3.11 事务失效场景总结表</h3>
+<table>
+<thead>
+<tr>
+<th>失效场景</th>
+<th>原因</th>
+<th>解决方案</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>private/protected方法</strong></td>
+<td>CGLIB无法代理非public方法</td>
+<td>使用public方法</td>
+</tr>
+<tr>
+<td><strong>同类自调用</strong></td>
+<td>绕过代理，直接调用目标对象</td>
+<td>注入自身代理 / AopContext</td>
+</tr>
+<tr>
+<td><strong>异常被catch</strong></td>
+<td>未抛出异常，Spring无法感知</td>
+<td>抛出异常或手动回滚</td>
+</tr>
+<tr>
+<td><strong>Checked异常</strong></td>
+<td>默认只回滚RuntimeException</td>
+<td><code>rollbackFor = Exception.class</code></td>
+</tr>
+<tr>
+<td><strong>MyISAM引擎</strong></td>
+<td>数据库不支持事务</td>
+<td>使用InnoDB</td>
+</tr>
+<tr>
+<td><strong>多线程</strong></td>
+<td>ThreadLocal线程隔离</td>
+<td>同线程执行或独立事务管理</td>
+</tr>
+<tr>
+<td><strong>非Spring Bean</strong></td>
+<td>未被AOP处理</td>
+<td>添加@Service/@Component</td>
+</tr>
+<tr>
+<td><strong>NOT_SUPPORTED/NEVER</strong></td>
+<td>明确指定非事务</td>
+<td>修改传播行为</td>
+</tr>
+<tr>
+<td><strong>多数据源配置错误</strong></td>
+<td>事务管理器与数据源不匹配</td>
+<td>指定正确的transactionManager</td>
+</tr>
+<tr>
+<td><strong>final/static方法</strong></td>
+<td>CGLIB无法重写</td>
+<td>移除final/static修饰</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h3 id="312-快速诊断清单">3.12 快速诊断清单</h3>
+<p>当发现事务不生效时，可以按以下清单逐一排查：</p>
+<pre><code>1. 方法是否为 public？
+2. 类是否有 @Service/@Component？
+3. 是否同类内部调用？（用 self.xxx() 或 AopContext）
+4. 异常是否被 catch 后未抛出？
+5. 是否抛出 checked 异常？（加 rollbackFor）
+6. 数据库是否为 InnoDB？
+7. 是否多线程调用？
+8. 传播行为是否正确？
+9. final/static 方法？
+10. 多数据源时事务管理器是否匹配？
+</code></pre>
+<hr>
+<h2 id="四-总结">四、总结</h2>
+<p>Spring事务管理是Java开发中不可或缺的知识点。本文从三个维度进行了深度解析：</p>
+<ol>
+<li><strong>实现原理</strong>：理解AOP代理和ThreadLocal绑定机制，掌握事务的核心运作方式</li>
+<li><strong>传播行为</strong>：熟悉7种传播行为的含义和使用场景，正确选择事务传播策略</li>
+<li><strong>失效场景</strong>：牢记10+种常见失效原因，避免踩坑，写出可靠的事务代码</li>
+</ol>
+<p>掌握这些内容，能够帮助开发者：</p>
+<ul>
+<li>正确使用Spring事务</li>
+<li>快速诊断事务问题</li>
+<li>编写健壮的业务代码</li>
+</ul>
+<hr>
+<h2 id="参考资料">参考资料</h2>
+<ul>
+<li><a href="https://docs.spring.io/spring-framework/reference/data-access/transaction.html">Spring官方文档 - Transaction Management</a></li>
+<li><a href="https://www.cnblogs.com/xxxtec/p/16287978.html">Spring事务管理详解</a></li>
+</ul>
+<hr>
+<p><em>本文为个人学习总结，如有错误请指正。</em></p>
+
+            </div>
+            
+              <div class="tag-container">
+                
+                  <a href="https://suxiaomu.top/zamEXLzW59/" class="tag">
+                    Spring事务
+                  </a>
+                
+                  <a href="https://suxiaomu.top/keMTkexIhC/" class="tag">
+                    数据库
+                  </a>
+                
+              </div>
+            
+            
+              <div class="next-post">
+                <div class="next">下一篇</div>
+                <a href="https://suxiaomu.top/oxda6OkfFf/">
+                  <h3 class="post-title">
+                    常见分布式事务解决方案
+                  </h3>
+                </a>
+              </div>
+            
+
+            
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+<script type="application/javascript">
+
+AOS.init();
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+
+  <script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>
+    hljs.initHighlightingOnLoad()
+  </script>
+
+
+
+
+
+  </body>
+</html>

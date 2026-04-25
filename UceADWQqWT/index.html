@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>快速排序、归并排序和单例模式实现 | 苏小霂的博客</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://suxiaomu.top/favicon.ico?v=1777096180678">
+<link rel="stylesheet" href="https://suxiaomu.top/styles/main.css">
+
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+
+
+    <meta name="description" content="快速排序、归并排序、单例模式
+
+快速排序
+    public static void quickSort(int[] arr, int left, int right) {
+        if (left &gt;= right) {
+..." />
+    <meta name="keywords" content="算法与数据结构" />
+  </head>
+  <body>
+    <div id="app" class="main">
+
+      <div class="sidebar" :class="{ 'full-height': menuVisible }">
+  <div class="top-container" data-aos="fade-right">
+    <div class="top-header-container">
+      <a class="site-title-container" href="https://suxiaomu.top">
+        <img src="https://suxiaomu.top/images/avatar.png?v=1777096180678" class="site-logo">
+        <h1 class="site-title">苏小霂的博客</h1>
+      </a>
+      <div class="menu-btn" @click="menuVisible = !menuVisible">
+        <div class="line"></div>
+      </div>
+    </div>
+    <div>
+      
+        
+          <a href="/" class="site-nav">
+            首页
+          </a>
+        
+      
+        
+          <a href="/archives" class="site-nav">
+            归档
+          </a>
+        
+      
+        
+          <a href="/tags" class="site-nav">
+            标签
+          </a>
+        
+      
+    </div>
+  </div>
+  <div class="bottom-container" data-aos="flip-up" data-aos-offset="0">
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+    <div class="site-description">
+      
+    </div>
+    <div class="site-footer">
+       | <a class="rss" href="https://suxiaomu.top/atom.xml" target="_blank">RSS</a>
+    </div>
+  </div>
+</div>
+
+
+      <div class="main-container">
+        <div class="content-container" data-aos="fade-up">
+          <div class="post-detail">
+            <h2 class="post-title">快速排序、归并排序和单例模式实现</h2>
+            <div class="post-date">2023-06-17</div>
+            
+            <div class="post-content" v-pre>
+              <p>快速排序、归并排序、单例模式</p>
+<!-- more -->
+<p>快速排序</p>
+<pre><code class="language-java">    public static void quickSort(int[] arr, int left, int right) {
+        if (left &gt;= right) {
+            return;
+        }
+        int i = left, j = right;
+        int pivot = arr[left];
+        while (i &lt; j) {
+            //从右往左找第一个小于pivot的值
+            while (i &lt; j &amp;&amp; arr[j] &gt;= pivot) {
+                j--;
+            }
+            //从左往右找第一个大于pivot的值
+            while (i &lt; j &amp;&amp; arr[i] &lt; pivot) {
+                i++;
+            }
+            if (i &lt; j) {
+                swap2(arr, i, j);
+            }
+        }
+        //一轮完成，把pivot换到中间位置
+        swap2(arr, i, left);
+        //递归处理左右数组
+        quickSort(arr, left, i - 1);
+        quickSort(arr, i + 1, right);
+
+    }
+</code></pre>
+<p>归并排序</p>
+<pre><code class="language-java">    public static void mergeSort(int[] nums, int l, int r){
+        //分而治之
+        //递归结束条件
+        if (l &gt;= r){
+            return;
+        }
+
+        //划分
+        int m = (l + r) / 2;
+        mergeSort(nums, l, m);
+        mergeSort(nums, m + 1, r);
+
+        //合并子数组
+        //暂存左右数组
+        int[] tmp = new int[r - l + 1];
+        for (int k = l; k &lt;= r; k++){
+            tmp[k - l] = nums[k];
+        }
+        //循环合并，i,j指针指向tmp数组的首元素
+        int i = 0;
+        int j = m - l + 1;
+        for (int k = l; k &lt;= r; k++){
+            if (i == m - l + 1){ //左子数组已经结束
+                nums[k] = tmp[j++];
+            } else if (j == r - l + 1 || tmp[i] &lt;= tmp[j]){
+                nums[k] = tmp[i++];
+            } else {
+                nums[k] = tmp[j++];
+            }
+        }
+    }
+</code></pre>
+<p>单例模式</p>
+<pre><code class="language-java">
+public class Singleton {
+
+    // ============================================================
+    // 一、饿汉式单例模式
+    // ============================================================
+
+    /**
+     * 【饿汉式】
+     *
+     * 特点：类加载时就创建实例，不管是否使用
+     *
+     * 优点：
+     * 1. 实现简单
+     * 2. 线程安全（类加载时由JVM保证线程安全）
+     * 3. 没有锁的开销，性能高
+     *
+     * 缺点：
+     * 1. 类加载时就初始化，可能造成内存浪费（如果始终不使用）
+     * 2. 无法实现延迟加载
+     *
+     * 适用场景：
+     * - 单例对象占用内存小，初始化快
+     * - 确定一定会使用该单例
+     */
+    static class EagerSingleton {
+        // 类加载时就创建实例
+        private static final EagerSingleton INSTANCE = new EagerSingleton();
+
+        // 私有构造函数，防止外部new
+        private EagerSingleton() {
+        }
+
+        // 提供全局访问点
+        public static EagerSingleton getInstance() {
+            return INSTANCE;
+        }
+    }
+
+    // ============================================================
+    // 二、懒汉式单例模式（线程不安全）
+    // ============================================================
+
+    /**
+     * 【懒汉式 - 线程不安全】
+     *
+     * 特点：第一次调用 getInstance() 时才创建实例
+     *
+     * 优点：
+     * 1. 实现了延迟加载，节省内存
+     *
+     * 缺点：
+     * 1. 线程不安全！多线程环境下可能创建多个实例
+     *
+     * 适用场景：
+     * - 单线程环境
+     * - 不推荐在生产环境使用
+     */
+    static class LazySingletonUnsafe {
+        // 不立即创建实例
+        private static LazySingletonUnsafe instance;
+
+        private LazySingletonUnsafe() {
+        }
+
+        // 线程不安全的懒汉式
+        public static LazySingletonUnsafe getInstance() {
+            if (instance == null) {
+                instance = new LazySingletonUnsafe(); // 多线程可能同时执行到这里
+            }
+            return instance;
+        }
+    }
+
+    // ============================================================
+    // 三、懒汉式单例模式（线程安全 - 同步方法）
+    // ============================================================
+
+    /**
+     * 【懒汉式 - 线程安全（同步方法）】
+     *
+     * 特点：在 getInstance() 方法上加 synchronized 关键字
+     *
+     * 优点：
+     * 1. 线程安全
+     * 2. 实现延迟加载
+     *
+     * 缺点：
+     * 1. 每次获取实例都要加锁，性能差
+     * 2. 实际上只需要在第一次创建时加锁
+     *
+     * 适用场景：
+     * - 对性能要求不高的场景
+     */
+    static class LazySingletonSafe {
+        private static LazySingletonSafe instance;
+
+        private LazySingletonSafe() {
+        }
+
+        // 整个方法加锁，性能较差
+        public static synchronized LazySingletonSafe getInstance() {
+            if (instance == null) {
+                instance = new LazySingletonSafe();
+            }
+            return instance;
+        }
+    }
+
+    // ============================================================
+    // 四、双重检查锁定（DCL）
+    // ============================================================
+
+    /**
+     * 【双重检查锁定 DCL (Double-Checked Locking)】
+     *
+     * 特点：双重检查 + volatile + 同步代码块
+     *
+     * 优点：
+     * 1. 线程安全
+     * 2. 延迟加载
+     * 3. 性能好（只在第一次创建时加锁）
+     *
+     * 缺点：
+     * 1. 实现稍复杂
+     * 2. 需要 volatile 防止指令重排序
+     *
+     * volatile 的作用：
+     * - 防止指令重排序
+     * - instance = new Singleton() 不是原子操作：
+     *   1. 分配内存空间
+     *   2. 初始化对象
+     *   3. 将引用指向内存地址
+     * - 没有 volatile，可能发生 2 和 3 重排序，导致其他线程拿到未初始化的对象
+     *
+     * 适用场景：
+     * - 需要延迟加载且对性能有要求的场景
+     * - 推荐！
+     */
+    static class DCLSingleton {
+        // volatile 防止指令重排序
+        private static volatile DCLSingleton instance;
+
+        private DCLSingleton() {
+        }
+
+        public static DCLSingleton getInstance() {
+            // 第一次检查：避免不必要的锁
+            if (instance == null) {
+                synchronized (DCLSingleton.class) {
+                    // 第二次检查：确保只创建一个实例
+                    if (instance == null) {
+                        instance = new DCLSingleton();
+                    }
+                }
+            }
+            return instance;
+        }
+    }
+
+    // ============================================================
+    // 五、静态内部类（推荐）
+    // ============================================================
+
+    /**
+     * 【静态内部类】
+     *
+     * 特点：利用类加载机制实现延迟加载和线程安全
+     *
+     * 原理：
+     * - 外部类加载时不会加载内部类
+     * - 只有调用 getInstance() 时才会加载内部类
+     * - JVM 保证类加载的线程安全
+     *
+     * 优点：
+     * 1. 线程安全（JVM 保证）
+     * 2. 延迟加载（用到才加载内部类）
+     * 3. 不需要锁，性能最好
+     * 4. 实现简洁
+     *
+     * 缺点：
+     * 1. 无法传参初始化
+     *
+     * 适用场景：
+     * - 大多数场景都适用
+     * - 强烈推荐！
+     */
+    static class StaticInnerSingleton {
+        // 私有构造
+        private StaticInnerSingleton() {
+        }
+
+        // 静态内部类，持有单例实例
+        private static class Holder {
+            private static final StaticInnerSingleton INSTANCE = new StaticInnerSingleton();
+        }
+
+        public static StaticInnerSingleton getInstance() {
+            return Holder.INSTANCE;
+        }
+    }
+
+    // ============================================================
+    // 六、枚举单例（最佳实践）
+    // ============================================================
+
+    /**
+     * 【枚举单例】
+     *
+     * 特点：利用枚举特性实现单例
+     *
+     * 优点：
+     * 1. 线程安全（枚举类加载时JVM保证）
+     * 2. 防止反序列化破坏单例
+     * 3. 防止反射攻击（枚举不能通过反射创建）
+     * 4. 实现最简洁
+     * 5. Effective Book 推荐！
+     *
+     * 缺点：
+     * 1. 无法延迟加载
+     * 2. 不能继承其他类（枚举已继承Enum）
+     *
+     * 适用场景：
+     * - 需要防止反序列化/反射攻击的场景
+     * - 不需要延迟加载的场景
+     * - 最佳实践！
+     */
+    enum EnumSingleton {
+        INSTANCE;
+
+        // 可以添加方法
+        public void doSomething() {
+            System.out.println(&quot;EnumSingleton do something&quot;);
+        }
+    }
+
+    // ============================================================
+    // 测试代码
+    // ============================================================
+
+    public static void main(String[] args) {
+        // 测试饿汉式
+        EagerSingleton eager1 = EagerSingleton.getInstance();
+        EagerSingleton eager2 = EagerSingleton.getInstance();
+        System.out.println(&quot;饿汉式: &quot; + (eager1 == eager2)); // true
+
+        // 测试DCL
+        DCLSingleton dcl1 = DCLSingleton.getInstance();
+        DCLSingleton dcl2 = DCLSingleton.getInstance();
+        System.out.println(&quot;DCL: &quot; + (dcl1 == dcl2)); // true
+
+        // 测试静态内部类
+        StaticInnerSingleton inner1 = StaticInnerSingleton.getInstance();
+        StaticInnerSingleton inner2 = StaticInnerSingleton.getInstance();
+        System.out.println(&quot;静态内部类: &quot; + (inner1 == inner2)); // true
+
+        // 测试枚举
+        EnumSingleton enum1 = EnumSingleton.INSTANCE;
+        EnumSingleton enum2 = EnumSingleton.INSTANCE;
+        System.out.println(&quot;枚举: &quot; + (enum1 == enum2)); // true
+        enum1.doSomething();
+    }
+}
+</code></pre>
+
+            </div>
+            
+              <div class="tag-container">
+                
+                  <a href="https://suxiaomu.top/OqHM3o-yr3/" class="tag">
+                    算法与数据结构
+                  </a>
+                
+              </div>
+            
+            
+              <div class="next-post">
+                <div class="next">下一篇</div>
+                <a href="https://suxiaomu.top/CeZNMgta1/">
+                  <h3 class="post-title">
+                    Java并发编程之线程池
+                  </h3>
+                </a>
+              </div>
+            
+
+            
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+<script type="application/javascript">
+
+AOS.init();
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+
+  <script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>
+    hljs.initHighlightingOnLoad()
+  </script>
+
+
+
+
+
+  </body>
+</html>
